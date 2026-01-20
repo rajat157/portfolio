@@ -1,4 +1,3 @@
-version: "3"
 services:
   strapi:
     container_name: portfolio-strapi
@@ -10,13 +9,6 @@ services:
       DATABASE_CLIENT: postgres
       DATABASE_HOST: strapiDB
       DATABASE_PORT: 5432
-      DATABASE_NAME: ${DATABASE_NAME}
-      DATABASE_USERNAME: ${DATABASE_USERNAME}
-      DATABASE_PASSWORD: ${DATABASE_PASSWORD}
-      JWT_SECRET: ${JWT_SECRET}
-      ADMIN_JWT_SECRET: ${ADMIN_JWT_SECRET}
-      APP_KEYS: ${APP_KEYS}
-      NODE_ENV: ${NODE_ENV}
     volumes:
       - ./backend/config:/opt/app/config
       - ./backend/src:/opt/app/src
