@@ -1,5 +1,6 @@
 "use client";
 
+import Image from "next/image";
 import Link from "next/link";
 import { Badge } from "@/components/ui/badge";
 import { Card } from "@/components/ui/card";
@@ -31,12 +32,14 @@ export function ArticleCard({ article, className }: ArticleCardProps) {
   return (
     <Card className={cn("overflow-hidden p-0 gap-0 group", className)}>
       {/* Image placeholder */}
-      <div className="aspect-[16/9] bg-muted flex items-center justify-center border-b">
+      <div className="aspect-[16/9] bg-muted flex items-center justify-center border-b relative">
         {article.imageUrl ? (
-          <img
+          <Image
             src={article.imageUrl}
             alt={article.title}
-            className="w-full h-full object-cover"
+            fill
+            sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
+            className="object-cover"
           />
         ) : (
           <div className="text-muted-foreground text-sm">

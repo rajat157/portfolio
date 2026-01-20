@@ -11,7 +11,13 @@
       "Bash(npm view:*)",
       "WebFetch(domain:registry.npmjs.org)",
       "WebFetch(domain:github.com)",
-      "Bash(node --version:*)"
+      "Bash(node --version:*)",
+      "Bash(cd:*)",
+      "Bash(npm install:*)",
+      "Bash(npm run lint)",
+      "Bash(cat:*)",
+      "Bash(npx tsc:*)",
+      "Bash(npm run lint:*)"
     ]
   }
 }

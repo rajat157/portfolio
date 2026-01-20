@@ -11,7 +11,7 @@ export interface Project {
   title: string;
   description: string;
   technologies: string[];
-  category: "Web Dev" | "Backend" | "DevOps";
+  category: string;
   imageUrl?: string;
 }
 

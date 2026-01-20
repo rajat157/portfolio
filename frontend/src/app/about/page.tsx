@@ -15,6 +15,8 @@ import {
   ChefHat,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { fetchAPI } from "@/lib/strapi";
+import type { About, StrapiResponse } from "@/lib/strapi/types";
 
 export const metadata: Metadata = {
   title: "About",
@@ -22,7 +24,53 @@ export const metadata: Metadata = {
     "Learn more about Rajat Kumar R - Software Architect with 8+ years of experience building high-performance systems.",
 };
 
-export default function AboutPage() {
+// Default fallback data when API returns empty
+const defaultAboutData = {
+  name: "Rajat Kumar R",
+  headline: "Software Architect & Developer",
+  bio_short:
+    "Experienced Software Architect with 8+ years building high-performance systems. From managing India's fastest supercomputer (SahasraT at IISc) to architecting real-time trading platforms, I bring deep expertise in Python, cloud infrastructure, and modern web technologies. Passionate about leveraging AI tools like Claude and Gemini to accelerate development.",
+  location: "Bangalore, India",
+  education: [
+    {
+      id: 1,
+      institution: "ACS College of Engineering, Bangalore",
+      degree: "B.E. Computer Science",
+      field: null,
+      start_date: "2012-01-01",
+      end_date: "2016-01-01",
+      description: null,
+    },
+  ],
+};
+
+async function getAboutData(): Promise<About | null> {
+  try {
+    const response = await fetchAPI<StrapiResponse<About>>({
+      endpoint: "/about",
+      query: {
+        populate: "*",
+      },
+      tags: ["about"],
+    });
+    return response.data;
+  } catch (error) {
+    console.error("Failed to fetch about data:", error);
+    return null;
+  }
+}
+
+export default async function AboutPage() {
+  const aboutData = await getAboutData();
+
+  // Use API data or fallback to defaults (Strapi 5 flat response format - no attributes wrapper)
+  const name = aboutData?.name || defaultAboutData.name;
+  const headline = aboutData?.headline || defaultAboutData.headline;
+  const bio = aboutData?.bio_short || defaultAboutData.bio_short;
+  const location = aboutData?.location || defaultAboutData.location;
+  const skills = aboutData?.skills;
+  const experience = aboutData?.experience;
+  const education = aboutData?.education || defaultAboutData.education;
   return (
     <>
       {/* Hero Section */}
@@ -34,13 +82,13 @@ export default function AboutPage() {
 
           <Reveal delay={0.1}>
             <h1 className="text-display font-bold tracking-tight mb-4">
-              Rajat Kumar R
+              {name}
             </h1>
           </Reveal>
 
           <Reveal delay={0.2}>
             <p className="text-heading text-muted-foreground mb-6">
-              Software Architect & Developer
+              {headline}
             </p>
           </Reveal>
 
@@ -48,7 +96,7 @@ export default function AboutPage() {
             <div className="flex flex-wrap gap-4 text-sm text-muted-foreground mb-8">
               <span className="flex items-center gap-2">
                 <MapPin className="w-4 h-4" />
-                Bangalore, India
+                {location}
               </span>
               <span className="flex items-center gap-2">
                 <Mail className="w-4 h-4" />
@@ -74,13 +122,7 @@ export default function AboutPage() {
           <Reveal delay={0.1}>
             <div className="prose prose-lg dark:prose-invert max-w-none">
               <p className="text-lg text-muted-foreground leading-relaxed">
-                Experienced Software Architect with 8+ years building
-                high-performance systems. From managing India&apos;s fastest
-                supercomputer (SahasraT at IISc) to architecting real-time
-                trading platforms, I bring deep expertise in Python, cloud
-                infrastructure, and modern web technologies. Passionate about
-                leveraging AI tools like Claude and Gemini to accelerate
-                development.
+                {bio}
               </p>
             </div>
           </Reveal>
@@ -103,7 +145,7 @@ export default function AboutPage() {
             </p>
           </Reveal>
 
-          <ExperienceTimeline />
+          <ExperienceTimeline experiences={experience} />
         </div>
       </section>
 
@@ -123,7 +165,7 @@ export default function AboutPage() {
             </p>
           </Reveal>
 
-          <SkillsGrid />
+          <SkillsGrid skills={skills} />
         </div>
       </section>
 
@@ -136,20 +178,29 @@ export default function AboutPage() {
             </h2>
           </Reveal>
 
-          <Reveal delay={0.1}>
-            <div className="bg-card border border-border rounded-xl p-8 flex items-start gap-6">
-              <div className="p-3 bg-muted rounded-lg">
-                <GraduationCap className="w-8 h-8" />
-              </div>
-              <div>
-                <h3 className="text-xl font-bold">B.E. Computer Science</h3>
-                <p className="text-primary font-medium mt-1">
-                  ACS College of Engineering, Bangalore
-                </p>
-                <p className="text-muted-foreground mt-2">Class of 2016</p>
-              </div>
-            </div>
-          </Reveal>
+          <div className="space-y-6">
+            {education.map((edu, index) => (
+              <Reveal key={edu.id} delay={index * 0.1}>
+                <div className="bg-card border border-border rounded-xl p-8 flex items-start gap-6">
+                  <div className="p-3 bg-muted rounded-lg">
+                    <GraduationCap className="w-8 h-8" />
+                  </div>
+                  <div>
+                    <h3 className="text-xl font-bold">{edu.degree}</h3>
+                    <p className="text-primary font-medium mt-1">
+                      {edu.institution}
+                    </p>
+                    <p className="text-muted-foreground mt-2">
+                      Class of {edu.end_date ? new Date(edu.end_date).getFullYear() : "Present"}
+                    </p>
+                    {edu.description && (
+                      <p className="text-muted-foreground mt-2 text-sm">{edu.description}</p>
+                    )}
+                  </div>
+                </div>
+              </Reveal>
+            ))}
+          </div>
         </div>
       </section>
 

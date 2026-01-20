@@ -1,83 +1,119 @@
-"use client";
-
-import { useState, useMemo } from "react";
+import { Metadata } from "next";
+import { fetchAPI, getStrapiMedia } from "@/lib/strapi/client";
+import { Project as StrapiProject, Category, StrapiResponse } from "@/lib/strapi/types";
 import { Reveal } from "@/components/animations/reveal";
-import {
-  ProjectGrid,
-  ProjectFilter,
-  type Project,
-  type ProjectCategory,
-} from "@/components/projects";
+import { ProjectsClient } from "./projects-client";
 
-// Placeholder data - will be connected to Strapi later
-const projects: Project[] = [
-  {
-    id: "1",
-    slug: "tredye",
-    title: "Tredye",
-    description:
-      "A comprehensive trading platform built with modern technologies for real-time data processing and high-performance trading operations.",
-    technologies: ["Next.js 16", "Docker", "Redis", "Kafka", "PostgreSQL"],
-    category: "Web Dev",
-  },
-  {
-    id: "2",
-    slug: "labbuild-2",
-    title: "Labbuild 2.0",
-    description:
-      "An advanced lab automation tool designed to streamline virtual machine management and infrastructure provisioning in enterprise environments.",
-    technologies: ["Python", "pyVmomi", "VMware"],
-    category: "DevOps",
-  },
-  {
-    id: "3",
-    slug: "labbuild-dashboard",
-    title: "Labbuild Dashboard",
-    description:
-      "A user-friendly web dashboard providing visibility and control over lab resources with real-time monitoring and management capabilities.",
-    technologies: ["Flask", "MongoDB", "Bootstrap"],
-    category: "Web Dev",
-  },
-  {
-    id: "4",
-    slug: "operation-schedules",
-    title: "Operation Schedules",
-    description:
-      "A robust scheduling system for managing and automating operational tasks with flexible scheduling options and reliable execution.",
-    technologies: ["FastAPI", "PostgreSQL", "Flask-APScheduler"],
-    category: "Backend",
-  },
-  {
-    id: "5",
-    slug: "pro-fit-club-dashboard",
-    title: "Pro Fit Club Dashboard",
-    description:
-      "A comprehensive fitness club management dashboard featuring member tracking, workout plans, and performance analytics.",
-    technologies: ["Django", "PostgreSQL", "Svelte"],
-    category: "Web Dev",
-  },
-  {
-    id: "6",
-    slug: "sahsarat-monitoring",
-    title: "SahasraT Monitoring",
-    description:
-      "A monitoring solution for tracking system health and performance metrics with real-time alerts and detailed visualization dashboards.",
-    technologies: ["Django", "PostgreSQL", "Twilio", "Plotly"],
-    category: "DevOps",
-  },
-];
+export const metadata: Metadata = {
+  title: "Projects | Rajat Kumar R",
+  description: "A collection of projects I have worked on, ranging from web applications to backend systems and DevOps tools.",
+};
 
-const categories: ProjectCategory[] = ["All", "Web Dev", "Backend", "DevOps"];
+// Transform Strapi 5 project data to the format expected by UI components (flat structure)
+function transformProject(strapiProject: StrapiProject) {
+  // Defensive check for valid project structure
+  if (!strapiProject || !strapiProject.id) {
+    return null;
+  }
 
-export default function ProjectsPage() {
-  const [activeCategory, setActiveCategory] = useState<ProjectCategory>("All");
+  return {
+    id: strapiProject.id?.toString() || "",
+    slug: strapiProject.slug || "",
+    title: strapiProject.title || "Untitled",
+    description: strapiProject.description || "",
+    technologies: strapiProject.technologies || [],
+    category: strapiProject.category?.name || "Uncategorized",
+    imageUrl: strapiProject.cover_image ? getStrapiMedia(strapiProject.cover_image.url) : null,
+  };
+}
 
-  const filteredProjects = useMemo(() => {
-    if (activeCategory === "All") {
-      return projects;
+// Extract unique categories from projects (Strapi 5 flat format)
+function extractCategories(projects: StrapiProject[]): string[] {
+  const categorySet = new Set<string>();
+
+  projects.forEach((project) => {
+    if (project && project.category?.name) {
+      categorySet.add(project.category.name);
     }
-    return projects.filter((project) => project.category === activeCategory);
-  }, [activeCategory]);
+  });
+
+  return Array.from(categorySet).sort();
+}
+
+async function getProjects() {
+  try {
+    const response = await fetchAPI<StrapiResponse<StrapiProject[]>>({
+      endpoint: "/projects",
+      query: {
+        populate: ["cover_image", "category"],
+        sort: ["featured:desc", "createdAt:desc"],
+      },
+      tags: ["projects"],
+    });
+
+    // Ensure we always return an array
+    if (!response || !response.data || !Array.isArray(response.data)) {
+      return [];
+    }
+
+    return response.data;
+  } catch (error) {
+    console.error("Failed to fetch projects:", error);
+    return [];
+  }
+}
+
+async function getCategories() {
+  try {
+    const response = await fetchAPI<StrapiResponse<Category[]>>({
+      endpoint: "/categories",
+      query: {
+        filters: {
+          type: {
+            $in: ["project", "both"],
+          },
+        },
+        sort: ["name:asc"],
+      },
+      tags: ["categories"],
+    });
+
+    // Ensure we always return an array
+    if (!response || !response.data || !Array.isArray(response.data)) {
+      return [];
+    }
+
+    return response.data;
+  } catch (error) {
+    console.error("Failed to fetch categories:", error);
+    return [];
+  }
+}
+
+export default async function ProjectsPage() {
+  const [strapiProjects, strapiCategories] = await Promise.all([
+    getProjects(),
+    getCategories(),
+  ]);
+
+  // Transform projects for UI (filter out null results)
+  const projects = strapiProjects
+    .map(transformProject)
+    .filter((p): p is NonNullable<typeof p> => p !== null);
+
+  // Get category names, either from dedicated categories endpoint or from projects (Strapi 5 flat format)
+  let categoryNames: string[];
+  if (strapiCategories.length > 0) {
+    categoryNames = strapiCategories
+      .filter((cat) => cat && cat.name)
+      .map((cat) => cat.name);
+  } else {
+    // Fallback: extract categories from projects
+    categoryNames = extractCategories(strapiProjects);
+  }
+
+  // Add "All" as the first option
+  const categories = ["All", ...categoryNames];
 
   return (
     <>
@@ -96,25 +132,8 @@ export default function ProjectsPage() {
         </div>
       </section>
 
-      {/* Filter Section */}
-      <section className="pb-8 px-4">
-        <div className="container mx-auto">
-          <Reveal direction="up" delay={0.2} duration={0.5}>
-            <ProjectFilter
-              categories={categories}
-              activeCategory={activeCategory}
-              onCategoryChange={setActiveCategory}
-            />
-          </Reveal>
-        </div>
-      </section>
-
-      {/* Projects Grid */}
-      <section className="pb-24 px-4">
-        <div className="container mx-auto">
-          <ProjectGrid projects={filteredProjects} />
-        </div>
-      </section>
+      {/* Client component for filtering and grid */}
+      <ProjectsClient projects={projects} categories={categories} />
     </>
   );
 }

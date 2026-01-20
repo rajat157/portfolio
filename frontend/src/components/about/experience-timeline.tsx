@@ -2,8 +2,9 @@
 
 import { Reveal } from "@/components/animations/reveal";
 import { Badge } from "@/components/ui/badge";
+import type { Experience as StrapiExperience } from "@/lib/strapi/types";
 
-interface Experience {
+interface ExperienceItem {
   company: string;
   role: string;
   period: string;
@@ -11,7 +12,8 @@ interface Experience {
   technologies?: string[];
 }
 
-const experiences: Experience[] = [
+// Default fallback data when API returns empty
+const defaultExperiences: ExperienceItem[] = [
   {
     company: "Voltvave Innovations",
     role: "Freelance Software Architect & Developer",
@@ -86,7 +88,39 @@ const experiences: Experience[] = [
   },
 ];
 
-export function ExperienceTimeline() {
+// Helper function to format date period
+function formatPeriod(startDate: string, endDate: string | null, isCurrent: boolean): string {
+  const formatDate = (date: string) => {
+    const d = new Date(date);
+    return d.toLocaleDateString("en-US", { month: "short", year: "numeric" });
+  };
+
+  const start = formatDate(startDate);
+  const end = isCurrent ? "Present" : (endDate ? formatDate(endDate) : "Present");
+
+  return `${start} - ${end}`;
+}
+
+// Transform Strapi experience data to component format
+function transformExperience(exp: StrapiExperience): ExperienceItem {
+  return {
+    company: exp.company,
+    role: exp.position,
+    period: formatPeriod(exp.start_date, exp.end_date, exp.is_current),
+    description: exp.description ? [exp.description] : [],
+    technologies: [], // Strapi Experience type doesn't have technologies
+  };
+}
+
+interface ExperienceTimelineProps {
+  experiences?: StrapiExperience[];
+}
+
+export function ExperienceTimeline({ experiences }: ExperienceTimelineProps) {
+  // Transform Strapi data or use defaults
+  const displayExperiences: ExperienceItem[] = experiences && experiences.length > 0
+    ? experiences.map(transformExperience)
+    : defaultExperiences;
   return (
     <div className="relative">
       {/* Timeline line */}
@@ -94,7 +128,7 @@ export function ExperienceTimeline() {
       <div className="absolute left-4 top-0 bottom-0 w-px bg-border md:hidden" />
 
       <div className="space-y-12">
-        {experiences.map((experience, index) => (
+        {displayExperiences.map((experience, index) => (
           <Reveal key={index} delay={index * 0.1} direction={index % 2 === 0 ? "left" : "right"}>
             <div
               className={`relative flex flex-col md:flex-row ${

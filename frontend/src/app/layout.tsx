@@ -15,27 +15,74 @@ const geistMono = Geist_Mono({
   subsets: ["latin"],
 });
 
+const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || "http://localhost:3000";
+
 export const metadata: Metadata = {
   title: {
-    default: "Portfolio",
-    template: "%s | Portfolio",
+    default: "Rajat Kumar R | Software Architect & Developer",
+    template: "%s | Rajat Kumar R",
   },
-  description: "A modern portfolio showcasing projects and blog posts about technology and development.",
-  keywords: ["portfolio", "developer", "web development", "blog", "projects"],
-  authors: [{ name: "Your Name" }],
-  creator: "Your Name",
+  description: "Portfolio of Rajat Kumar R - Software Architect & Developer specializing in Python, Django, FastAPI, Next.js, and cloud technologies.",
+  keywords: ["software architect", "developer", "Python", "Django", "FastAPI", "Next.js", "React", "portfolio", "blog"],
+  authors: [{ name: "Rajat Kumar R" }],
+  creator: "Rajat Kumar R",
+  metadataBase: new URL(siteUrl),
   openGraph: {
     type: "website",
     locale: "en_US",
-    siteName: "Portfolio",
+    siteName: "Rajat Kumar R",
+    title: "Rajat Kumar R | Software Architect & Developer",
+    description: "Portfolio of Rajat Kumar R - Software Architect & Developer specializing in Python, Django, FastAPI, Next.js, and cloud technologies.",
   },
   twitter: {
     card: "summary_large_image",
+    creator: "@rajatkumarr",
   },
   robots: {
     index: true,
     follow: true,
   },
+};
+
+const jsonLd = {
+  "@context": "https://schema.org",
+  "@graph": [
+    {
+      "@type": "WebSite",
+      "@id": `${siteUrl}/#website`,
+      url: siteUrl,
+      name: "Rajat Kumar R",
+      description: "Portfolio of Rajat Kumar R - Software Architect & Developer",
+      publisher: {
+        "@id": `${siteUrl}/#person`,
+      },
+    },
+    {
+      "@type": "Person",
+      "@id": `${siteUrl}/#person`,
+      name: "Rajat Kumar R",
+      jobTitle: "Software Architect & Developer",
+      url: siteUrl,
+      sameAs: [
+        "https://github.com/rajatkumarr",
+        "https://linkedin.com/in/rajatkumarr",
+      ],
+      knowsAbout: [
+        "Python",
+        "Django",
+        "Flask",
+        "FastAPI",
+        "Next.js",
+        "React",
+        "TypeScript",
+        "PostgreSQL",
+        "Docker",
+        "Kubernetes",
+        "AWS",
+        "GCP",
+      ],
+    },
+  ],
 };
 
 export default function RootLayout({
@@ -45,6 +92,12 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en" suppressHydrationWarning>
+      <head>
+        <script
+          type="application/ld+json"
+          dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
+        />
+      </head>
       <body
         className={`${geistSans.variable} ${geistMono.variable} antialiased min-h-screen flex flex-col`}
       >

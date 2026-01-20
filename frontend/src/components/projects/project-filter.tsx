@@ -2,12 +2,12 @@
 
 import { cn } from "@/lib/utils";
 
-export type ProjectCategory = "All" | "Web Dev" | "Backend" | "DevOps";
+export type ProjectCategory = string;
 
 interface ProjectFilterProps {
-  categories: ProjectCategory[];
-  activeCategory: ProjectCategory;
-  onCategoryChange: (category: ProjectCategory) => void;
+  categories: string[];
+  activeCategory: string;
+  onCategoryChange: (category: string) => void;
   className?: string;
 }
 

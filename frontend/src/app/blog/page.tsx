@@ -1,76 +1,107 @@
-"use client";
-
-import { useState, useMemo } from "react";
+import type { Metadata } from "next";
+import { fetchAPI, getStrapiMedia } from "@/lib/strapi";
+import type { StrapiResponse, BlogPost, Category } from "@/lib/strapi/types";
 import { Reveal } from "@/components/animations/reveal";
-import { ArticleGrid, CategoryFilter, type Article } from "@/components/blog";
+import { BlogPageClient } from "./blog-page-client";
+import type { Article } from "@/components/blog";
 
-// Placeholder articles data (will connect to Strapi later)
-const placeholderArticles: Article[] = [
-  {
-    id: "1",
-    slug: "building-trading-platform-nextjs-kafka",
-    title: "Building a Trading Platform with Next.js and Kafka",
-    excerpt:
-      "Learn how to build a high-performance trading platform using Next.js for the frontend and Apache Kafka for real-time event streaming and data processing.",
-    category: "Tech",
-    readingTime: 8,
-    publishedAt: "2024-01-15",
-  },
-  {
-    id: "2",
-    slug: "managing-indias-fastest-supercomputer",
-    title: "Managing India's Fastest Supercomputer: Lessons Learned",
-    excerpt:
-      "Insights and lessons from managing one of the most powerful supercomputers in India, covering infrastructure, monitoring, and optimization strategies.",
-    category: "DevOps",
-    readingTime: 12,
-    publishedAt: "2024-01-10",
-  },
-  {
-    id: "3",
-    slug: "monolith-to-microservices-performance",
-    title: "From Monolith to Microservices: A 90% Performance Improvement",
-    excerpt:
-      "A case study on migrating a monolithic application to microservices architecture, achieving significant performance gains and improved scalability.",
-    category: "Architecture",
-    readingTime: 10,
-    publishedAt: "2024-01-05",
-  },
-  {
-    id: "4",
-    slug: "leveraging-ai-tools-software-development",
-    title: "Leveraging AI Tools in Software Development",
-    excerpt:
-      "Exploring how AI-powered tools are transforming software development workflows, from code generation to automated testing and documentation.",
-    category: "AI",
-    readingTime: 6,
-    publishedAt: "2024-01-01",
-  },
-  {
-    id: "5",
-    slug: "realtime-dashboards-django-plotly",
-    title: "Building Real-time Dashboards with Django and Plotly",
-    excerpt:
-      "A comprehensive guide to creating interactive, real-time data visualization dashboards using Django backend and Plotly for dynamic charts.",
-    category: "Web Dev",
-    readingTime: 7,
-    publishedAt: "2023-12-28",
-  },
-];
+export const metadata: Metadata = {
+  title: "Blog | Rajat Kumar R",
+  description:
+    "Thoughts on software development, architecture, DevOps, and lessons learned from building scalable systems.",
+};
 
-const categories = ["All", "Tech", "DevOps", "Architecture", "AI", "Web Dev"];
+// Transform Strapi BlogPost to Article format used by components
+// Strapi 5 uses flat response format (no .attributes wrapper)
+function transformBlogPostToArticle(post: BlogPost): Article | null {
+  // Defensive check for valid post structure
+  if (!post || !post.slug) {
+    return null;
+  }
 
-export default function BlogPage() {
-  const [activeCategory, setActiveCategory] = useState("All");
+  return {
+    id: post.id?.toString() || "",
+    slug: post.slug || "",
+    title: post.title || "Untitled",
+    excerpt: post.excerpt || "",
+    category: post.category?.name || "Uncategorized",
+    readingTime: post.reading_time || 5,
+    publishedAt: post.published_date || post.publishedAt || new Date().toISOString(),
+    imageUrl: post.cover_image?.url ? getStrapiMedia(post.cover_image.url) || undefined : undefined,
+  };
+}
 
-  const filteredArticles = useMemo(() => {
-    if (activeCategory === "All") {
-      return placeholderArticles;
+async function getBlogPosts(): Promise<Article[]> {
+  try {
+    const response = await fetchAPI<StrapiResponse<BlogPost[]>>({
+      endpoint: "/blog-posts",
+      query: {
+        populate: ["cover_image", "category"],
+        sort: ["published_date:desc"],
+        pagination: {
+          pageSize: 100,
+        },
+      },
+      tags: ["blog-posts"],
+      revalidate: 3600,
+    });
+
+    if (!response?.data || !Array.isArray(response.data) || response.data.length === 0) {
+      return [];
     }
-    return placeholderArticles.filter(
-      (article) => article.category === activeCategory
-    );
-  }, [activeCategory]);
+
+    // Transform and filter out any null results
+    return response.data
+      .map(transformBlogPostToArticle)
+      .filter((article): article is Article => article !== null);
+  } catch (error) {
+    console.error("Failed to fetch blog posts:", error);
+    return [];
+  }
+}
+
+async function getBlogCategories(): Promise<string[]> {
+  try {
+    const response = await fetchAPI<StrapiResponse<Category[]>>({
+      endpoint: "/categories",
+      query: {
+        filters: {
+          type: {
+            $in: ["blog", "both"],
+          },
+        },
+        sort: ["name:asc"],
+      },
+      tags: ["categories"],
+      revalidate: 3600,
+    });
+
+    if (!response?.data || response.data.length === 0) {
+      return [];
+    }
+
+    // Strapi 5 flat response format
+    return response.data.map((cat) => cat.name);
+  } catch (error) {
+    console.error("Failed to fetch categories:", error);
+    return [];
+  }
+}
+
+export default async function BlogPage() {
+  const [articles, categoryNames] = await Promise.all([
+    getBlogPosts(),
+    getBlogCategories(),
+  ]);
+
+  // Build categories array with "All" as first option
+  const categories = ["All", ...categoryNames];
+
+  // Extract unique categories from articles if API categories are empty
+  const categoriesFromArticles =
+    categoryNames.length === 0
+      ? ["All", ...Array.from(new Set(articles.map((a) => a.category))).sort()]
+      : categories;
 
   return (
     <>
@@ -93,19 +124,10 @@ export default function BlogPage() {
       {/* Category Filter & Articles */}
       <section className="py-12 px-4">
         <div className="container mx-auto">
-          {/* Category Filter */}
-          <Reveal delay={0.3}>
-            <div className="flex justify-center mb-12">
-              <CategoryFilter
-                categories={categories}
-                activeCategory={activeCategory}
-                onCategoryChange={setActiveCategory}
-              />
-            </div>
-          </Reveal>
-
-          {/* Article Grid */}
-          <ArticleGrid articles={filteredArticles} />
+          <BlogPageClient
+            articles={articles}
+            categories={categoriesFromArticles}
+          />
         </div>
       </section>
     </>

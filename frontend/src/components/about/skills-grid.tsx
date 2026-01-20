@@ -2,6 +2,7 @@
 
 import { Reveal } from "@/components/animations/reveal";
 import { Badge } from "@/components/ui/badge";
+import type { Skill as StrapiSkill } from "@/lib/strapi/types";
 
 interface SkillCategory {
   name: string;
@@ -9,7 +10,8 @@ interface SkillCategory {
   icon: string;
 }
 
-const skillCategories: SkillCategory[] = [
+// Default fallback data when API returns empty
+const defaultSkillCategories: SkillCategory[] = [
   {
     name: "Languages & Frameworks",
     icon: "code",
@@ -54,6 +56,33 @@ const skillCategories: SkillCategory[] = [
     skills: ["Git", "Jira", "Confluence", "Kafka"],
   },
 ];
+
+// Map Strapi skill categories to display names and icons
+const categoryDisplayMap: Record<string, { name: string; icon: string }> = {
+  frontend: { name: "Frontend", icon: "code" },
+  backend: { name: "Backend", icon: "database" },
+  devops: { name: "DevOps & Cloud", icon: "cloud" },
+  design: { name: "Design", icon: "tools" },
+  other: { name: "Other", icon: "tools" },
+};
+
+// Transform Strapi skills data to component format (grouped by category)
+function transformSkills(skills: StrapiSkill[]): SkillCategory[] {
+  const grouped = skills.reduce((acc, skill) => {
+    const category = skill.category || "other";
+    if (!acc[category]) {
+      acc[category] = [];
+    }
+    acc[category].push(skill.name);
+    return acc;
+  }, {} as Record<string, string[]>);
+
+  return Object.entries(grouped).map(([category, skillNames]) => ({
+    name: categoryDisplayMap[category]?.name || category,
+    icon: categoryDisplayMap[category]?.icon || "tools",
+    skills: skillNames,
+  }));
+}
 
 const iconMap: Record<string, React.ReactNode> = {
   code: (
@@ -143,7 +172,16 @@ const iconMap: Record<string, React.ReactNode> = {
   ),
 };
 
-export function SkillsGrid() {
+interface SkillsGridProps {
+  skills?: StrapiSkill[];
+}
+
+export function SkillsGrid({ skills }: SkillsGridProps) {
+  // Transform Strapi data or use defaults
+  const skillCategories: SkillCategory[] = skills && skills.length > 0
+    ? transformSkills(skills)
+    : defaultSkillCategories;
+
   return (
     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
       {skillCategories.map((category, index) => (
