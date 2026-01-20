@@ -1,0 +1,16 @@
+{
+  "permissions": {
+    "allow": [
+      "WebFetch(domain:strapi.io)",
+      "WebFetch(domain:ashfall.studio)",
+      "WebFetch(domain:snp.agency)",
+      "WebFetch(domain:gianlucagradogna.com)",
+      "WebFetch(domain:www.phantom.land)",
+      "WebFetch(domain:docs.strapi.io)",
+      "Bash(git init:*)",
+      "Bash(npm view:*)",
+      "WebFetch(domain:registry.npmjs.org)",
+      "WebFetch(domain:github.com)"
+    ]
+  }
+}

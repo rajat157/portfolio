@@ -1,0 +1,31 @@
+# Dependencies
+node_modules/
+
+# Build
+build/
+dist/
+
+# Environment
+.env
+
+# Strapi
+.tmp/
+.cache/
+public/uploads/*
+!public/uploads/.gitkeep
+
+# Logs
+*.log
+
+# IDE
+.idea/
+.vscode/
+*.swp
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Database
+*.sqlite
+*.db
