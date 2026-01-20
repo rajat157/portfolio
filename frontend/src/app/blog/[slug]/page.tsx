@@ -200,7 +200,7 @@ export default async function BlogArticlePage({ params }: BlogArticlePageProps) 
 
   const relatedArticles = await getRelatedPosts(slug);
 
-  // Generate TOC from the article content
+  // Generate TOC from the article content (markdown format)
   const tocItems = generateToc(article.content);
 
   return (

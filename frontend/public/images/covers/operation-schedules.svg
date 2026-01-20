@@ -1,0 +1,138 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1920 1080">
+  <defs>
+    <linearGradient id="bg5" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#0a0a0f"/>
+      <stop offset="50%" stop-color="#1a1a2e"/>
+      <stop offset="100%" stop-color="#0f2027"/>
+    </linearGradient>
+    <linearGradient id="accent5" x1="0%" y1="0%" x2="100%" y2="0%">
+      <stop offset="0%" stop-color="#14b8a6"/>
+      <stop offset="100%" stop-color="#f59e0b"/>
+    </linearGradient>
+    <linearGradient id="nodeGlow" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#14b8a6"/>
+      <stop offset="100%" stop-color="#0d9488"/>
+    </linearGradient>
+  </defs>
+
+  <!-- Background -->
+  <rect width="1920" height="1080" fill="url(#bg5)"/>
+
+  <!-- Timeline grid -->
+  <g opacity="0.1" stroke="#14b8a6" stroke-width="1">
+    <line x1="200" y1="200" x2="200" y2="800"/>
+    <line x1="500" y1="200" x2="500" y2="800"/>
+    <line x1="800" y1="200" x2="800" y2="800"/>
+    <line x1="1100" y1="200" x2="1100" y2="800"/>
+    <line x1="1400" y1="200" x2="1400" y2="800"/>
+    <line x1="1700" y1="200" x2="1700" y2="800"/>
+    <line x1="200" y1="200" x2="1700" y2="200"/>
+    <line x1="200" y1="400" x2="1700" y2="400"/>
+    <line x1="200" y1="600" x2="1700" y2="600"/>
+    <line x1="200" y1="800" x2="1700" y2="800"/>
+  </g>
+
+  <!-- Time labels -->
+  <g font-family="monospace" font-size="14" fill="#555">
+    <text x="200" y="180" text-anchor="middle">00:00</text>
+    <text x="500" y="180" text-anchor="middle">04:00</text>
+    <text x="800" y="180" text-anchor="middle">08:00</text>
+    <text x="1100" y="180" text-anchor="middle">12:00</text>
+    <text x="1400" y="180" text-anchor="middle">16:00</text>
+    <text x="1700" y="180" text-anchor="middle">20:00</text>
+  </g>
+
+  <!-- Workflow nodes and connections -->
+  <g>
+    <!-- Row 1: Data Pipeline -->
+    <rect x="250" y="250" width="200" height="80" fill="#1a1a2e" stroke="#14b8a6" stroke-width="2" rx="8"/>
+    <text x="350" y="295" text-anchor="middle" font-family="system-ui, sans-serif" font-size="16" fill="#fff">Data Fetch</text>
+    <circle cx="250" cy="290" r="8" fill="#14b8a6"/>
+    <circle cx="450" cy="290" r="8" fill="#14b8a6"/>
+
+    <path d="M458,290 L550,290" stroke="#14b8a6" stroke-width="2" stroke-dasharray="8,4"/>
+
+    <rect x="550" y="250" width="200" height="80" fill="#1a1a2e" stroke="#f59e0b" stroke-width="2" rx="8"/>
+    <text x="650" y="295" text-anchor="middle" font-family="system-ui, sans-serif" font-size="16" fill="#fff">Transform</text>
+    <circle cx="550" cy="290" r="8" fill="#f59e0b"/>
+    <circle cx="750" cy="290" r="8" fill="#f59e0b"/>
+
+    <path d="M758,290 L850,290" stroke="#f59e0b" stroke-width="2" stroke-dasharray="8,4"/>
+
+    <rect x="850" y="250" width="200" height="80" fill="#1a1a2e" stroke="#14b8a6" stroke-width="2" rx="8"/>
+    <text x="950" y="295" text-anchor="middle" font-family="system-ui, sans-serif" font-size="16" fill="#fff">Load DB</text>
+    <circle cx="850" cy="290" r="8" fill="#14b8a6"/>
+    <circle cx="1050" cy="290" r="8" fill="#00ff88"/>
+
+    <!-- Row 2: Batch Jobs -->
+    <rect x="400" y="450" width="250" height="80" fill="#1a1a2e" stroke="#e879f9" stroke-width="2" rx="8"/>
+    <text x="525" y="495" text-anchor="middle" font-family="system-ui, sans-serif" font-size="16" fill="#fff">Batch Processing</text>
+    <circle cx="400" cy="490" r="8" fill="#e879f9"/>
+    <circle cx="650" cy="490" r="8" fill="#e879f9"/>
+
+    <path d="M658,490 L800,490" stroke="#e879f9" stroke-width="2" stroke-dasharray="8,4"/>
+
+    <rect x="800" y="450" width="200" height="80" fill="#1a1a2e" stroke="#14b8a6" stroke-width="2" rx="8"/>
+    <text x="900" y="495" text-anchor="middle" font-family="system-ui, sans-serif" font-size="16" fill="#fff">Report Gen</text>
+    <circle cx="800" cy="490" r="8" fill="#14b8a6"/>
+    <circle cx="1000" cy="490" r="8" fill="#14b8a6"/>
+
+    <path d="M1008,490 L1150,490" stroke="#14b8a6" stroke-width="2" stroke-dasharray="8,4"/>
+
+    <rect x="1150" y="450" width="200" height="80" fill="#1a1a2e" stroke="#f59e0b" stroke-width="2" rx="8"/>
+    <text x="1250" y="495" text-anchor="middle" font-family="system-ui, sans-serif" font-size="16" fill="#fff">Email Notify</text>
+    <circle cx="1150" cy="490" r="8" fill="#f59e0b"/>
+    <circle cx="1350" cy="490" r="8" fill="#00ff88"/>
+
+    <!-- Row 3: Maintenance -->
+    <rect x="600" y="650" width="250" height="80" fill="#1a1a2e" stroke="#38bdf8" stroke-width="2" rx="8"/>
+    <text x="725" y="695" text-anchor="middle" font-family="system-ui, sans-serif" font-size="16" fill="#fff">Cleanup Jobs</text>
+    <circle cx="600" cy="690" r="8" fill="#38bdf8"/>
+    <circle cx="850" cy="690" r="8" fill="#38bdf8"/>
+
+    <path d="M858,690 L1000,690" stroke="#38bdf8" stroke-width="2" stroke-dasharray="8,4"/>
+
+    <rect x="1000" y="650" width="200" height="80" fill="#1a1a2e" stroke="#14b8a6" stroke-width="2" rx="8"/>
+    <text x="1100" y="695" text-anchor="middle" font-family="system-ui, sans-serif" font-size="16" fill="#fff">Backup</text>
+    <circle cx="1000" cy="690" r="8" fill="#14b8a6"/>
+    <circle cx="1200" cy="690" r="8" fill="#00ff88"/>
+
+    <!-- Dependency arrows (vertical) -->
+    <path d="M950,330 L950,380 L525,380 L525,450" stroke="#888" stroke-width="1" fill="none" stroke-dasharray="4,4"/>
+    <path d="M900,530 L900,580 L725,580 L725,650" stroke="#888" stroke-width="1" fill="none" stroke-dasharray="4,4"/>
+  </g>
+
+  <!-- Legend -->
+  <g transform="translate(1500, 250)">
+    <rect x="0" y="0" width="300" height="200" fill="#1a1a2e" stroke="#2d2d4a" stroke-width="2" rx="8" opacity="0.9"/>
+    <text x="20" y="35" font-family="system-ui, sans-serif" font-size="18" fill="#fff">Status</text>
+
+    <circle cx="35" cy="70" r="8" fill="#00ff88"/>
+    <text x="55" y="75" font-family="system-ui, sans-serif" font-size="14" fill="#888">Completed</text>
+
+    <circle cx="35" cy="110" r="8" fill="#14b8a6"/>
+    <text x="55" y="115" font-family="system-ui, sans-serif" font-size="14" fill="#888">Running</text>
+
+    <circle cx="35" cy="150" r="8" fill="#f59e0b"/>
+    <text x="55" y="155" font-family="system-ui, sans-serif" font-size="14" fill="#888">Pending</text>
+
+    <circle cx="35" cy="190" r="8" fill="#e879f9"/>
+    <text x="55" y="195" font-family="system-ui, sans-serif" font-size="14" fill="#888">Scheduled</text>
+  </g>
+
+  <!-- Glow effect -->
+  <ellipse cx="960" cy="500" rx="500" ry="250" fill="#14b8a6" opacity="0.03"/>
+
+  <!-- Title -->
+  <text x="960" y="920" text-anchor="middle" font-family="system-ui, -apple-system, sans-serif" font-size="72" font-weight="700" fill="#ffffff">
+    Operation Schedules
+  </text>
+
+  <!-- Subtitle -->
+  <text x="960" y="1000" text-anchor="middle" font-family="system-ui, -apple-system, sans-serif" font-size="32" fill="#888888">
+    FastAPI • Scheduling • Workflows
+  </text>
+
+  <!-- Accent bar -->
+  <rect x="860" y="1040" width="200" height="4" fill="url(#accent5)" rx="2"/>
+</svg>

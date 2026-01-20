@@ -11,6 +11,42 @@ export const metadata: Metadata = {
     "Thoughts on software development, architecture, DevOps, and lessons learned from building scalable systems.",
 };
 
+// Default fallback articles when API is unavailable
+const defaultArticles: Article[] = [
+  {
+    id: "1",
+    slug: "building-real-time-trading-platforms",
+    title: "Building Real-Time Trading Platforms",
+    excerpt: "Lessons learned from architecting high-frequency trading systems with modern tech stack. Covers Kafka, WebSocket, and low-latency design patterns.",
+    category: "Architecture",
+    readingTime: 8,
+    publishedAt: "2026-01-15",
+    imageUrl: "/images/covers/building-real-time-trading-platforms.svg",
+  },
+  {
+    id: "2",
+    slug: "ai-accelerated-development",
+    title: "AI-Accelerated Development",
+    excerpt: "How I use Claude and Gemini to 10x my development productivity. Practical tips and workflow optimizations.",
+    category: "AI",
+    readingTime: 5,
+    publishedAt: "2026-01-10",
+    imageUrl: "/images/covers/ai-accelerated-development.svg",
+  },
+  {
+    id: "3",
+    slug: "managing-supercomputers",
+    title: "Managing India's Fastest Supercomputer",
+    excerpt: "My experience managing SahasraT at IISc with 33,000 cores. SLURM job scheduling, monitoring, and performance optimization.",
+    category: "DevOps",
+    readingTime: 12,
+    publishedAt: "2026-01-05",
+    imageUrl: "/images/covers/managing-supercomputers.svg",
+  },
+];
+
+const defaultBlogCategories = ["All", "Architecture", "AI", "DevOps"];
+
 // Transform Strapi BlogPost to Article format used by components
 // Strapi 5 uses flat response format (no .attributes wrapper)
 function transformBlogPostToArticle(post: BlogPost): Article | null {
@@ -89,19 +125,25 @@ async function getBlogCategories(): Promise<string[]> {
 }
 
 export default async function BlogPage() {
-  const [articles, categoryNames] = await Promise.all([
+  const [apiArticles, categoryNames] = await Promise.all([
     getBlogPosts(),
     getBlogCategories(),
   ]);
 
-  // Build categories array with "All" as first option
-  const categories = ["All", ...categoryNames];
+  // Use API articles or fallback to defaults
+  const articles = apiArticles.length > 0 ? apiArticles : defaultArticles;
 
-  // Extract unique categories from articles if API categories are empty
-  const categoriesFromArticles =
-    categoryNames.length === 0
-      ? ["All", ...Array.from(new Set(articles.map((a) => a.category))).sort()]
-      : categories;
+  // Build categories array with "All" as first option
+  let categories: string[];
+  if (categoryNames.length > 0) {
+    categories = ["All", ...categoryNames];
+  } else if (apiArticles.length > 0) {
+    // Extract unique categories from articles if API categories are empty
+    categories = ["All", ...Array.from(new Set(articles.map((a) => a.category))).sort()];
+  } else {
+    // Use default categories when no API data
+    categories = defaultBlogCategories;
+  }
 
   return (
     <>
@@ -126,7 +168,7 @@ export default async function BlogPage() {
         <div className="container mx-auto">
           <BlogPageClient
             articles={articles}
-            categories={categoriesFromArticles}
+            categories={categories}
           />
         </div>
       </section>

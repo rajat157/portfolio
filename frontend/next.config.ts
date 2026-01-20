@@ -1,7 +1,11 @@
 import type { NextConfig } from "next";
 
+const isDev = process.env.NODE_ENV === "development";
+
 const nextConfig: NextConfig = {
   images: {
+    // Disable image optimization in development to allow localhost
+    unoptimized: isDev,
     remotePatterns: [
       {
         protocol: "http",
@@ -10,9 +14,20 @@ const nextConfig: NextConfig = {
         pathname: "/uploads/**",
       },
       {
+        protocol: "http",
+        hostname: "127.0.0.1",
+        port: "1337",
+        pathname: "/uploads/**",
+      },
+      {
         protocol: "https",
         hostname: "**.strapiapp.com",
         pathname: "/uploads/**",
+      },
+      {
+        protocol: "https",
+        hostname: "cdn.simpleicons.org",
+        pathname: "/**",
       },
     ],
   },

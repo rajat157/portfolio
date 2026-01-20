@@ -2,6 +2,8 @@
 
 import { useRef } from "react";
 import Link from "next/link";
+import ReactMarkdown from "react-markdown";
+import remarkGfm from "remark-gfm";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Card } from "@/components/ui/card";
@@ -10,6 +12,7 @@ import { ReadingProgress } from "@/components/blog/reading-progress";
 import { ArticleHeader } from "@/components/blog/article-header";
 import { ArticleToc } from "@/components/blog/article-toc";
 import type { TocItem } from "@/lib/utils/generate-toc";
+import { slugify } from "@/lib/utils/generate-toc";
 import { Twitter, Linkedin, Link2, ArrowLeft } from "lucide-react";
 
 export interface ArticleData {
@@ -116,17 +119,93 @@ export function ArticleContent({
 
             {/* Article Content */}
             <Reveal delay={0.5}>
-              <div
-                className="prose prose-lg dark:prose-invert max-w-none
-                  prose-headings:scroll-mt-24
-                  prose-h2:text-2xl prose-h2:font-bold prose-h2:mt-12 prose-h2:mb-4
-                  prose-h3:text-xl prose-h3:font-semibold prose-h3:mt-8 prose-h3:mb-3
-                  prose-p:text-muted-foreground prose-p:leading-relaxed prose-p:mb-4
-                  prose-ul:text-muted-foreground prose-ul:my-4
-                  prose-li:my-1
-                  prose-a:text-primary prose-a:no-underline hover:prose-a:underline"
-                dangerouslySetInnerHTML={{ __html: article.content }}
-              />
+              <div className="max-w-none">
+                {article.content ? (
+                  <ReactMarkdown
+                    remarkPlugins={[remarkGfm]}
+                    components={{
+                      h1: ({ children }) => {
+                        const text = String(children);
+                        const id = slugify(text);
+                        return <h1 id={id} className="text-4xl font-bold tracking-tight mt-12 mb-6 text-foreground scroll-mt-24">{children}</h1>;
+                      },
+                      h2: ({ children }) => {
+                        const text = String(children);
+                        const id = slugify(text);
+                        return <h2 id={id} className="text-2xl font-bold tracking-tight mt-12 mb-4 text-foreground scroll-mt-24 border-b border-border/50 pb-2">{children}</h2>;
+                      },
+                      h3: ({ children }) => {
+                        const text = String(children);
+                        const id = slugify(text);
+                        return <h3 id={id} className="text-xl font-semibold mt-8 mb-3 text-foreground scroll-mt-24">{children}</h3>;
+                      },
+                      h4: ({ children }) => {
+                        const text = String(children);
+                        const id = slugify(text);
+                        return <h4 id={id} className="text-lg font-semibold mt-6 mb-2 text-foreground/90 scroll-mt-24">{children}</h4>;
+                      },
+                      p: ({ children }) => (
+                        <p className="text-muted-foreground leading-relaxed mb-6 text-base">{children}</p>
+                      ),
+                      ul: ({ children }) => (
+                        <ul className="list-disc list-outside ml-6 my-6 space-y-2 text-muted-foreground marker:text-primary/70">{children}</ul>
+                      ),
+                      ol: ({ children }) => (
+                        <ol className="list-decimal list-outside ml-6 my-6 space-y-2 text-muted-foreground marker:text-foreground/50">{children}</ol>
+                      ),
+                      li: ({ children }) => (
+                        <li className="pl-2 leading-relaxed">{children}</li>
+                      ),
+                      blockquote: ({ children }) => (
+                        <blockquote className="border-l-4 border-primary/60 pl-6 py-4 my-8 bg-muted/30 rounded-r-lg italic text-muted-foreground/90">{children}</blockquote>
+                      ),
+                      pre: ({ children }) => (
+                        <pre className="bg-muted/80 border border-border rounded-lg p-4 my-6 overflow-x-auto">{children}</pre>
+                      ),
+                      code: ({ className, children, ...props }) => {
+                        const isInline = !className;
+                        if (isInline) {
+                          return <code className="bg-muted px-1.5 py-0.5 rounded text-sm font-mono text-primary/90 border border-border/50" {...props}>{children}</code>;
+                        }
+                        return <code className="text-sm font-mono text-foreground/90" {...props}>{children}</code>;
+                      },
+                      a: ({ href, children }) => (
+                        <a
+                          href={href}
+                          target={href?.startsWith("http") ? "_blank" : undefined}
+                          rel={href?.startsWith("http") ? "noopener noreferrer" : undefined}
+                          className="text-primary hover:text-primary/80 underline underline-offset-4 decoration-primary/50 hover:decoration-primary transition-colors"
+                        >
+                          {children}
+                        </a>
+                      ),
+                      img: ({ src, alt }) => (
+                        <figure className="my-8">
+                          <div className="rounded-lg overflow-hidden border border-border/50">
+                            <img src={src} alt={alt || "Article image"} className="w-full h-auto" />
+                          </div>
+                          {alt && (
+                            <figcaption className="text-sm text-muted-foreground/70 text-center mt-3 italic">{alt}</figcaption>
+                          )}
+                        </figure>
+                      ),
+                      strong: ({ children }) => (
+                        <strong className="font-semibold text-foreground">{children}</strong>
+                      ),
+                      em: ({ children }) => (
+                        <em className="italic">{children}</em>
+                      ),
+                      hr: () => (
+                        <hr className="my-8 border-border/50" />
+                      ),
+                    }}
+                  >
+                    {article.content}
+                  </ReactMarkdown>
+                ) : (
+                  <p className="text-muted-foreground">No content available.</p>
+                )}
+              </div>
             </Reveal>
 
             {/* Desktop TOC */}

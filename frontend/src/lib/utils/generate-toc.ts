@@ -5,26 +5,40 @@ export interface TocItem {
 }
 
 /**
- * Generates a table of contents from HTML content by extracting headings.
- * This is a placeholder implementation that works with rendered HTML.
- * In a real implementation, this would parse markdown or rich text content.
+ * Generates a table of contents from content by extracting headings.
+ * Supports both HTML headings and Markdown headings.
  *
- * @param content - The HTML content string to parse
+ * @param content - The content string to parse (HTML or Markdown)
  * @returns Array of TocItem objects representing the headings
  */
 export function generateToc(content: string): TocItem[] {
-  // Placeholder implementation - in production, this would parse
-  // actual content from a CMS like Strapi
-  const headingRegex = /<h([2-4])[^>]*id="([^"]*)"[^>]*>([^<]*)<\/h[2-4]>/gi;
   const items: TocItem[] = [];
 
+  // Try to parse as HTML first (for pre-rendered content)
+  const htmlHeadingRegex = /<h([2-4])[^>]*id="([^"]*)"[^>]*>([^<]*)<\/h[2-4]>/gi;
   let match;
-  while ((match = headingRegex.exec(content)) !== null) {
+  while ((match = htmlHeadingRegex.exec(content)) !== null) {
     items.push({
       level: parseInt(match[1], 10),
       id: match[2],
       text: match[3],
     });
+  }
+
+  // If no HTML headings found, try to parse as Markdown
+  if (items.length === 0) {
+    // Match markdown headings: ## Heading, ### Heading, #### Heading
+    const markdownHeadingRegex = /^(#{2,4})\s+(.+)$/gm;
+    while ((match = markdownHeadingRegex.exec(content)) !== null) {
+      const level = match[1].length; // Number of # symbols
+      const text = match[2].trim();
+      const id = slugify(text);
+      items.push({
+        level,
+        id,
+        text,
+      });
+    }
   }
 
   return items;

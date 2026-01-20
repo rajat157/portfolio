@@ -180,7 +180,7 @@ export default async function AboutPage() {
 
           <div className="space-y-6">
             {education.map((edu, index) => (
-              <Reveal key={edu.id} delay={index * 0.1}>
+              <Reveal key={edu.id ?? index} delay={index * 0.1}>
                 <div className="bg-card border border-border rounded-xl p-8 flex items-start gap-6">
                   <div className="p-3 bg-muted rounded-lg">
                     <GraduationCap className="w-8 h-8" />

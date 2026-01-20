@@ -2,6 +2,8 @@ import { Metadata } from "next";
 import Image from "next/image";
 import Link from "next/link";
 import { notFound } from "next/navigation";
+import ReactMarkdown from "react-markdown";
+import remarkGfm from "remark-gfm";
 import { ArrowLeft, ExternalLink, Github, Calendar, User, Briefcase, Layers } from "lucide-react";
 
 import { Badge } from "@/components/ui/badge";
@@ -328,13 +330,55 @@ export default async function ProjectDetailPage({
             <div className="lg:col-span-2">
               <Reveal delay={0.2}>
                 <h2 className="text-2xl font-bold mb-6">About the Project</h2>
-                <div className="prose prose-neutral dark:prose-invert max-w-none">
-                  {/* Render content if available, otherwise use description */}
-                  {(project.content || project.description).split("\n\n").map((paragraph, index) => (
-                    <p key={index} className="text-muted-foreground mb-4 leading-relaxed">
-                      {paragraph}
-                    </p>
-                  ))}
+                <div className="max-w-none">
+                  {project.content ? (
+                    <ReactMarkdown
+                      remarkPlugins={[remarkGfm]}
+                      components={{
+                        h1: ({ children }) => <h1 className="text-3xl font-bold tracking-tight mt-10 mb-4 text-foreground">{children}</h1>,
+                        h2: ({ children }) => <h2 className="text-2xl font-bold tracking-tight mt-8 mb-4 text-foreground">{children}</h2>,
+                        h3: ({ children }) => <h3 className="text-xl font-semibold mt-6 mb-3 text-foreground">{children}</h3>,
+                        h4: ({ children }) => <h4 className="text-lg font-semibold mt-4 mb-2 text-foreground/90">{children}</h4>,
+                        p: ({ children }) => <p className="text-muted-foreground leading-relaxed mb-5">{children}</p>,
+                        ul: ({ children }) => <ul className="list-disc list-outside ml-6 my-5 space-y-2 text-muted-foreground marker:text-primary/70">{children}</ul>,
+                        ol: ({ children }) => <ol className="list-decimal list-outside ml-6 my-5 space-y-2 text-muted-foreground">{children}</ol>,
+                        li: ({ children }) => <li className="pl-2 leading-relaxed">{children}</li>,
+                        blockquote: ({ children }) => <blockquote className="border-l-4 border-primary/60 pl-6 py-3 my-6 bg-muted/30 rounded-r-lg italic text-muted-foreground/90">{children}</blockquote>,
+                        pre: ({ children }) => <pre className="bg-muted/80 border border-border rounded-lg p-4 my-5 overflow-x-auto">{children}</pre>,
+                        code: ({ className, children, ...props }) => {
+                          const isInline = !className;
+                          if (isInline) {
+                            return <code className="bg-muted px-1.5 py-0.5 rounded text-sm font-mono text-primary/90 border border-border/50" {...props}>{children}</code>;
+                          }
+                          return <code className="text-sm font-mono text-foreground/90" {...props}>{children}</code>;
+                        },
+                        a: ({ href, children }) => (
+                          <a
+                            href={href}
+                            target={href?.startsWith("http") ? "_blank" : undefined}
+                            rel={href?.startsWith("http") ? "noopener noreferrer" : undefined}
+                            className="text-primary hover:text-primary/80 underline underline-offset-4 decoration-primary/50 hover:decoration-primary transition-colors"
+                          >
+                            {children}
+                          </a>
+                        ),
+                        img: ({ src, alt }) => (
+                          <figure className="my-6">
+                            <div className="rounded-lg overflow-hidden border border-border/50">
+                              <img src={src} alt={alt || ""} className="w-full h-auto" />
+                            </div>
+                            {alt && <figcaption className="text-sm text-muted-foreground/70 text-center mt-2 italic">{alt}</figcaption>}
+                          </figure>
+                        ),
+                        strong: ({ children }) => <strong className="font-semibold text-foreground">{children}</strong>,
+                        em: ({ children }) => <em className="italic">{children}</em>,
+                      }}
+                    >
+                      {project.content}
+                    </ReactMarkdown>
+                  ) : (
+                    <p className="text-muted-foreground leading-relaxed">{project.description}</p>
+                  )}
                 </div>
               </Reveal>
             </div>

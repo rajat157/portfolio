@@ -14,6 +14,7 @@ const defaultProjects = [
     description: "Real-time trading platform built with Next.js 16, Docker, Redis, Kafka, and PostgreSQL",
     technologies: ["Next.js", "Docker", "Redis", "Kafka", "PostgreSQL"],
     category: "Web Dev" as const,
+    imageUrl: "/images/covers/tredye-trading-platform.svg",
   },
   {
     id: "2",
@@ -22,6 +23,7 @@ const defaultProjects = [
     description: "High-performance lab infrastructure system with 90% faster performance",
     technologies: ["Python", "Flask", "FastAPI", "MongoDB"],
     category: "Backend" as const,
+    imageUrl: "/images/covers/labbuild-2.svg",
   },
   {
     id: "3",
@@ -30,6 +32,7 @@ const defaultProjects = [
     description: "Django dashboard for monitoring SahasraT supercomputer at IISc",
     technologies: ["Django", "Python", "Linux", "HPC"],
     category: "DevOps" as const,
+    imageUrl: "/images/covers/supercomputer-dashboard.svg",
   },
 ];
 
@@ -42,6 +45,7 @@ const defaultBlogPosts = [
     category: "Architecture",
     readingTime: 8,
     publishedAt: "2026-01-15",
+    imageUrl: "/images/covers/building-real-time-trading-platforms.svg",
   },
   {
     id: "2",
@@ -51,6 +55,7 @@ const defaultBlogPosts = [
     category: "AI",
     readingTime: 5,
     publishedAt: "2026-01-10",
+    imageUrl: "/images/covers/ai-accelerated-development.svg",
   },
   {
     id: "3",
@@ -60,6 +65,7 @@ const defaultBlogPosts = [
     category: "DevOps",
     readingTime: 12,
     publishedAt: "2026-01-05",
+    imageUrl: "/images/covers/managing-supercomputers.svg",
   },
 ];
 

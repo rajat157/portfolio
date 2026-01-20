@@ -47,8 +47,9 @@
     },
     "category": {
       "type": "relation",
-      "relation": "oneToMany",
-      "target": "api::category.category"
+      "relation": "manyToOne",
+      "target": "api::category.category",
+      "inversedBy": "projects"
     },
     "featured": {
       "type": "boolean",

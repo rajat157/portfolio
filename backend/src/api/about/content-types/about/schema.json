@@ -19,9 +19,12 @@
       "type": "string",
       "required": true
     },
-    "bio": {
-      "type": "blocks",
+    "bio_short": {
+      "type": "text",
       "required": true
+    },
+    "bio_full": {
+      "type": "text"
     },
     "avatar": {
       "type": "media",
@@ -29,6 +32,13 @@
       "allowedTypes": [
         "images"
       ]
+    },
+    "location": {
+      "type": "string"
+    },
+    "available_for_work": {
+      "type": "boolean",
+      "default": true
     },
     "skills": {
       "type": "json"

@@ -1,0 +1,128 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1920 1080">
+  <defs>
+    <linearGradient id="bg4" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#0a0a0f"/>
+      <stop offset="50%" stop-color="#1a1a2e"/>
+      <stop offset="100%" stop-color="#16213e"/>
+    </linearGradient>
+    <linearGradient id="accent4" x1="0%" y1="0%" x2="100%" y2="0%">
+      <stop offset="0%" stop-color="#f39c12"/>
+      <stop offset="100%" stop-color="#e74c3c"/>
+    </linearGradient>
+    <linearGradient id="chartGreen" x1="0%" y1="100%" x2="0%" y2="0%">
+      <stop offset="0%" stop-color="#00ff88" stop-opacity="0.1"/>
+      <stop offset="100%" stop-color="#00ff88" stop-opacity="0.6"/>
+    </linearGradient>
+  </defs>
+
+  <!-- Background -->
+  <rect width="1920" height="1080" fill="url(#bg4)"/>
+
+  <!-- Dashboard panels -->
+  <g transform="translate(100, 150)">
+    <!-- Panel 1: Line chart -->
+    <rect x="0" y="0" width="500" height="300" fill="#1a1a2e" stroke="#2d2d4a" stroke-width="2" rx="8"/>
+    <text x="20" y="35" font-family="system-ui, sans-serif" font-size="18" fill="#fff">User Sessions</text>
+    <text x="420" y="35" font-family="system-ui, sans-serif" font-size="14" fill="#00ff88">+12.5%</text>
+
+    <!-- Chart area -->
+    <path d="M40,250 L100,220 L160,180 L220,200 L280,150 L340,130 L400,100 L460,80"
+          fill="none" stroke="#00ff88" stroke-width="3"/>
+    <path d="M40,250 L100,220 L160,180 L220,200 L280,150 L340,130 L400,100 L460,80 L460,250 L40,250"
+          fill="url(#chartGreen)"/>
+
+    <!-- Panel 2: Stats cards -->
+    <g transform="translate(540, 0)">
+      <rect x="0" y="0" width="240" height="140" fill="#1a1a2e" stroke="#2d2d4a" stroke-width="2" rx="8"/>
+      <text x="20" y="35" font-family="system-ui, sans-serif" font-size="14" fill="#888">CPU Usage</text>
+      <text x="20" y="90" font-family="system-ui, sans-serif" font-size="48" font-weight="700" fill="#00ff88">78%</text>
+
+      <rect x="280" y="0" width="240" height="140" fill="#1a1a2e" stroke="#2d2d4a" stroke-width="2" rx="8"/>
+      <text x="300" y="35" font-family="system-ui, sans-serif" font-size="14" fill="#888">Memory</text>
+      <text x="300" y="90" font-family="system-ui, sans-serif" font-size="48" font-weight="700" fill="#f39c12">64%</text>
+
+      <rect x="0" y="160" width="240" height="140" fill="#1a1a2e" stroke="#2d2d4a" stroke-width="2" rx="8"/>
+      <text x="20" y="195" font-family="system-ui, sans-serif" font-size="14" fill="#888">Active Users</text>
+      <text x="20" y="250" font-family="system-ui, sans-serif" font-size="48" font-weight="700" fill="#00b4d8">247</text>
+
+      <rect x="280" y="160" width="240" height="140" fill="#1a1a2e" stroke="#2d2d4a" stroke-width="2" rx="8"/>
+      <text x="300" y="195" font-family="system-ui, sans-serif" font-size="14" fill="#888">Requests/min</text>
+      <text x="300" y="250" font-family="system-ui, sans-serif" font-size="48" font-weight="700" fill="#e74c3c">1.2K</text>
+    </g>
+
+    <!-- Panel 3: Bar chart -->
+    <rect x="0" y="340" width="500" height="300" fill="#1a1a2e" stroke="#2d2d4a" stroke-width="2" rx="8"/>
+    <text x="20" y="375" font-family="system-ui, sans-serif" font-size="18" fill="#fff">API Endpoints</text>
+
+    <!-- Bars -->
+    <rect x="60" y="420" width="50" height="180" fill="#f39c12" rx="4"/>
+    <rect x="130" y="450" width="50" height="150" fill="#e74c3c" rx="4"/>
+    <rect x="200" y="400" width="50" height="200" fill="#00ff88" rx="4"/>
+    <rect x="270" y="480" width="50" height="120" fill="#00b4d8" rx="4"/>
+    <rect x="340" y="440" width="50" height="160" fill="#9b59b6" rx="4"/>
+    <rect x="410" y="500" width="50" height="100" fill="#f39c12" rx="4"/>
+
+    <!-- Labels -->
+    <text x="85" y="620" font-family="monospace" font-size="12" fill="#888" text-anchor="middle">/api</text>
+    <text x="155" y="620" font-family="monospace" font-size="12" fill="#888" text-anchor="middle">/users</text>
+    <text x="225" y="620" font-family="monospace" font-size="12" fill="#888" text-anchor="middle">/data</text>
+    <text x="295" y="620" font-family="monospace" font-size="12" fill="#888" text-anchor="middle">/auth</text>
+    <text x="365" y="620" font-family="monospace" font-size="12" fill="#888" text-anchor="middle">/logs</text>
+    <text x="435" y="620" font-family="monospace" font-size="12" fill="#888" text-anchor="middle">/jobs</text>
+
+    <!-- Panel 4: Server list -->
+    <g transform="translate(540, 340)">
+      <rect x="0" y="0" width="520" height="300" fill="#1a1a2e" stroke="#2d2d4a" stroke-width="2" rx="8"/>
+      <text x="20" y="35" font-family="system-ui, sans-serif" font-size="18" fill="#fff">Server Status</text>
+
+      <!-- Server rows -->
+      <g transform="translate(20, 60)">
+        <circle cx="10" cy="15" r="6" fill="#00ff88"/>
+        <text x="30" y="20" font-family="monospace" font-size="14" fill="#fff">web-server-01</text>
+        <text x="400" y="20" font-family="monospace" font-size="14" fill="#00ff88">healthy</text>
+
+        <circle cx="10" cy="55" r="6" fill="#00ff88"/>
+        <text x="30" y="60" font-family="monospace" font-size="14" fill="#fff">web-server-02</text>
+        <text x="400" y="60" font-family="monospace" font-size="14" fill="#00ff88">healthy</text>
+
+        <circle cx="10" cy="95" r="6" fill="#f39c12"/>
+        <text x="30" y="100" font-family="monospace" font-size="14" fill="#fff">db-primary</text>
+        <text x="400" y="100" font-family="monospace" font-size="14" fill="#f39c12">warning</text>
+
+        <circle cx="10" cy="135" r="6" fill="#00ff88"/>
+        <text x="30" y="140" font-family="monospace" font-size="14" fill="#fff">db-replica</text>
+        <text x="400" y="140" font-family="monospace" font-size="14" fill="#00ff88">healthy</text>
+
+        <circle cx="10" cy="175" r="6" fill="#00ff88"/>
+        <text x="30" y="180" font-family="monospace" font-size="14" fill="#fff">cache-redis</text>
+        <text x="400" y="180" font-family="monospace" font-size="14" fill="#00ff88">healthy</text>
+
+        <circle cx="10" cy="215" r="6" fill="#00ff88"/>
+        <text x="30" y="220" font-family="monospace" font-size="14" fill="#fff">worker-queue</text>
+        <text x="400" y="220" font-family="monospace" font-size="14" fill="#00ff88">healthy</text>
+      </g>
+    </g>
+  </g>
+
+  <!-- MongoDB icon hint -->
+  <g transform="translate(1650, 200)" opacity="0.15">
+    <path d="M50,0 C55,30 70,50 70,100 C70,150 55,170 50,200 C45,170 30,150 30,100 C30,50 45,30 50,0"
+          fill="#00ff88" stroke="none"/>
+  </g>
+
+  <!-- Glow effect -->
+  <ellipse cx="960" cy="540" rx="600" ry="300" fill="#f39c12" opacity="0.03"/>
+
+  <!-- Title -->
+  <text x="1350" y="800" text-anchor="middle" font-family="system-ui, -apple-system, sans-serif" font-size="72" font-weight="700" fill="#ffffff">
+    Labbuild Dashboard
+  </text>
+
+  <!-- Subtitle -->
+  <text x="1350" y="880" text-anchor="middle" font-family="system-ui, -apple-system, sans-serif" font-size="32" fill="#888888">
+    Flask • MongoDB • Monitoring
+  </text>
+
+  <!-- Accent bar -->
+  <rect x="1250" y="920" width="200" height="4" fill="url(#accent4)" rx="2"/>
+</svg>
