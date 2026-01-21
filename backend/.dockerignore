@@ -1,0 +1,43 @@
+# Dependencies
+node_modules
+
+# Build outputs
+dist
+build
+.cache
+
+# Temp files
+.tmp
+
+# Environment files (use docker-compose env)
+.env
+.env.*
+
+# Git
+.git
+.gitignore
+
+# IDE
+.idea
+.vscode
+
+# Logs
+*.log
+logs
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# Strapi
+.strapi
+.strapi-updater.json
+.strapi-cloud.json
+exports
+license.txt
+
+# Scripts (not needed in container)
+scripts
+
+# Documentation
+*.md
