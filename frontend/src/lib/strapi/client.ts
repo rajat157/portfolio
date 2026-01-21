@@ -1,6 +1,9 @@
 import qs from "qs";
 
-const STRAPI_URL = process.env.NEXT_PUBLIC_STRAPI_URL || "http://localhost:1337";
+// Server-side uses internal URL, client-side uses relative paths (via nginx)
+const STRAPI_URL = typeof window === "undefined"
+  ? (process.env.STRAPI_URL || "http://localhost:1337")
+  : (process.env.NEXT_PUBLIC_STRAPI_URL || "");
 const STRAPI_TOKEN = process.env.STRAPI_API_TOKEN;
 
 interface FetchOptions {

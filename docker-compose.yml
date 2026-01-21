@@ -1,4 +1,18 @@
 services:
+  nginx:
+    container_name: portfolio-nginx
+    image: nginx:alpine
+    restart: unless-stopped
+    ports:
+      - "80:80"
+    volumes:
+      - ./nginx/nginx.conf:/etc/nginx/nginx.conf:ro
+    networks:
+      - portfolio
+    depends_on:
+      - frontend
+      - strapi
+
   frontend:
     container_name: portfolio-frontend
     build:
@@ -7,14 +21,15 @@ services:
     restart: unless-stopped
     env_file: .env
     environment:
-      NEXT_PUBLIC_STRAPI_URL: http://strapi:1337
+      # Server-side calls (SSR) - internal Docker network
+      STRAPI_URL: http://strapi:1337
+      # Client-side calls - empty = relative paths through nginx
+      NEXT_PUBLIC_STRAPI_URL: ""
       STRAPI_API_TOKEN: ${STRAPI_API_TOKEN}
-      NEXT_PUBLIC_SITE_URL: ${NEXT_PUBLIC_SITE_URL:-http://localhost:3000}
+      NEXT_PUBLIC_SITE_URL: ${NEXT_PUBLIC_SITE_URL:-http://localhost}
       REVALIDATION_SECRET: ${REVALIDATION_SECRET:-}
       RESEND_API_KEY: ${RESEND_API_KEY:-}
       CONTACT_EMAIL: ${CONTACT_EMAIL:-}
-    ports:
-      - "3000:3000"
     networks:
       - portfolio
     depends_on:
@@ -40,10 +55,9 @@ services:
       TRANSFER_TOKEN_SALT: ${TRANSFER_TOKEN_SALT}
       JWT_SECRET: ${JWT_SECRET}
       NODE_ENV: production
+      PUBLIC_URL: ${PUBLIC_URL:-http://localhost}
     volumes:
       - strapi-uploads:/opt/app/public/uploads
-    ports:
-      - "1337:1337"
     networks:
       - portfolio
     depends_on:
@@ -61,8 +75,6 @@ services:
       POSTGRES_DB: ${DATABASE_NAME}
     volumes:
       - postgres-data:/var/lib/postgresql/data
-    ports:
-      - "5432:5432"
     networks:
       - portfolio
     healthcheck:
