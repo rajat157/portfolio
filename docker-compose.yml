@@ -1,4 +1,23 @@
 services:
+  frontend:
+    container_name: portfolio-frontend
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+    restart: unless-stopped
+    environment:
+      NEXT_PUBLIC_STRAPI_URL: http://strapi:1337
+      STRAPI_API_TOKEN: ${STRAPI_API_TOKEN:-}
+      NEXT_PUBLIC_SITE_URL: http://localhost:3000
+      RESEND_API_KEY: ${RESEND_API_KEY:-}
+      CONTACT_EMAIL: ${CONTACT_EMAIL:-}
+    ports:
+      - "3000:3000"
+    networks:
+      - portfolio
+    depends_on:
+      - strapi
+
   strapi:
     container_name: portfolio-strapi
     build:

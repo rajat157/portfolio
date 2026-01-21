@@ -3,6 +3,7 @@ import type { NextConfig } from "next";
 const isDev = process.env.NODE_ENV === "development";
 
 const nextConfig: NextConfig = {
+  output: "standalone",
   images: {
     // Disable image optimization in development to allow localhost
     unoptimized: isDev,
@@ -16,6 +17,12 @@ const nextConfig: NextConfig = {
       {
         protocol: "http",
         hostname: "127.0.0.1",
+        port: "1337",
+        pathname: "/uploads/**",
+      },
+      {
+        protocol: "http",
+        hostname: "strapi",
         port: "1337",
         pathname: "/uploads/**",
       },

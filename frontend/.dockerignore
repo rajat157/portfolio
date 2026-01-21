@@ -1,0 +1,38 @@
+# Dependencies
+node_modules
+
+# Build output
+.next
+
+# Version control
+.git
+.gitignore
+
+# Documentation
+*.md
+
+# Environment files
+.env
+.env.*
+.env.local
+
+# IDE
+.vscode
+.idea
+
+# Cache
+.eslintcache
+.turbo
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Debug
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# Test
+coverage
+.nyc_output
