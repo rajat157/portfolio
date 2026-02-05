@@ -36,6 +36,11 @@ const nextConfig: NextConfig = {
         hostname: "cdn.simpleicons.org",
         pathname: "/**",
       },
+      {
+        protocol: "https",
+        hostname: "res.cloudinary.com",
+        pathname: "/**",
+      },
     ],
   },
 };
