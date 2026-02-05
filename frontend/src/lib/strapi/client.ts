@@ -40,7 +40,11 @@ export async function fetchAPI<T>({
   });
 
   if (!response.ok) {
+    // Log but don't throw on 404 - content might not exist yet
     console.error(`Strapi API error: ${response.status} ${response.statusText}`);
+    if (response.status === 404) {
+      return { data: null } as T; // Return empty data for missing content
+    }
     throw new Error(`Strapi API error: ${response.statusText}`);
   }
 
