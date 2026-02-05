@@ -14,11 +14,10 @@ export function ThemeToggle() {
     setMounted(true);
   }, []);
 
-  const toggleTheme = async () => {
-    const isDark = theme === "dark";
-    const newTheme = isDark ? "light" : "dark";
+  const toggleTheme = () => {
+    const newTheme = theme === "dark" ? "light" : "dark";
     
-    // Check if View Transitions API is supported
+    // Fallback for unsupported browsers or reduced motion
     if (
       !document.startViewTransition ||
       window.matchMedia("(prefers-reduced-motion: reduce)").matches
@@ -27,58 +26,24 @@ export function ThemeToggle() {
       return;
     }
 
-    // Get the click position (center of button)
+    // Set CSS custom properties for animation origin
     const button = buttonRef.current;
-    if (!button) {
-      setTheme(newTheme);
-      return;
+    if (button) {
+      const rect = button.getBoundingClientRect();
+      const x = rect.left + rect.width / 2;
+      const y = rect.top + rect.height / 2;
+      const radius = Math.hypot(
+        Math.max(x, window.innerWidth - x),
+        Math.max(y, window.innerHeight - y)
+      );
+      
+      document.documentElement.style.setProperty("--theme-x", `${x}px`);
+      document.documentElement.style.setProperty("--theme-y", `${y}px`);
+      document.documentElement.style.setProperty("--theme-radius", `${radius}px`);
     }
 
-    const rect = button.getBoundingClientRect();
-    const x = rect.left + rect.width / 2;
-    const y = rect.top + rect.height / 2;
-
-    // Calculate the radius needed to cover the entire screen
-    const endRadius = Math.hypot(
-      Math.max(x, window.innerWidth - x),
-      Math.max(y, window.innerHeight - y)
-    );
-
-    // Clip paths for animation (centered on toggle button)
-    const clipStart = `circle(0px at ${x}px ${y}px)`;
-    const clipEnd = `circle(${endRadius}px at ${x}px ${y}px)`;
-
-    // Start the view transition
-    const transition = document.startViewTransition(() => {
-      setTheme(newTheme);
-    });
-
-    // Wait for transition to be ready, then animate
-    await transition.ready;
-
-    if (isDark) {
-      // Dark to Light: expand light (new) FROM the toggle button
-      await document.documentElement.animate(
-        { clipPath: [clipStart, clipEnd] },
-        {
-          duration: 500,
-          easing: "ease-out",
-          fill: "forwards",
-          pseudoElement: "::view-transition-new(root)",
-        }
-      ).finished;
-    } else {
-      // Light to Dark: shrink light (old) TOWARDS the toggle button
-      await document.documentElement.animate(
-        { clipPath: [clipEnd, clipStart] },
-        {
-          duration: 500,
-          easing: "ease-out",
-          fill: "forwards",
-          pseudoElement: "::view-transition-old(root)",
-        }
-      ).finished;
-    }
+    // Trigger view transition - CSS handles the animation
+    document.startViewTransition(() => setTheme(newTheme));
   };
 
   if (!mounted) {

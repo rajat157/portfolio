@@ -131,18 +131,38 @@
   mix-blend-mode: normal;
 }
 
-/* After switch TO dark (light→dark): old=light on top, shrinks */
-html.dark::view-transition-old(root) {
-  z-index: 1;
-}
-html.dark::view-transition-new(root) {
-  z-index: 0;
-}
-
-/* After switch TO light (dark→light): new=light on top, expands */
+/* Dark to Light: new (light) expands from toggle */
 html:not(.dark)::view-transition-old(root) {
   z-index: 0;
 }
 html:not(.dark)::view-transition-new(root) {
   z-index: 1;
+  animation: theme-expand 0.5s ease-out forwards;
+}
+
+/* Light to Dark: old (light) shrinks towards toggle */
+html.dark::view-transition-old(root) {
+  z-index: 1;
+  animation: theme-shrink 0.5s ease-out forwards;
+}
+html.dark::view-transition-new(root) {
+  z-index: 0;
+}
+
+@keyframes theme-expand {
+  from {
+    clip-path: circle(0px at var(--theme-x, 50%) var(--theme-y, 50%));
+  }
+  to {
+    clip-path: circle(var(--theme-radius, 100vmax) at var(--theme-x, 50%) var(--theme-y, 50%));
+  }
+}
+
+@keyframes theme-shrink {
+  from {
+    clip-path: circle(var(--theme-radius, 100vmax) at var(--theme-x, 50%) var(--theme-y, 50%));
+  }
+  to {
+    clip-path: circle(0px at var(--theme-x, 50%) var(--theme-y, 50%));
+  }
 }
