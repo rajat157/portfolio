@@ -135,16 +135,29 @@
   mix-blend-mode: normal;
 }
 
-::view-transition-new(root) {
-  animation-name: theme-reveal;
-}
-
+/* Light to Dark: shrink the light (old) towards button, dark underneath */
 ::view-transition-old(root) {
-  animation: none;
-  z-index: -1;
+  z-index: 1;
+  animation-name: theme-shrink;
 }
 
-@keyframes theme-reveal {
+::view-transition-new(root) {
+  z-index: -1;
+  animation: none;
+}
+
+/* Dark to Light: expand the light (new) from button, dark underneath */
+.dark::view-transition-old(root) {
+  z-index: -1;
+  animation: none;
+}
+
+.dark::view-transition-new(root) {
+  z-index: 1;
+  animation-name: theme-expand;
+}
+
+@keyframes theme-expand {
   from {
     clip-path: circle(0px at var(--theme-toggle-x, 50%) var(--theme-toggle-y, 50%));
   }
@@ -153,12 +166,11 @@
   }
 }
 
-/* Reverse animation when switching to dark mode */
-.dark::view-transition-new(root) {
-  animation-name: none;
-}
-
-.dark::view-transition-old(root) {
-  animation-name: theme-reveal;
-  z-index: 1;
+@keyframes theme-shrink {
+  from {
+    clip-path: circle(var(--theme-toggle-radius, 100vmax) at var(--theme-toggle-x, 50%) var(--theme-toggle-y, 50%));
+  }
+  to {
+    clip-path: circle(0px at var(--theme-toggle-x, 50%) var(--theme-toggle-y, 50%));
+  }
 }
