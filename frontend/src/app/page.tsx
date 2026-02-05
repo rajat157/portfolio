@@ -286,8 +286,8 @@ export default async function Home() {
               <a href="https://strapi.io" target="_blank" rel="noopener noreferrer" title="Strapi" className="hover:opacity-80 transition-opacity">
                 <img src="https://cdn.simpleicons.org/strapi/currentColor" alt="Strapi" className="h-6 w-auto dark:invert" />
               </a>
-              <a href="https://neon.tech" target="_blank" rel="noopener noreferrer" title="Neon" className="hover:opacity-80 transition-opacity">
-                <img src="https://cdn.simpleicons.org/neon/currentColor" alt="Neon" className="h-5 w-auto dark:invert" />
+              <a href="https://neon.tech" target="_blank" rel="noopener noreferrer" title="Neon (PostgreSQL)" className="hover:opacity-80 transition-opacity">
+                <img src="https://cdn.simpleicons.org/postgresql/currentColor" alt="Neon (PostgreSQL)" className="h-6 w-auto dark:invert" />
               </a>
               <a href="https://cloudinary.com" target="_blank" rel="noopener noreferrer" title="Cloudinary" className="hover:opacity-80 transition-opacity">
                 <img src="https://cdn.simpleicons.org/cloudinary/currentColor" alt="Cloudinary" className="h-6 w-auto dark:invert" />
