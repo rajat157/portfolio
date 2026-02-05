@@ -123,3 +123,42 @@
     @apply bg-background text-foreground;
   }
 }
+
+/* Theme toggle circular transition */
+::view-transition-group(root) {
+  animation-duration: 0.5s;
+  animation-timing-function: ease-out;
+}
+
+::view-transition-new(root),
+::view-transition-old(root) {
+  mix-blend-mode: normal;
+}
+
+::view-transition-new(root) {
+  animation-name: theme-reveal;
+}
+
+::view-transition-old(root) {
+  animation: none;
+  z-index: -1;
+}
+
+@keyframes theme-reveal {
+  from {
+    clip-path: circle(0px at var(--theme-toggle-x, 50%) var(--theme-toggle-y, 50%));
+  }
+  to {
+    clip-path: circle(var(--theme-toggle-radius, 100vmax) at var(--theme-toggle-x, 50%) var(--theme-toggle-y, 50%));
+  }
+}
+
+/* Reverse animation when switching to dark mode */
+.dark::view-transition-new(root) {
+  animation-name: none;
+}
+
+.dark::view-transition-old(root) {
+  animation-name: theme-reveal;
+  z-index: 1;
+}
