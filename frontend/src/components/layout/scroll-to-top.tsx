@@ -1,19 +1,27 @@
 "use client";
 
 import { usePathname } from "next/navigation";
-import { useEffect, useLayoutEffect } from "react";
-
-// Use useLayoutEffect on client, useEffect on server
-const useIsomorphicLayoutEffect = typeof window !== "undefined" ? useLayoutEffect : useEffect;
+import { useEffect } from "react";
 
 export function ScrollToTop() {
   const pathname = usePathname();
 
-  useIsomorphicLayoutEffect(() => {
-    // Scroll to top on route change - use requestAnimationFrame for reliability
+  useEffect(() => {
+    // Multiple attempts to ensure scroll works
+    // Immediate scroll
+    window.scrollTo(0, 0);
+    
+    // After paint
     requestAnimationFrame(() => {
-      window.scrollTo({ top: 0, left: 0, behavior: "instant" });
+      window.scrollTo(0, 0);
     });
+    
+    // Fallback with slight delay for slow renders
+    const timeout = setTimeout(() => {
+      window.scrollTo(0, 0);
+    }, 50);
+
+    return () => clearTimeout(timeout);
   }, [pathname]);
 
   return null;

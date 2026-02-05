@@ -4,6 +4,9 @@ const isDev = process.env.NODE_ENV === "development";
 
 const nextConfig: NextConfig = {
   // output: "standalone", // Only needed for Docker deployments
+  experimental: {
+    scrollRestoration: true,
+  },
   images: {
     // Disable image optimization in development to allow localhost
     unoptimized: isDev,
