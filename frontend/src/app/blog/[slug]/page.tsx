@@ -13,6 +13,8 @@ function transformBlogPostToArticleData(post: BlogPost): ArticleData | null {
     return null;
   }
 
+  const coverImage = post.cover_image;
+
   return {
     slug: post.slug || "",
     title: post.title || "Untitled",
@@ -22,6 +24,8 @@ function transformBlogPostToArticleData(post: BlogPost): ArticleData | null {
     publishedDate: post.published_date || post.publishedAt || new Date().toISOString(),
     readingTime: post.reading_time || 5,
     author: "Rajat Kumar R", // Default author
+    coverImageUrl: coverImage?.url ? getStrapiMedia(coverImage.url) : null,
+    coverImageAlt: coverImage?.alternativeText || post.title,
   };
 }
 

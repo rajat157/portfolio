@@ -24,6 +24,8 @@ export interface ArticleData {
   publishedDate: string;
   readingTime: number;
   author: string;
+  coverImageUrl?: string | null;
+  coverImageAlt?: string | null;
 }
 
 interface ArticleContentProps {
@@ -98,12 +100,20 @@ export function ArticleContent({
           />
         </div>
 
-        {/* Cover Image Placeholder */}
-        <Reveal delay={0.4}>
-          <div className="w-full aspect-[21/9] bg-muted flex items-center justify-center my-8">
-            <span className="text-muted-foreground">Cover Image</span>
-          </div>
-        </Reveal>
+        {/* Cover Image */}
+        {article.coverImageUrl && (
+          <Reveal delay={0.4}>
+            <div className="container mx-auto px-4 my-8">
+              <div className="max-w-4xl mx-auto aspect-[21/9] relative rounded-xl overflow-hidden border border-border">
+                <img
+                  src={article.coverImageUrl}
+                  alt={article.coverImageAlt || article.title}
+                  className="w-full h-full object-cover"
+                />
+              </div>
+            </div>
+          </Reveal>
+        )}
 
         {/* Two Column Layout */}
         <div className="container mx-auto px-4">
