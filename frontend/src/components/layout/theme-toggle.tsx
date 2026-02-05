@@ -58,24 +58,26 @@ export function ThemeToggle() {
 
     if (isDark) {
       // Dark to Light: expand light (new) FROM the toggle button
-      document.documentElement.animate(
+      await document.documentElement.animate(
         { clipPath: [clipStart, clipEnd] },
         {
           duration: 500,
           easing: "ease-out",
+          fill: "forwards",
           pseudoElement: "::view-transition-new(root)",
         }
-      );
+      ).finished;
     } else {
       // Light to Dark: shrink light (old) TOWARDS the toggle button
-      document.documentElement.animate(
+      await document.documentElement.animate(
         { clipPath: [clipEnd, clipStart] },
         {
           duration: 500,
           easing: "ease-out",
+          fill: "forwards",
           pseudoElement: "::view-transition-old(root)",
         }
-      );
+      ).finished;
     }
   };
 
