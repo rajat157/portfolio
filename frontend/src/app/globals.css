@@ -135,26 +135,30 @@
   mix-blend-mode: normal;
 }
 
-/* Light to Dark: shrink the light (old) towards button, dark underneath */
-::view-transition-old(root) {
+/* Default: no animation */
+::view-transition-old(root),
+::view-transition-new(root) {
+  animation: none;
+}
+
+/* Dark to Light: expand light (new) from button */
+[data-theme-transition="to-light"]::view-transition-old(root) {
+  z-index: -1;
+}
+
+[data-theme-transition="to-light"]::view-transition-new(root) {
+  z-index: 1;
+  animation-name: theme-expand;
+}
+
+/* Light to Dark: shrink light (old) towards button */
+[data-theme-transition="to-dark"]::view-transition-old(root) {
   z-index: 1;
   animation-name: theme-shrink;
 }
 
-::view-transition-new(root) {
+[data-theme-transition="to-dark"]::view-transition-new(root) {
   z-index: -1;
-  animation: none;
-}
-
-/* Dark to Light: expand the light (new) from button, dark underneath */
-.dark::view-transition-old(root) {
-  z-index: -1;
-  animation: none;
-}
-
-.dark::view-transition-new(root) {
-  z-index: 1;
-  animation-name: theme-expand;
 }
 
 @keyframes theme-expand {

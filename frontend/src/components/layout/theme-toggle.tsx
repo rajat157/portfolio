@@ -16,6 +16,7 @@ export function ThemeToggle() {
 
   const toggleTheme = async (event: React.MouseEvent<HTMLButtonElement>) => {
     const newTheme = theme === "dark" ? "light" : "dark";
+    const isDark = theme === "dark";
     
     // Check if View Transitions API is supported
     if (
@@ -47,14 +48,18 @@ export function ThemeToggle() {
     document.documentElement.style.setProperty("--theme-toggle-x", `${x}px`);
     document.documentElement.style.setProperty("--theme-toggle-y", `${y}px`);
     document.documentElement.style.setProperty("--theme-toggle-radius", `${endRadius}px`);
+    
+    // Set transition direction BEFORE starting (dark-to-light or light-to-dark)
+    document.documentElement.dataset.themeTransition = isDark ? "to-light" : "to-dark";
 
     // Start the view transition
     const transition = document.startViewTransition(() => {
       setTheme(newTheme);
     });
 
-    // Wait for the transition to finish
+    // Wait for the transition to finish, then clean up
     await transition.finished;
+    delete document.documentElement.dataset.themeTransition;
   };
 
   if (!mounted) {
