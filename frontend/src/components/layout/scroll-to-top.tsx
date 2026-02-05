@@ -7,21 +7,13 @@ export function ScrollToTop() {
   const pathname = usePathname();
 
   useEffect(() => {
-    // Multiple attempts to ensure scroll works
-    // Immediate scroll
-    window.scrollTo(0, 0);
+    // Scroll to top after Next.js navigation completes
+    // Small delay ensures this runs after Next.js's own scroll handling
+    const timer = setTimeout(() => {
+      window.scrollTo({ top: 0, left: 0, behavior: "instant" });
+    }, 0);
     
-    // After paint
-    requestAnimationFrame(() => {
-      window.scrollTo(0, 0);
-    });
-    
-    // Fallback with slight delay for slow renders
-    const timeout = setTimeout(() => {
-      window.scrollTo(0, 0);
-    }, 50);
-
-    return () => clearTimeout(timeout);
+    return () => clearTimeout(timer);
   }, [pathname]);
 
   return null;
