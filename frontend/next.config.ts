@@ -3,7 +3,7 @@ import type { NextConfig } from "next";
 const isDev = process.env.NODE_ENV === "development";
 
 const nextConfig: NextConfig = {
-  output: "standalone",
+  // output: "standalone", // Only needed for Docker deployments
   images: {
     // Disable image optimization in development to allow localhost
     unoptimized: isDev,
