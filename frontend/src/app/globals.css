@@ -166,3 +166,12 @@ html.dark::view-transition-new(root) {
     clip-path: circle(0px at var(--theme-x, 50%) var(--theme-y, 50%));
   }
 }
+
+/* Prevent iOS zoom on input focus - ensure 16px minimum font size */
+@media screen and (max-width: 768px) {
+  input,
+  select,
+  textarea {
+    font-size: 16px !important;
+  }
+}
