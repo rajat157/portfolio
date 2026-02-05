@@ -97,7 +97,7 @@ async function getRelatedPosts(
             $ne: currentSlug,
           },
         },
-        populate: ["category"],
+        populate: ["category", "cover_image"],
         sort: ["published_date:desc"],
         pagination: {
           pageSize: limit,

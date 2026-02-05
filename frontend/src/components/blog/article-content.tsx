@@ -277,11 +277,19 @@ export function ArticleContent({
             {relatedArticles.map((relatedArticle, index) => (
               <Reveal key={relatedArticle.slug} delay={0.2 + index * 0.1}>
                 <Card className="overflow-hidden p-0 gap-0 group h-full">
-                  {/* Image placeholder */}
-                  <div className="aspect-[16/9] bg-muted flex items-center justify-center border-b">
-                    <span className="text-muted-foreground text-sm">
-                      Featured Image
-                    </span>
+                  {/* Cover Image */}
+                  <div className="aspect-[16/9] bg-muted flex items-center justify-center border-b relative overflow-hidden">
+                    {relatedArticle.coverImageUrl ? (
+                      <img
+                        src={relatedArticle.coverImageUrl}
+                        alt={relatedArticle.title}
+                        className="w-full h-full object-cover"
+                      />
+                    ) : (
+                      <span className="text-muted-foreground text-sm">
+                        Featured Image
+                      </span>
+                    )}
                   </div>
 
                   {/* Content */}
