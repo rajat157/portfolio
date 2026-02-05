@@ -44,6 +44,10 @@ export function ThemeToggle() {
       Math.max(y, window.innerHeight - y)
     );
 
+    // Clip paths for animation (centered on toggle button)
+    const clipStart = `circle(0px at ${x}px ${y}px)`;
+    const clipEnd = `circle(${endRadius}px at ${x}px ${y}px)`;
+
     // Start the view transition
     const transition = document.startViewTransition(() => {
       setTheme(newTheme);
@@ -54,9 +58,6 @@ export function ThemeToggle() {
 
     if (isDark) {
       // Dark to Light: expand light (new) FROM the toggle button
-      const clipStart = `circle(0px at ${x}px ${y}px)`;
-      const clipEnd = `circle(${endRadius}px at ${x}px ${y}px)`;
-      
       document.documentElement.animate(
         { clipPath: [clipStart, clipEnd] },
         {
@@ -66,20 +67,13 @@ export function ThemeToggle() {
         }
       );
     } else {
-      // Light to Dark: expand dark (new) FROM the bottom-left corner
-      const cornerX = 0;
-      const cornerY = window.innerHeight;
-      const cornerRadius = Math.hypot(window.innerWidth, window.innerHeight);
-      
-      const clipStart = `circle(0px at ${cornerX}px ${cornerY}px)`;
-      const clipEnd = `circle(${cornerRadius}px at ${cornerX}px ${cornerY}px)`;
-      
+      // Light to Dark: shrink light (old) TOWARDS the toggle button
       document.documentElement.animate(
-        { clipPath: [clipStart, clipEnd] },
+        { clipPath: [clipEnd, clipStart] },
         {
           duration: 500,
           easing: "ease-out",
-          pseudoElement: "::view-transition-new(root)",
+          pseudoElement: "::view-transition-old(root)",
         }
       );
     }

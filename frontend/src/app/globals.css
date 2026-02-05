@@ -130,3 +130,19 @@
   animation: none;
   mix-blend-mode: normal;
 }
+
+/* After switch TO dark (light→dark): old=light on top, shrinks */
+html.dark::view-transition-old(root) {
+  z-index: 1;
+}
+html.dark::view-transition-new(root) {
+  z-index: 0;
+}
+
+/* After switch TO light (dark→light): new=light on top, expands */
+html:not(.dark)::view-transition-old(root) {
+  z-index: 0;
+}
+html:not(.dark)::view-transition-new(root) {
+  z-index: 1;
+}
