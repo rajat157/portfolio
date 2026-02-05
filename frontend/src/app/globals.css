@@ -125,56 +125,8 @@
 }
 
 /* Theme toggle circular transition */
-::view-transition-group(root) {
-  animation-duration: 0.5s;
-  animation-timing-function: ease-out;
-}
-
-::view-transition-new(root),
-::view-transition-old(root) {
-  mix-blend-mode: normal;
-}
-
-/* Default: no animation */
 ::view-transition-old(root),
 ::view-transition-new(root) {
   animation: none;
-}
-
-/* Dark to Light: expand light (new) from button */
-[data-theme-transition="to-light"]::view-transition-old(root) {
-  z-index: -1;
-}
-
-[data-theme-transition="to-light"]::view-transition-new(root) {
-  z-index: 1;
-  animation-name: theme-expand;
-}
-
-/* Light to Dark: shrink light (old) towards button */
-[data-theme-transition="to-dark"]::view-transition-old(root) {
-  z-index: 1;
-  animation-name: theme-shrink;
-}
-
-[data-theme-transition="to-dark"]::view-transition-new(root) {
-  z-index: -1;
-}
-
-@keyframes theme-expand {
-  from {
-    clip-path: circle(0px at var(--theme-toggle-x, 50%) var(--theme-toggle-y, 50%));
-  }
-  to {
-    clip-path: circle(var(--theme-toggle-radius, 100vmax) at var(--theme-toggle-x, 50%) var(--theme-toggle-y, 50%));
-  }
-}
-
-@keyframes theme-shrink {
-  from {
-    clip-path: circle(var(--theme-toggle-radius, 100vmax) at var(--theme-toggle-x, 50%) var(--theme-toggle-y, 50%));
-  }
-  to {
-    clip-path: circle(0px at var(--theme-toggle-x, 50%) var(--theme-toggle-y, 50%));
-  }
+  mix-blend-mode: normal;
 }

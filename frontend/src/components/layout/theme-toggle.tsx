@@ -14,9 +14,9 @@ export function ThemeToggle() {
     setMounted(true);
   }, []);
 
-  const toggleTheme = async (event: React.MouseEvent<HTMLButtonElement>) => {
-    const newTheme = theme === "dark" ? "light" : "dark";
+  const toggleTheme = async () => {
     const isDark = theme === "dark";
+    const newTheme = isDark ? "light" : "dark";
     
     // Check if View Transitions API is supported
     if (
@@ -44,22 +44,41 @@ export function ThemeToggle() {
       Math.max(y, window.innerHeight - y)
     );
 
-    // Set CSS custom properties for the animation origin
-    document.documentElement.style.setProperty("--theme-toggle-x", `${x}px`);
-    document.documentElement.style.setProperty("--theme-toggle-y", `${y}px`);
-    document.documentElement.style.setProperty("--theme-toggle-radius", `${endRadius}px`);
-    
-    // Set transition direction BEFORE starting (dark-to-light or light-to-dark)
-    document.documentElement.dataset.themeTransition = isDark ? "to-light" : "to-dark";
+    // Clip paths for animation
+    const clipStart = `circle(0px at ${x}px ${y}px)`;
+    const clipEnd = `circle(${endRadius}px at ${x}px ${y}px)`;
 
     // Start the view transition
     const transition = document.startViewTransition(() => {
       setTheme(newTheme);
     });
 
-    // Wait for the transition to finish, then clean up
-    await transition.finished;
-    delete document.documentElement.dataset.themeTransition;
+    // Wait for transition to be ready, then animate
+    await transition.ready;
+
+    // Dark to Light: expand light (new) from button
+    // Light to Dark: shrink light (old) towards button
+    if (isDark) {
+      // Going to light - expand the NEW (light) view
+      document.documentElement.animate(
+        { clipPath: [clipStart, clipEnd] },
+        {
+          duration: 500,
+          easing: "ease-out",
+          pseudoElement: "::view-transition-new(root)",
+        }
+      );
+    } else {
+      // Going to dark - shrink the OLD (light) view
+      document.documentElement.animate(
+        { clipPath: [clipEnd, clipStart] },
+        {
+          duration: 500,
+          easing: "ease-in",
+          pseudoElement: "::view-transition-old(root)",
+        }
+      );
+    }
   };
 
   if (!mounted) {
