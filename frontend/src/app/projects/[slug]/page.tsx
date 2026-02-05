@@ -232,7 +232,7 @@ export default async function ProjectDetailPage({
       <section className="py-16 px-4">
         <div className="container mx-auto">
           <Reveal>
-            <div className="max-w-4xl">
+            <div className="max-w-4xl mx-auto text-center">
               {/* Category Badge */}
               <Badge variant="secondary" className="mb-4">
                 {project.category}
@@ -251,7 +251,7 @@ export default async function ProjectDetailPage({
               )}
 
               {/* Tech Stack Badges */}
-              <div className="flex flex-wrap gap-2 mb-8">
+              <div className="flex flex-wrap gap-2 mb-8 justify-center">
                 {project.technologies.map((tech) => (
                   <Badge key={tech} variant="outline">
                     {tech}
@@ -260,7 +260,7 @@ export default async function ProjectDetailPage({
               </div>
 
               {/* External Links */}
-              <div className="flex flex-wrap gap-4">
+              <div className="flex flex-wrap gap-4 justify-center">
                 {project.liveUrl && (
                   <Button asChild>
                     <a

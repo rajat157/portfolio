@@ -14,7 +14,7 @@ export function Hero() {
   };
 
   return (
-    <section className="min-h-[calc(100vh-4rem)] md:min-h-screen flex flex-col justify-center items-center relative px-4">
+    <section className="min-h-[calc(100vh-8rem)] md:min-h-screen flex flex-col justify-center items-center relative px-4">
       <div className="container mx-auto text-center">
         <Reveal delay={0.1}>
           <p className="text-muted-foreground text-lg md:text-xl mb-4">
