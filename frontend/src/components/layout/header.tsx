@@ -74,17 +74,17 @@ export function Header() {
                 <span className="sr-only">Toggle menu</span>
               </Button>
             </SheetTrigger>
-            <SheetContent side="right" className="w-[300px]">
-              <nav className="flex flex-col gap-4 mt-8">
+            <SheetContent side="right" className="w-full sm:w-[300px] bg-background border-l border-border">
+              <nav className="flex flex-col gap-2 mt-12">
                 {navItems.map((item) => (
                   <Link
                     key={item.href}
                     href={item.href}
                     onClick={() => setIsOpen(false)}
                     className={cn(
-                      "text-lg font-medium transition-colors hover:text-foreground py-2",
+                      "text-xl font-medium transition-colors hover:text-foreground hover:bg-muted px-4 py-3 rounded-lg",
                       pathname === item.href
-                        ? "text-foreground"
+                        ? "text-foreground bg-muted"
                         : "text-muted-foreground"
                     )}
                   >
