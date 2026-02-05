@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { Github, Linkedin, Twitter } from "lucide-react";
+import { cn } from "@/lib/utils";
 
 const socialLinks = [
   { href: "https://github.com", icon: Github, label: "GitHub" },
@@ -7,11 +8,15 @@ const socialLinks = [
   { href: "https://twitter.com", icon: Twitter, label: "Twitter" },
 ];
 
-export function Footer() {
+interface FooterProps {
+  className?: string;
+}
+
+export function Footer({ className }: FooterProps) {
   const currentYear = new Date().getFullYear();
 
   return (
-    <footer className="border-t border-border/40 bg-background">
+    <footer className={cn("border-t border-border/40 bg-background", className)}>
       <div className="container mx-auto px-4 py-12">
         <div className="flex flex-col md:flex-row justify-between items-center gap-6">
           {/* Copyright */}
