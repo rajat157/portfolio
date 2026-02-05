@@ -270,6 +270,41 @@ export default async function Home() {
           </form>
         </div>
       </section>
+
+      {/* Built With Section */}
+      <section className="py-12 px-4 border-t border-border/40">
+        <div className="container mx-auto">
+          <div className="flex flex-col items-center gap-6">
+            <p className="text-sm text-muted-foreground">Built with</p>
+            <div className="flex flex-wrap items-center justify-center gap-6 md:gap-8 opacity-60 hover:opacity-100 transition-opacity">
+              <a href="https://nextjs.org" target="_blank" rel="noopener noreferrer" title="Next.js" className="hover:opacity-80 transition-opacity">
+                <img src="https://cdn.simpleicons.org/nextdotjs/currentColor" alt="Next.js" className="h-6 w-auto dark:invert" />
+              </a>
+              <a href="https://vercel.com" target="_blank" rel="noopener noreferrer" title="Vercel" className="hover:opacity-80 transition-opacity">
+                <img src="https://cdn.simpleicons.org/vercel/currentColor" alt="Vercel" className="h-5 w-auto dark:invert" />
+              </a>
+              <a href="https://strapi.io" target="_blank" rel="noopener noreferrer" title="Strapi" className="hover:opacity-80 transition-opacity">
+                <img src="https://cdn.simpleicons.org/strapi/currentColor" alt="Strapi" className="h-6 w-auto dark:invert" />
+              </a>
+              <a href="https://neon.tech" target="_blank" rel="noopener noreferrer" title="Neon" className="hover:opacity-80 transition-opacity">
+                <img src="https://cdn.simpleicons.org/neon/currentColor" alt="Neon" className="h-5 w-auto dark:invert" />
+              </a>
+              <a href="https://cloudinary.com" target="_blank" rel="noopener noreferrer" title="Cloudinary" className="hover:opacity-80 transition-opacity">
+                <img src="https://cdn.simpleicons.org/cloudinary/currentColor" alt="Cloudinary" className="h-6 w-auto dark:invert" />
+              </a>
+              <a href="https://ui.shadcn.com" target="_blank" rel="noopener noreferrer" title="shadcn/ui" className="hover:opacity-80 transition-opacity">
+                <img src="https://cdn.simpleicons.org/shadcnui/currentColor" alt="shadcn/ui" className="h-5 w-auto dark:invert" />
+              </a>
+              <a href="https://tailwindcss.com" target="_blank" rel="noopener noreferrer" title="Tailwind CSS" className="hover:opacity-80 transition-opacity">
+                <img src="https://cdn.simpleicons.org/tailwindcss/currentColor" alt="Tailwind CSS" className="h-5 w-auto dark:invert" />
+              </a>
+              <a href="https://cloudflare.com" target="_blank" rel="noopener noreferrer" title="Cloudflare" className="hover:opacity-80 transition-opacity">
+                <img src="https://cdn.simpleicons.org/cloudflare/currentColor" alt="Cloudflare" className="h-6 w-auto dark:invert" />
+              </a>
+            </div>
+          </div>
+        </div>
+      </section>
     </>
   );
 }
