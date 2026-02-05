@@ -6,14 +6,16 @@ import { useEffect } from "react";
 export function ScrollToTop() {
   const pathname = usePathname();
 
+  // Disable browser's automatic scroll restoration
   useEffect(() => {
-    // Scroll to top after Next.js navigation completes
-    // Small delay ensures this runs after Next.js's own scroll handling
-    const timer = setTimeout(() => {
-      window.scrollTo({ top: 0, left: 0, behavior: "instant" });
-    }, 0);
-    
-    return () => clearTimeout(timer);
+    if (typeof window !== "undefined" && "scrollRestoration" in history) {
+      history.scrollRestoration = "manual";
+    }
+  }, []);
+
+  // Scroll to top on every pathname change
+  useEffect(() => {
+    window.scrollTo(0, 0);
   }, [pathname]);
 
   return null;
