@@ -1,11 +1,10 @@
 import Link from "next/link";
-import { Github, Linkedin, Twitter } from "lucide-react";
+import { Github, Linkedin } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 const socialLinks = [
-  { href: "https://github.com", icon: Github, label: "GitHub" },
-  { href: "https://linkedin.com", icon: Linkedin, label: "LinkedIn" },
-  { href: "https://twitter.com", icon: Twitter, label: "Twitter" },
+  { href: "https://github.com/rajat157", icon: Github, label: "GitHub" },
+  { href: "https://www.linkedin.com/in/rajat-kumar-r", icon: Linkedin, label: "LinkedIn" },
 ];
 
 interface FooterProps {

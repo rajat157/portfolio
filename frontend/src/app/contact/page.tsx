@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
 import Link from "next/link";
-import { Mail, MapPin, Github, Linkedin, Twitter } from "lucide-react";
+import { Mail, MapPin, Github, Linkedin } from "lucide-react";
 
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -18,18 +18,13 @@ const contactInfo = {
   socialLinks: [
     {
       name: "GitHub",
-      href: "https://github.com/yourusername",
+      href: "https://github.com/rajat157",
       icon: Github,
     },
     {
       name: "LinkedIn",
-      href: "https://linkedin.com/in/yourusername",
+      href: "https://www.linkedin.com/in/rajat-kumar-r",
       icon: Linkedin,
-    },
-    {
-      name: "Twitter",
-      href: "https://twitter.com/yourusername",
-      icon: Twitter,
     },
   ],
 };

@@ -36,7 +36,6 @@ export const metadata: Metadata = {
   },
   twitter: {
     card: "summary_large_image",
-    creator: "@rajatkumarr",
   },
   robots: {
     index: true,
@@ -64,8 +63,8 @@ const jsonLd = {
       jobTitle: "Software Architect & Developer",
       url: siteUrl,
       sameAs: [
-        "https://github.com/rajatkumarr",
-        "https://linkedin.com/in/rajatkumarr",
+        "https://github.com/rajat157",
+        "https://www.linkedin.com/in/rajat-kumar-r",
       ],
       knowsAbout: [
         "Python",
