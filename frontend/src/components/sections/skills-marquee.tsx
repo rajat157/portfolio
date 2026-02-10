@@ -16,9 +16,9 @@ const skills = [
   { name: "Redis", icon: "https://cdn.simpleicons.org/redis" },
   { name: "Docker", icon: "https://cdn.simpleicons.org/docker" },
   { name: "Kubernetes", icon: "https://cdn.simpleicons.org/kubernetes" },
-  { name: "AWS", icon: "https://cdn.simpleicons.org/amazonaws" },
+  { name: "AWS", icon: "https://api.iconify.design/simple-icons/amazonaws.svg" },
   { name: "GCP", icon: "https://cdn.simpleicons.org/googlecloud" },
-  { name: "Azure", icon: "https://cdn.simpleicons.org/microsoftazure" },
+  { name: "Azure", icon: "https://api.iconify.design/simple-icons/microsoftazure.svg" },
   { name: "Git", icon: "https://cdn.simpleicons.org/git" },
   { name: "Kafka", icon: "https://cdn.simpleicons.org/apachekafka" },
 ];
