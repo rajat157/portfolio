@@ -286,12 +286,7 @@ export default async function AboutPage() {
                 size="lg"
                 className="rounded-full"
               >
-                <a 
-                  href={resumeUrl} 
-                  target="_blank" 
-                  rel="noopener noreferrer"
-                  download="Rajat Kumar R - Software Architect & Developer (Resume).pdf"
-                >
+                <a href={resumeUrl} target="_blank" rel="noopener noreferrer">
                   <Download className="w-4 h-4 mr-2" />
                   Download Resume
                 </a>
