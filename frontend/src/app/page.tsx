@@ -75,10 +75,15 @@ async function getFeaturedProjects(): Promise<Project[]> {
       endpoint: "/projects",
       query: {
         populate: "*",
+        filters: {
+          featured: {
+            $eq: true,
+          },
+        },
         pagination: {
           limit: 6,
         },
-        sort: ["createdAt:desc"],
+        sort: ["start_date:desc", "createdAt:desc"],
       },
       tags: ["projects"],
     });

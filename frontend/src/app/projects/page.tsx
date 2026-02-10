@@ -106,7 +106,7 @@ async function getProjects() {
       endpoint: "/projects",
       query: {
         populate: ["cover_image", "category"],
-        sort: ["featured:desc", "createdAt:desc"],
+        sort: ["featured:desc", "start_date:desc", "createdAt:desc"],
       },
       tags: ["projects"],
     });
