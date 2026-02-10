@@ -71,7 +71,8 @@ export default async function AboutPage() {
   const skills = aboutData?.skills;
   const experience = aboutData?.experience;
   const education = aboutData?.education || defaultAboutData.education;
-  const resumeUrl = aboutData?.resume_url || "/resume.pdf";
+  // Use local PDF for reliable downloads (Cloudinary requires auth)
+  const resumeUrl = "/resume.pdf";
   return (
     <>
       {/* Hero Section */}
@@ -286,7 +287,7 @@ export default async function AboutPage() {
                 size="lg"
                 className="rounded-full"
               >
-                <a href={resumeUrl} target="_blank" rel="noopener noreferrer">
+                <a href={resumeUrl} download>
                   <Download className="w-4 h-4 mr-2" />
                   Download Resume
                 </a>
