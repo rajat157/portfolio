@@ -18,7 +18,7 @@ export async function fetchAPI<T>({
   endpoint,
   query,
   wrappedByKey,
-  revalidate = 3600,
+  revalidate = 60,
   tags,
 }: FetchOptions): Promise<T> {
   const queryString = query ? `?${qs.stringify(query, { encodeValuesOnly: true })}` : "";
