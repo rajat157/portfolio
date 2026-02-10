@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import Link from "next/link";
 import { Reveal } from "@/components/animations/reveal";
 import { ExperienceTimeline } from "@/components/about/experience-timeline";
 import { SkillsGrid } from "@/components/about/skills-grid";
@@ -275,10 +276,10 @@ export default async function AboutPage() {
           <Reveal delay={0.2}>
             <div className="flex flex-col sm:flex-row gap-4 justify-center">
               <Button asChild size="lg" className="rounded-full">
-                <a href="/contact">
+                <Link href="/contact">
                   Get in Touch
                   <ArrowRight className="w-4 h-4 ml-2" />
-                </a>
+                </Link>
               </Button>
               <Button
                 asChild
