@@ -113,7 +113,7 @@ function transformProject(strapiProject: StrapiProject): ProjectDetail {
   return {
     slug: strapiProject.slug,
     title: strapiProject.title,
-    tagline: strapiProject.description?.slice(0, 100) || null, // Use description excerpt as tagline
+    tagline: strapiProject.description || null,
     description: strapiProject.description,
     content: strapiProject.content,
     technologies: strapiProject.technologies || [],
