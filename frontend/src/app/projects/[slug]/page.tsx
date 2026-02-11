@@ -86,6 +86,16 @@ async function getAllProjects(): Promise<StrapiProject[]> {
   }
 }
 
+// Ensure URL has a protocol prefix
+function normalizeUrl(url: string | null): string | null {
+  if (!url) return null;
+  url = url.trim();
+  if (url && !url.startsWith("http://") && !url.startsWith("https://")) {
+    return `https://${url}`;
+  }
+  return url;
+}
+
 // Transform Strapi project to UI format (Strapi 5 flat format)
 function transformProject(strapiProject: StrapiProject): ProjectDetail {
   // Strapi 5 uses flat structure - no attributes wrapper
@@ -111,8 +121,8 @@ function transformProject(strapiProject: StrapiProject): ProjectDetail {
     client: null, // Not in current schema
     role: null, // Not in current schema
     year,
-    liveUrl: strapiProject.live_url,
-    githubUrl: strapiProject.github_url,
+    liveUrl: normalizeUrl(strapiProject.live_url),
+    githubUrl: normalizeUrl(strapiProject.github_url),
     coverImageUrl: coverImage ? getStrapiMedia(coverImage.url) : null,
     coverImageAlt: coverImage?.alternativeText || strapiProject.title,
     gallery: galleryImages.map((img: StrapiMedia) => ({
