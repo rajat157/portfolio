@@ -33,9 +33,18 @@ export const metadata: Metadata = {
     siteName: "Rajat Kumar R",
     title: "Rajat Kumar R | Software Architect & Developer",
     description: "Portfolio of Rajat Kumar R - Software Architect & Developer specializing in Python, Django, FastAPI, Next.js, and cloud technologies.",
+    images: [
+      {
+        url: "/opengraph-image",
+        width: 1200,
+        height: 630,
+        alt: "Rajat Kumar R | Software Architect & Developer",
+      },
+    ],
   },
   twitter: {
     card: "summary_large_image",
+    images: ["/opengraph-image"],
   },
   robots: {
     index: true,
