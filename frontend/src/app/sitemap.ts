@@ -1,6 +1,9 @@
 import { MetadataRoute } from "next";
 import { fetchAPI, StrapiResponse, Project, BlogPost } from "@/lib/strapi";
 
+// Regenerate at most hourly — keeps ISR cadence fixed even if data fetches skip the cache
+export const revalidate = 3600;
+
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   const baseUrl = process.env.NEXT_PUBLIC_SITE_URL || "http://localhost:3000";
 

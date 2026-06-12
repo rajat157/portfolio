@@ -5,6 +5,9 @@ import { Reveal } from "@/components/animations/reveal";
 import { BlogPageClient } from "./blog-page-client";
 import type { Article } from "@/components/blog";
 
+// Regenerate at most hourly — keeps ISR cadence fixed even if data fetches skip the cache
+export const revalidate = 3600;
+
 export const metadata: Metadata = {
   title: "Blog | Rajat Kumar R",
   description:

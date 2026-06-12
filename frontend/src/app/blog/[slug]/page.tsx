@@ -5,6 +5,9 @@ import type { StrapiResponse, BlogPost } from "@/lib/strapi/types";
 import { ArticleContent, type ArticleData } from "@/components/blog/article-content";
 import { generateToc } from "@/lib/utils/generate-toc";
 
+// Regenerate at most hourly — keeps ISR cadence fixed even if data fetches skip the cache
+export const revalidate = 3600;
+
 // Transform Strapi BlogPost to ArticleData format
 // Strapi 5 uses flat response format (no .attributes wrapper)
 function transformBlogPostToArticleData(post: BlogPost): ArticleData | null {

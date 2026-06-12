@@ -4,6 +4,9 @@ import { Project as StrapiProject, Category, StrapiResponse } from "@/lib/strapi
 import { Reveal } from "@/components/animations/reveal";
 import { ProjectsClient } from "./projects-client";
 
+// Regenerate at most hourly — keeps ISR cadence fixed even if data fetches skip the cache
+export const revalidate = 3600;
+
 export const metadata: Metadata = {
   title: "Projects | Rajat Kumar R",
   description: "A collection of projects I have worked on, ranging from web applications to backend systems and DevOps tools.",

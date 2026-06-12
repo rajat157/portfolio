@@ -19,6 +19,9 @@ import { Button } from "@/components/ui/button";
 import { fetchAPI } from "@/lib/strapi";
 import type { About, StrapiResponse } from "@/lib/strapi/types";
 
+// Regenerate at most hourly — keeps ISR cadence fixed even if data fetches skip the cache
+export const revalidate = 3600;
+
 export const metadata: Metadata = {
   title: "About",
   description:

@@ -5,6 +5,9 @@ import type { Project, BlogPost, StrapiResponse } from "@/lib/strapi/types";
 import { ProjectCard } from "@/components/projects/project-card";
 import { ArticleCard } from "@/components/blog/article-card";
 
+// Regenerate at most hourly — keeps ISR cadence fixed even if data fetches skip the cache
+export const revalidate = 3600;
+
 // Default fallback data when API returns empty
 const defaultProjects = [
   {

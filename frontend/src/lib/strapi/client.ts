@@ -6,6 +6,15 @@ const STRAPI_URL = typeof window === "undefined"
   : (process.env.NEXT_PUBLIC_STRAPI_URL || "");
 const STRAPI_TOKEN = process.env.STRAPI_API_TOKEN;
 
+// Kill switch: skip Strapi entirely (callers fall back to their default content).
+// Set STRAPI_DISABLED=1 on Vercel while the backend is down/being migrated.
+const STRAPI_DISABLED =
+  process.env.STRAPI_DISABLED === "1" || process.env.STRAPI_DISABLED === "true";
+
+// A dead/spinning-down backend must fail fast, not hold the function for the
+// full 300s Vercel max duration (that's what burns the compute quota).
+const FETCH_TIMEOUT_MS = Number(process.env.STRAPI_TIMEOUT_MS) || 5000;
+
 interface FetchOptions {
   endpoint: string;
   query?: Record<string, unknown>;
@@ -18,9 +27,13 @@ export async function fetchAPI<T>({
   endpoint,
   query,
   wrappedByKey,
-  revalidate = 60,
+  revalidate = 3600,
   tags,
 }: FetchOptions): Promise<T> {
+  if (STRAPI_DISABLED) {
+    return { data: null } as T;
+  }
+
   const queryString = query ? `?${qs.stringify(query, { encodeValuesOnly: true })}` : "";
 
   const headers: HeadersInit = {
@@ -33,6 +46,7 @@ export async function fetchAPI<T>({
 
   const response = await fetch(`${STRAPI_URL}/api${endpoint}${queryString}`, {
     headers,
+    signal: AbortSignal.timeout(FETCH_TIMEOUT_MS),
     next: {
       revalidate,
       tags,

@@ -63,3 +63,8 @@ coverage/
 # Optional stylelint cache
 .stylelintcache
 .claude/
+
+.vercel
+
+# Local snapshots of live site content (pre-deploy backups)
+.backup/
