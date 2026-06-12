@@ -56,6 +56,9 @@ export default buildConfig({
     pool: {
       connectionString: databaseURI,
     },
+    // Dev push must never run against a migration-managed database
+    // (e.g. when seeding prod from a local dev server): PAYLOAD_DB_PUSH=false
+    ...(process.env.PAYLOAD_DB_PUSH === "false" ? { push: false } : {}),
   }),
   // Vercel Blob in production; local disk uploads in dev (no token set).
   // clientUploads off: uploads proxy through the server (fine under Vercel's
