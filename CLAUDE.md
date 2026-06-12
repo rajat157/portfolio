@@ -1,181 +1,108 @@
 # Portfolio Website
 
 ## Overview
-Modern, dark-mode-first portfolio website with blog functionality for **Rajat Kumar R** - Software Architect & Developer.
+Modern, dark-mode-first portfolio website with blog functionality for **Rajat Kumar R** - Software Architect & Developer. Live at https://www.rajatkumarr.com.
+
+Single Next.js app with **Payload CMS embedded** (admin at `/admin`). There is no separate backend service — the former Strapi-on-Render backend was retired in June 2026.
 
 ## Tech Stack
-- **Frontend**: Next.js 16 (App Router, TypeScript)
-- **CMS**: Strapi 5 (headless)
-- **Database**: SQLite (local dev) / PostgreSQL 16 (production)
+- **App**: Next.js 16 (App Router, TypeScript, Turbopack)
+- **CMS**: Payload 3 (embedded; Postgres adapter, schema `payload`)
+- **Database**: Neon Postgres via Vercel Marketplace (prod) / Docker Postgres on port 5434 (dev)
+- **Media**: Vercel Blob, public store `portfolio-media` (prod) / local disk `frontend/media/` (dev, gitignored)
 - **Styling**: Tailwind CSS v4 + shadcn/ui
 - **Animations**: Framer Motion + Lenis (smooth scroll)
 - **Email**: Resend
-- **Deployment**: Vercel (frontend) + Docker/Strapi Cloud (backend)
+- **Deployment**: Vercel only (project `portfolio`, root directory `frontend`, auto-deploys from `master`)
 
 ## Requirements
-- **Node.js**: v24 LTS (v20, v22, v24 supported; odd versions like v25 NOT supported by Strapi)
-- **nvm**: Recommended for Node version management
+- **Node.js**: v24 LTS (odd versions unsupported). A Node 24 binary lives at `~/.nvm/versions/node/v24.13.0/bin` if the shell default differs.
+- `frontend/package.json` has `"type": "module"` — required for the Payload CLI to work; do not remove.
 
 ## Project Structure
 ```
 portfolio/
-├── frontend/              # Next.js 16 application
+├── frontend/                       # The entire application
 │   ├── src/
-│   │   ├── app/          # App Router pages
-│   │   │   ├── about/
-│   │   │   ├── projects/[slug]/
-│   │   │   ├── blog/[slug]/
-│   │   │   ├── contact/
-│   │   │   └── api/contact/
-│   │   ├── components/
-│   │   │   ├── ui/       # shadcn components
-│   │   │   ├── layout/   # Header, Footer
-│   │   │   ├── sections/ # Hero, SkillsMarquee
-│   │   │   ├── about/    # Timeline, Skills
-│   │   │   ├── projects/ # Cards, Grid, Filter
-│   │   │   ├── blog/     # Cards, ReadingProgress
-│   │   │   └── animations/
-│   │   ├── lib/
-│   │   │   ├── strapi/   # API client, types
-│   │   │   └── utils/
-│   │   └── providers/
-│   └── public/
-├── backend/               # Strapi 5 CMS
-│   ├── src/api/          # Content types
-│   ├── config/           # Database, server config
-│   ├── Dockerfile        # Node 22, yarn
-│   └── .env              # PostgreSQL config
-├── docker-compose.yml     # Strapi + PostgreSQL
-├── PROGRESS.md           # Detailed progress tracking
-└── CLAUDE.md             # This file
+│   │   ├── app/
+│   │   │   ├── (site)/            # Public site: layout, pages, sitemap, robots
+│   │   │   ├── (payload)/         # Payload admin + REST/GraphQL (template files)
+│   │   │   └── api/
+│   │   │       ├── contact/       # Resend contact form
+│   │   │       └── dev-import/    # Dev-only content seeder (idempotent)
+│   │   ├── payload/               # Collections + globals (content model)
+│   │   ├── payload.config.ts      # Payload config (db, blob plugin, guards)
+│   │   ├── migrations/            # Committed DB migrations (run in CI)
+│   │   ├── migration/             # Recovered seed/snapshot content (import source)
+│   │   ├── lib/cms/               # Data layer: queries + types + getMediaURL
+│   │   └── components/
+│   └── scripts/export-strapi-neon.mjs  # Legacy Strapi DB export (July 2026 reconciliation)
+├── migration-data/                 # Extracted live-site content (migration archive)
+└── CLAUDE.md
 ```
 
 ## Development Commands
-
-### Frontend (Next.js)
 ```bash
 cd frontend
-npm run dev          # Start dev server (port 3000)
-npm run build        # Production build
-npm run lint         # Run ESLint
+npm run dev              # Dev server (site :3000, admin /admin); schema auto-pushes in dev
+npm run build            # Production build
+npm run lint             # ESLint
+npm run generate:types   # Regenerate src/payload-types.ts after collection changes
+npm run ci               # What Vercel runs: payload migrate (unpooled URL) && next build
 ```
 
-### Backend (Local Development)
-```bash
-cd backend
+Local dev DB (one-time): `docker run -d --name portfolio-payload-pg -p 5434:5432 -e POSTGRES_USER=payload -e POSTGRES_PASSWORD=payload -e POSTGRES_DB=payload postgres:16-alpine`
 
-# Install dependencies
-npm install
+Seed/reseed dev content: `curl -X POST http://localhost:3000/api/dev-import`
 
-# Start Strapi dev server (port 1337)
-npm run develop
-
-# Build for production
-npm run build
-
-# Start production server
-npm run start
-```
-
-### Backend (Docker - Alternative)
-```bash
-# Start Strapi + PostgreSQL
-docker-compose up -d
-
-# View logs
-docker-compose logs -f strapi
-
-# Stop containers
-docker-compose down
-
-# Rebuild after changes
-docker-compose build strapi
-```
-
-## Pages
-
-| Route | Description |
-|-------|-------------|
-| `/` | Home - Hero, Skills marquee, Featured projects, Latest posts |
-| `/about` | About - Bio, Experience timeline, Skills grid |
-| `/projects` | Projects listing with category filters |
-| `/projects/[slug]` | Project detail/case study |
-| `/blog` | Blog listing with category filters |
-| `/blog/[slug]` | Article with reading progress, TOC |
-| `/contact` | Contact form with validation |
-
-## Strapi Content Types
-- **Project**: title, slug, description, cover_image, technologies, category, featured, live_url, github_url
-- **BlogPost**: title, slug, excerpt, content, cover_image, category, tags, published_date, reading_time
-- **Category**: name, slug, type (project|blog|both), color
-- **About**: name, headline, bio, skills, experience, education
-- **SiteSettings**: site_title, site_description, social_links
+## Content Model (frontend/src/payload/)
+- **Collections**: `projects`, `blog-posts` (both with drafts), `categories`, `media` (upload), `users` (admin auth)
+- **Globals**: `about` (skills/experience/education arrays), `site-settings`
+- Long-form `content` fields are **Markdown** (code field), rendered with react-markdown — not Lexical.
+- Public queries MUST filter `_status: published` — `lib/cms` does this; Payload's local API otherwise returns drafts.
 
 ## Environment Variables
 
-### Frontend (.env.local)
+### frontend/.env.local (dev)
 ```
-NEXT_PUBLIC_STRAPI_URL=http://localhost:1337
-STRAPI_API_TOKEN=<from Strapi admin>
-REVALIDATION_SECRET=<random string>
-RESEND_API_KEY=<from Resend>
-CONTACT_EMAIL=rajat.kumar.r@outlook.com
+PAYLOAD_SECRET=<random>
+DATABASE_URI=postgresql://payload:payload@localhost:5434/payload
 NEXT_PUBLIC_SITE_URL=http://localhost:3000
+RESEND_API_KEY=
+CONTACT_EMAIL=
+OLD_NEON_DATABASE_URL=<legacy Strapi DB, for scripts/export-strapi-neon.mjs>
 ```
 
-### Backend (.env)
-```
-# SQLite (local development - default)
-DATABASE_CLIENT=sqlite
-DATABASE_FILENAME=.tmp/data.db
+### Vercel (production — already configured)
+- `DATABASE_URL` / `DATABASE_URL_UNPOOLED` etc. — auto-injected by the Neon Marketplace integration (`neon-bole-bridge`)
+- `BLOB_READ_WRITE_TOKEN` — auto-injected by the Blob store (`portfolio-media`)
+- `PAYLOAD_SECRET`, `NEXT_PUBLIC_SITE_URL`, `RESEND_API_KEY`, `CONTACT_EMAIL`
+- Build Command override: `npm run ci`
 
-# PostgreSQL (production/Docker)
-# DATABASE_CLIENT=postgres
-# DATABASE_HOST=localhost
-# DATABASE_PORT=5432
-# DATABASE_NAME=strapi
-# DATABASE_USERNAME=strapi
-# DATABASE_PASSWORD=strapi_secure_password_2026
-
-APP_KEYS=<generate 4 comma-separated random keys>
-API_TOKEN_SALT=<random string>
-ADMIN_JWT_SECRET=<random string>
-TRANSFER_TOKEN_SALT=<random string>
-JWT_SECRET=<random string>
-```
+## Schema Changes
+Dev uses drizzle push (automatic). Production uses committed migrations in `frontend/src/migrations/`:
+1. Change collections, verify in dev.
+2. `payload migrate:create <name>` — NOTE: drizzle codegen fails under the CLI's tsx loader on Windows (and sometimes Linux); the working alternative is a raw-SQL migration (pg_dump the dev schema and wrap it — see `20260612_000000_initial.ts`).
+3. Commit; Vercel's `npm run ci` applies it over `DATABASE_URL_UNPOOLED` before building.
+- Never point `npm run dev` at the prod DB without `PAYLOAD_DB_PUSH=false` (env-gated in payload.config.ts).
+- Do NOT add `sharp` back to payload.config — its libvips native lib gets dropped from the Vercel function bundle and 500s `/admin`.
 
 ## Code Conventions
-- TypeScript strict mode
-- Absolute imports with `@/` alias
-- Component naming: PascalCase
-- Use Reveal component for scroll animations
-- Dark mode default, toggle available
+- TypeScript strict mode; absolute imports via `@/`; `@payload-config` resolves to src/payload.config.ts
+- Components PascalCase; Reveal component for scroll animations; dark mode default
+- Pages keep hardcoded fallback content for when the DB returns nothing — preserve this pattern
+- ISR: all CMS pages export `revalidate = 3600`
 
-## Current Status
-See `PROGRESS.md` for detailed progress tracking.
+## Pages
+| Route | Description |
+|-------|-------------|
+| `/` | Home - Hero, Skills marquee, Featured projects, Latest posts |
+| `/about` | Bio, Experience timeline, Skills grid |
+| `/projects` + `/projects/[slug]` | Listing with filters + case studies |
+| `/blog` + `/blog/[slug]` | Listing + article with reading progress |
+| `/contact` | Contact form (Resend) |
+| `/admin` | Payload admin |
 
-**Completed:**
-- All pages created with placeholder data
-- Docker + PostgreSQL configured
-- Build successful (18 pages)
-
-**Pending:**
-- Start Strapi and create content
-- Connect pages to Strapi API
-- Configure email (Resend)
-- Deploy
-
-## Design References
-
-The frontend design is inspired by these award-winning portfolio sites:
-
-- **Ashfall Studio** (https://ashfall.studio/) - Grid layouts, scroll animations, minimal aesthetic
-- **Gianluca Gradogna** (https://gianlucagradogna.com/) - Massive typography, dark theme, bold visuals
-
-Key design principles:
-- Dark mode first with subtle gradients
-- Large, bold typography for headings
-- Smooth scroll animations using Lenis
-- Reveal animations on scroll using Framer Motion
-- Clean grid layouts for projects and blog posts
-- Minimal color palette with accent highlights
+## Pending / History
+- **~July 2026**: old Strapi Neon DB (`OLD_NEON_DATABASE_URL`) exits compute-quota lockout — run `node scripts/export-strapi-neon.mjs` and reconcile any blog posts/drafts not among the migrated content. Delete the Render service `portfolio-strapi` if not already done.
+- Migration history and details: see PROGRESS.md and git history (commits `30d4ccf`, `ee8041a`).

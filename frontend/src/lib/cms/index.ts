@@ -1,9 +1,9 @@
 /**
  * Payload-backed data layer.
- * Returns objects in the same shape the Strapi client used to return
- * (types from @/lib/strapi/types), so page-level transforms and fallback
- * logic stay unchanged. Media URLs are returned as-is: app-relative
- * (/api/media/file/...) in dev, absolute Blob/Cloudinary URLs in prod.
+ * Returns objects in the shapes the pages' transforms expect (./types,
+ * inherited from the original Strapi integration). Media URLs are returned
+ * as-is: app-relative (/api/media/file/...) in dev, absolute Blob CDN URLs
+ * in prod.
  */
 import config from "@payload-config";
 import { getPayload } from "payload";
@@ -14,10 +14,15 @@ import type {
   Category,
   Project,
   StrapiMedia,
-} from "@/lib/strapi/types";
+} from "./types";
 
 async function cms() {
   return getPayload({ config });
+}
+
+// Media URLs are usable as-is in <Image src> — no host prefixing needed.
+export function getMediaURL(url: string | null) {
+  return url || null;
 }
 
 /* eslint-disable @typescript-eslint/no-explicit-any */

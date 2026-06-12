@@ -1,7 +1,6 @@
 import { Metadata } from "next";
-import { getStrapiMedia } from "@/lib/strapi/client";
-import { cmsProjects, cmsCategories } from "@/lib/cms";
-import { Project as StrapiProject } from "@/lib/strapi/types";
+import { cmsProjects, cmsCategories, getMediaURL } from "@/lib/cms";
+import { Project as StrapiProject } from "@/lib/cms/types";
 import { Reveal } from "@/components/animations/reveal";
 import { ProjectsClient } from "./projects-client";
 
@@ -87,7 +86,7 @@ function transformProject(strapiProject: StrapiProject) {
     description: strapiProject.description || "",
     technologies: strapiProject.technologies || [],
     category: strapiProject.category?.name || "Uncategorized",
-    imageUrl: strapiProject.cover_image ? getStrapiMedia(strapiProject.cover_image.url) : null,
+    imageUrl: strapiProject.cover_image ? getMediaURL(strapiProject.cover_image.url) : null,
   };
 }
 

@@ -316,3 +316,20 @@ JWT_SECRET=<generate random string>
 - Contact form has Zod validation + Resend email integration
 - SEO: JSON-LD schemas, dynamic sitemap, robots.txt configured
 - SSG enabled with generateStaticParams for projects and blog posts
+
+---
+
+## Phase 9: Strapi -> Payload Migration (2026-06-12/13) - COMPLETED
+
+The Strapi-on-Render backend died (Render free tier + Neon compute quota exhaustion)
+and was burning the Vercel Hobby compute quota via hung ISR revalidations.
+
+- Band-aid (commit 30d4ccf): fetch timeouts, STRAPI_DISABLED kill switch, hourly ISR.
+- Migration (commit ee8041a): Payload 3.85.1 embedded into the Next.js app
+  (admin at /admin), Neon Postgres via Vercel Marketplace, media on Vercel Blob.
+  All 9 projects, 3 blog posts, categories, about, site settings recovered from
+  seed scripts + live-page snapshots and imported. Pages rewired to a local-API
+  data layer (lib/cms). Deployed and verified 2026-06-13.
+- Cleanup: backend/, docker-compose/nginx stack, render.yaml, lib/strapi removed.
+- Outstanding: ~July 2026 export of the old Strapi Neon DB (quota-locked) to
+  reconcile any unmigrated blog posts/drafts - scripts/export-strapi-neon.mjs.

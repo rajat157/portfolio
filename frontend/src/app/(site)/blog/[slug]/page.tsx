@@ -1,8 +1,7 @@
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
-import { getStrapiMedia } from "@/lib/strapi";
-import { cmsBlogPosts, cmsBlogPostBySlug } from "@/lib/cms";
-import type { BlogPost } from "@/lib/strapi/types";
+import { cmsBlogPosts, cmsBlogPostBySlug, getMediaURL } from "@/lib/cms";
+import type { BlogPost } from "@/lib/cms/types";
 import { ArticleContent, type ArticleData } from "@/components/blog/article-content";
 import { generateToc } from "@/lib/utils/generate-toc";
 
@@ -28,7 +27,7 @@ function transformBlogPostToArticleData(post: BlogPost): ArticleData | null {
     publishedDate: post.published_date || post.publishedAt || new Date().toISOString(),
     readingTime: post.reading_time || 5,
     author: "Rajat Kumar R", // Default author
-    coverImageUrl: coverImage?.url ? getStrapiMedia(coverImage.url) : null,
+    coverImageUrl: coverImage?.url ? getMediaURL(coverImage.url) : null,
     coverImageAlt: coverImage?.alternativeText || post.title,
   };
 }
@@ -96,7 +95,7 @@ export async function generateMetadata({
 
   // Strapi 5 flat response format
   const coverImage = post.cover_image;
-  const coverImageUrl = coverImage?.url ? getStrapiMedia(coverImage.url) : null;
+  const coverImageUrl = coverImage?.url ? getMediaURL(coverImage.url) : null;
 
   return {
     title: post.title,

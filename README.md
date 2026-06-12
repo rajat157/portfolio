@@ -1,135 +1,59 @@
 # Portfolio Website
 
-A modern, dark-mode-first portfolio website with blog functionality built with Next.js and Strapi.
+Modern, dark-mode-first portfolio website with blog functionality for **Rajat Kumar R**, live at [rajatkumarr.com](https://www.rajatkumarr.com). A single Next.js app with Payload CMS embedded — no separate backend.
 
 ## Tech Stack
 
 | Layer | Technology |
 |-------|------------|
-| Frontend | Next.js 16 (App Router), TypeScript, Tailwind CSS v4, shadcn/ui |
+| App | Next.js 16 (App Router), TypeScript |
+| CMS | Payload 3 (embedded — admin at `/admin`) |
+| Database | Neon Postgres (prod, via Vercel Marketplace) / Dockerized Postgres (dev) |
+| Media | Vercel Blob (prod) / local disk (dev) |
+| Styling | Tailwind CSS v4 + shadcn/ui |
 | Animations | Framer Motion, Lenis (smooth scroll) |
-| CMS | Strapi 5 (headless) |
-| Database | SQLite (local dev) / PostgreSQL 16 (Docker) |
-| Reverse Proxy | nginx (Docker only) |
 | Email | Resend |
+| Hosting | Vercel (everything) |
 
 ## Prerequisites
 
-- **Node.js**: v24 LTS (v20, v22, v24 supported; odd versions like v25 NOT supported by Strapi)
-- **Docker & Docker Compose**: Required for containerized deployment
+- **Node.js** v24 LTS (even versions only)
+- **Docker** (for the local dev database)
 
 ## Local Development
 
-### Backend (Strapi)
-
 ```bash
-cd backend
-npm install
-npm run develop  # Starts on http://localhost:1337
-```
+# one-time: local Postgres for Payload
+docker run -d --name portfolio-payload-pg -p 5434:5432 \
+  -e POSTGRES_USER=payload -e POSTGRES_PASSWORD=payload -e POSTGRES_DB=payload \
+  postgres:16-alpine
 
-Access the Strapi admin panel at `http://localhost:1337/admin`.
-
-### Frontend (Next.js)
-
-```bash
 cd frontend
 npm install
-npm run dev  # Starts on http://localhost:3000
+npm run dev          # site on :3000, admin on :3000/admin
 ```
 
-Create `frontend/.env.local` with:
+Required `frontend/.env.local`:
 
 ```env
-NEXT_PUBLIC_STRAPI_URL=http://localhost:1337
-STRAPI_API_TOKEN=<from Strapi admin>
+PAYLOAD_SECRET=<random>
+DATABASE_URI=postgresql://payload:payload@localhost:5434/payload
 NEXT_PUBLIC_SITE_URL=http://localhost:3000
-REVALIDATION_SECRET=<random string>
-RESEND_API_KEY=<from Resend>
-CONTACT_EMAIL=your@email.com
+RESEND_API_KEY=
+CONTACT_EMAIL=
 ```
 
-## Docker Deployment
+In dev the database schema syncs automatically (drizzle push). Seed content with `curl -X POST http://localhost:3000/api/dev-import` (idempotent; dev-only route).
 
-### Quick Start
+## Production
 
-```bash
-# Copy and configure environment variables
-cp .env.example .env
-# Edit .env with your values (see Environment Variables section)
+Deploys automatically on push to `master`. The Vercel Build Command is `npm run ci`, which runs committed migrations (`frontend/src/migrations/`) against Neon before building. Schema changes need a migration — `migrate:create` requires Linux/CI (drizzle codegen breaks under the CLI's tsx loader in some setups); a raw-SQL migration is a fine alternative, see `src/migrations/20260612_000000_initial.ts`.
 
-# Build and start all services
-docker-compose up -d --build
-```
+Production env (managed on Vercel): `DATABASE_URL`* (auto-injected by the Neon integration), `BLOB_READ_WRITE_TOKEN` (auto-injected by the Blob store), `PAYLOAD_SECRET`, `NEXT_PUBLIC_SITE_URL`, `RESEND_API_KEY`, `CONTACT_EMAIL`.
 
-### Access Points
+## Content Model
 
-| Service | URL |
-|---------|-----|
-| Frontend | http://localhost |
-| Strapi Admin | http://localhost/admin |
-
-### Docker Commands
-
-```bash
-# View logs
-docker-compose logs -f
-
-# View specific service logs
-docker-compose logs -f strapi
-docker-compose logs -f frontend
-
-# Stop all services
-docker-compose down
-
-# Rebuild after code changes
-docker-compose up -d --build
-
-# Reset everything (including database)
-docker-compose down -v
-docker-compose up -d --build
-```
-
-## Environment Variables
-
-Copy `.env.example` to `.env` and configure:
-
-| Variable | Description | Required |
-|----------|-------------|----------|
-| `DATABASE_NAME` | PostgreSQL database name | Yes |
-| `DATABASE_USERNAME` | PostgreSQL username | Yes |
-| `DATABASE_PASSWORD` | PostgreSQL password | Yes |
-| `APP_KEYS` | Strapi app keys (4 comma-separated) | Yes |
-| `API_TOKEN_SALT` | Strapi API token salt | Yes |
-| `ADMIN_JWT_SECRET` | Strapi admin JWT secret | Yes |
-| `TRANSFER_TOKEN_SALT` | Strapi transfer token salt | Yes |
-| `JWT_SECRET` | Strapi JWT secret | Yes |
-| `STRAPI_API_TOKEN` | API token from Strapi admin | Yes |
-| `NEXT_PUBLIC_SITE_URL` | Public URL of the site | Yes |
-| `REVALIDATION_SECRET` | Secret for ISR revalidation | No |
-| `RESEND_API_KEY` | Resend API key for emails | No |
-| `CONTACT_EMAIL` | Email for contact form | No |
-
-## Project Structure
-
-```
-portfolio/
-├── frontend/              # Next.js application
-│   ├── src/
-│   │   ├── app/          # App Router pages
-│   │   ├── components/   # React components
-│   │   └── lib/          # Utilities, API client
-│   └── Dockerfile
-├── backend/               # Strapi CMS
-│   ├── src/api/          # Content types
-│   ├── config/           # Database, server config
-│   └── Dockerfile
-├── nginx/                 # Reverse proxy config
-│   └── nginx.conf
-├── docker-compose.yml     # Docker services
-├── .env.example          # Environment template
-└── CLAUDE.md             # Development guide
-```
+Collections: `projects`, `blog-posts`, `categories`, `media`, `users` · Globals: `about`, `site-settings`. Defined in `frontend/src/payload/`; long-form content is Markdown rendered with `react-markdown`.
 
 ## Pages
 
@@ -142,6 +66,7 @@ portfolio/
 | `/blog` | Blog listing with filters |
 | `/blog/[slug]` | Article with reading progress |
 | `/contact` | Contact form |
+| `/admin` | Payload admin panel |
 
 ## License
 

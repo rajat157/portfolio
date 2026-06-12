@@ -136,6 +136,30 @@ export async function POST() {
     }
   }
 
+  // The real blog cover images live only in the quota-locked legacy Strapi DB;
+  // until that export, use the designed SVG covers shipped in public/.
+  async function importMediaFromPublic(
+    relPath: string,
+    alt: string
+  ): Promise<number | null> {
+    const abs = path.join(process.cwd(), "public", relPath);
+    if (!fs.existsSync(abs)) return null;
+    const filename = path.basename(abs);
+    const existing = await payload.find({
+      collection: "media",
+      where: { filename: { equals: filename } },
+      limit: 1,
+    });
+    if (existing.docs[0]) return existing.docs[0].id as number;
+    const doc = await payload.create({
+      collection: "media",
+      data: { alt },
+      filePath: abs,
+    });
+    log.push(`media imported from public/: ${filename} (#${doc.id})`);
+    return doc.id as number;
+  }
+
   // ---------- projects ----------
   type ListingEntry = {
     slug: string;
@@ -205,11 +229,16 @@ export async function POST() {
 
   // ---------- blog posts ----------
   for (const post of seedBlogPosts) {
+    const coverId = await importMediaFromPublic(
+      path.join("images", "covers", `${post.slug}.svg`),
+      post.title
+    );
     const data = {
       title: post.title,
       slug: post.slug,
       excerpt: post.excerpt,
       content: post.content,
+      cover_image: coverId,
       category: categoryIds[post.categorySlug] ?? null,
       tags: post.tags.map((name) => ({ name })),
       published_date: post.published_date,

@@ -1,7 +1,6 @@
 import type { Metadata } from "next";
-import { getStrapiMedia } from "@/lib/strapi";
-import { cmsBlogPosts, cmsCategories } from "@/lib/cms";
-import type { BlogPost } from "@/lib/strapi/types";
+import { cmsBlogPosts, cmsCategories, getMediaURL } from "@/lib/cms";
+import type { BlogPost } from "@/lib/cms/types";
 import { Reveal } from "@/components/animations/reveal";
 import { BlogPageClient } from "./blog-page-client";
 import type { Article } from "@/components/blog";
@@ -67,7 +66,7 @@ function transformBlogPostToArticle(post: BlogPost): Article | null {
     category: post.category?.name || "Uncategorized",
     readingTime: post.reading_time || 5,
     publishedAt: post.published_date || post.publishedAt || new Date().toISOString(),
-    imageUrl: post.cover_image?.url ? getStrapiMedia(post.cover_image.url) || undefined : undefined,
+    imageUrl: post.cover_image?.url ? getMediaURL(post.cover_image.url) || undefined : undefined,
   };
 }
 

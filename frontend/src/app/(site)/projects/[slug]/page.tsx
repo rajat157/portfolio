@@ -10,9 +10,8 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Reveal } from "@/components/animations/reveal";
-import { getStrapiMedia } from "@/lib/strapi/client";
-import { cmsProjects, cmsProjectBySlug } from "@/lib/cms";
-import { Project as StrapiProject, StrapiMedia } from "@/lib/strapi/types";
+import { cmsProjects, cmsProjectBySlug, getMediaURL } from "@/lib/cms";
+import { Project as StrapiProject, StrapiMedia } from "@/lib/cms/types";
 
 // Regenerate at most hourly — keeps ISR cadence fixed even if data fetches skip the cache
 export const revalidate = 3600;
@@ -96,10 +95,10 @@ function transformProject(strapiProject: StrapiProject): ProjectDetail {
     year,
     liveUrl: normalizeUrl(strapiProject.live_url),
     githubUrl: normalizeUrl(strapiProject.github_url),
-    coverImageUrl: coverImage ? getStrapiMedia(coverImage.url) : null,
+    coverImageUrl: coverImage ? getMediaURL(coverImage.url) : null,
     coverImageAlt: coverImage?.alternativeText || strapiProject.title,
     gallery: galleryImages.map((img: StrapiMedia) => ({
-      url: getStrapiMedia(img.url) || "",
+      url: getMediaURL(img.url) || "",
       alt: img.alternativeText,
     })),
   };
@@ -116,7 +115,7 @@ function transformProjectForCard(strapiProject: StrapiProject) {
     tagline: strapiProject.description?.slice(0, 100) + "..." || "",
     technologies: strapiProject.technologies || [],
     category: strapiProject.category?.name || "Uncategorized",
-    imageUrl: coverImage ? getStrapiMedia(coverImage.url) : null,
+    imageUrl: coverImage ? getMediaURL(coverImage.url) : null,
   };
 }
 
@@ -162,7 +161,7 @@ export async function generateMetadata({
       images: coverImage
         ? [
             {
-              url: getStrapiMedia(coverImage.url) || "",
+              url: getMediaURL(coverImage.url) || "",
               width: coverImage.width,
               height: coverImage.height,
               alt: coverImage.alternativeText || strapiProject.title,

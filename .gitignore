@@ -68,3 +68,5 @@ coverage/
 
 # Local snapshots of live site content (pre-deploy backups)
 .backup/
+
+.env*

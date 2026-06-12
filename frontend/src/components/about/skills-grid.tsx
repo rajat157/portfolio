@@ -2,7 +2,7 @@
 
 import { Reveal } from "@/components/animations/reveal";
 import { Badge } from "@/components/ui/badge";
-import type { Skill as StrapiSkill } from "@/lib/strapi/types";
+import type { Skill as StrapiSkill } from "@/lib/cms/types";
 
 interface SkillCategory {
   name: string;

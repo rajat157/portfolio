@@ -1,8 +1,7 @@
 import Link from "next/link";
 import { Hero, SkillsMarquee } from "@/components/sections";
-import { getStrapiMedia } from "@/lib/strapi";
-import { cmsProjects, cmsBlogPosts } from "@/lib/cms";
-import type { Project, BlogPost } from "@/lib/strapi/types";
+import { cmsProjects, cmsBlogPosts, getMediaURL } from "@/lib/cms";
+import type { Project, BlogPost } from "@/lib/cms/types";
 import { ProjectCard } from "@/components/projects/project-card";
 import { ArticleCard } from "@/components/blog/article-card";
 
@@ -99,7 +98,7 @@ function transformProject(project: Project) {
   }
 
   const coverUrl = project.cover_image?.url
-    ? getStrapiMedia(project.cover_image.url)
+    ? getMediaURL(project.cover_image.url)
     : undefined;
 
   return {
@@ -121,7 +120,7 @@ function transformBlogPost(post: BlogPost) {
   }
 
   const coverUrl = post.cover_image?.url
-    ? getStrapiMedia(post.cover_image.url)
+    ? getMediaURL(post.cover_image.url)
     : undefined;
 
   return {

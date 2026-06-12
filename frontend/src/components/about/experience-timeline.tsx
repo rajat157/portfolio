@@ -2,7 +2,7 @@
 
 import { Reveal } from "@/components/animations/reveal";
 import { Badge } from "@/components/ui/badge";
-import type { Experience as StrapiExperience } from "@/lib/strapi/types";
+import type { Experience as StrapiExperience } from "@/lib/cms/types";
 
 interface ExperienceItem {
   company: string;

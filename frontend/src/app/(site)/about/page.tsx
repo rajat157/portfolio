@@ -17,7 +17,7 @@ import {
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { cmsAbout } from "@/lib/cms";
-import type { About } from "@/lib/strapi/types";
+import type { About } from "@/lib/cms/types";
 
 // Regenerate at most hourly — keeps ISR cadence fixed even if data fetches skip the cache
 export const revalidate = 3600;
