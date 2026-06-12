@@ -5,7 +5,6 @@ import { postgresAdapter } from "@payloadcms/db-postgres";
 import { lexicalEditor } from "@payloadcms/richtext-lexical";
 import { vercelBlobStorage } from "@payloadcms/storage-vercel-blob";
 import { buildConfig } from "payload";
-import sharp from "sharp";
 
 import { BlogPosts } from "@/payload/collections/BlogPosts";
 import { Categories } from "@/payload/collections/Categories";
@@ -60,6 +59,9 @@ export default buildConfig({
     // (e.g. when seeding prod from a local dev server): PAYLOAD_DB_PUSH=false
     ...(process.env.PAYLOAD_DB_PUSH === "false" ? { push: false } : {}),
   }),
+  // No `sharp`: media uploads are served as-is (no imageSizes/cropping
+  // configured), and sharp's native libvips kept breaking the Vercel
+  // function bundle. next/image handles rendering-time optimization.
   // Vercel Blob in production; local disk uploads in dev (no token set).
   // clientUploads off: uploads proxy through the server (fine under Vercel's
   // 4.5MB body limit) and the admin importMap stays identical in dev and prod.
@@ -73,5 +75,4 @@ export default buildConfig({
         }),
       ]
     : [],
-  sharp,
 });
