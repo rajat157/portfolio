@@ -70,10 +70,8 @@ export function getStrapiURL(path = "") {
   return `${STRAPI_URL}${path}`;
 }
 
+// Media URLs now come from Payload: app-relative (/api/media/file/...) in dev,
+// absolute Blob/Cloudinary URLs in prod. Both are usable as-is.
 export function getStrapiMedia(url: string | null) {
-  if (!url) return null;
-  if (url.startsWith("http") || url.startsWith("//")) {
-    return url;
-  }
-  return `${STRAPI_URL}${url}`;
+  return url || null;
 }

@@ -1,7 +1,8 @@
 import Link from "next/link";
 import { Hero, SkillsMarquee } from "@/components/sections";
-import { fetchAPI, getStrapiMedia } from "@/lib/strapi";
-import type { Project, BlogPost, StrapiResponse } from "@/lib/strapi/types";
+import { getStrapiMedia } from "@/lib/strapi";
+import { cmsProjects, cmsBlogPosts } from "@/lib/cms";
+import type { Project, BlogPost } from "@/lib/strapi/types";
 import { ProjectCard } from "@/components/projects/project-card";
 import { ArticleCard } from "@/components/blog/article-card";
 
@@ -74,23 +75,7 @@ const defaultBlogPosts = [
 
 async function getFeaturedProjects(): Promise<Project[]> {
   try {
-    const response = await fetchAPI<StrapiResponse<Project[]>>({
-      endpoint: "/projects",
-      query: {
-        populate: "*",
-        filters: {
-          featured: {
-            $eq: true,
-          },
-        },
-        pagination: {
-          limit: 6,
-        },
-        sort: ["start_date:desc", "createdAt:desc"],
-      },
-      tags: ["projects"],
-    });
-    return response.data || [];
+    return await cmsProjects({ featured: true, limit: 6 });
   } catch (error) {
     console.error("Failed to fetch featured projects:", error);
     return [];
@@ -99,18 +84,7 @@ async function getFeaturedProjects(): Promise<Project[]> {
 
 async function getLatestBlogPosts(): Promise<BlogPost[]> {
   try {
-    const response = await fetchAPI<StrapiResponse<BlogPost[]>>({
-      endpoint: "/blog-posts",
-      query: {
-        sort: ["published_date:desc"],
-        pagination: {
-          limit: 3,
-        },
-        populate: "*",
-      },
-      tags: ["blog-posts"],
-    });
-    return response.data || [];
+    return await cmsBlogPosts({ limit: 3 });
   } catch (error) {
     console.error("Failed to fetch latest blog posts:", error);
     return [];

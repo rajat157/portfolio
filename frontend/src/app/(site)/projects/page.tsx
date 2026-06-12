@@ -1,6 +1,7 @@
 import { Metadata } from "next";
-import { fetchAPI, getStrapiMedia } from "@/lib/strapi/client";
-import { Project as StrapiProject, Category, StrapiResponse } from "@/lib/strapi/types";
+import { getStrapiMedia } from "@/lib/strapi/client";
+import { cmsProjects, cmsCategories } from "@/lib/cms";
+import { Project as StrapiProject } from "@/lib/strapi/types";
 import { Reveal } from "@/components/animations/reveal";
 import { ProjectsClient } from "./projects-client";
 
@@ -105,21 +106,7 @@ function extractCategories(projects: StrapiProject[]): string[] {
 
 async function getProjects() {
   try {
-    const response = await fetchAPI<StrapiResponse<StrapiProject[]>>({
-      endpoint: "/projects",
-      query: {
-        populate: ["cover_image", "category"],
-        sort: ["featured:desc", "start_date:desc", "createdAt:desc"],
-      },
-      tags: ["projects"],
-    });
-
-    // Ensure we always return an array
-    if (!response || !response.data || !Array.isArray(response.data)) {
-      return [];
-    }
-
-    return response.data;
+    return await cmsProjects();
   } catch (error) {
     console.error("Failed to fetch projects:", error);
     return [];
@@ -128,25 +115,7 @@ async function getProjects() {
 
 async function getCategories() {
   try {
-    const response = await fetchAPI<StrapiResponse<Category[]>>({
-      endpoint: "/categories",
-      query: {
-        filters: {
-          type: {
-            $in: ["project", "both"],
-          },
-        },
-        sort: ["name:asc"],
-      },
-      tags: ["categories"],
-    });
-
-    // Ensure we always return an array
-    if (!response || !response.data || !Array.isArray(response.data)) {
-      return [];
-    }
-
-    return response.data;
+    return await cmsCategories("project");
   } catch (error) {
     console.error("Failed to fetch categories:", error);
     return [];

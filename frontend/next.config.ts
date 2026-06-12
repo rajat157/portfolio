@@ -1,4 +1,11 @@
+import path from "path";
+import { fileURLToPath } from "url";
+
 import type { NextConfig } from "next";
+import { withPayload } from "@payloadcms/next/withPayload";
+
+const filename = fileURLToPath(import.meta.url);
+const dirname = path.dirname(filename);
 
 const isDev = process.env.NODE_ENV === "development";
 
@@ -7,30 +14,13 @@ const nextConfig: NextConfig = {
   images: {
     // Disable image optimization in development to allow localhost
     unoptimized: isDev,
+    // Payload media served by the app itself
+    localPatterns: [
+      {
+        pathname: "/api/media/file/**",
+      },
+    ],
     remotePatterns: [
-      {
-        protocol: "http",
-        hostname: "localhost",
-        port: "1337",
-        pathname: "/uploads/**",
-      },
-      {
-        protocol: "http",
-        hostname: "127.0.0.1",
-        port: "1337",
-        pathname: "/uploads/**",
-      },
-      {
-        protocol: "http",
-        hostname: "strapi",
-        port: "1337",
-        pathname: "/uploads/**",
-      },
-      {
-        protocol: "https",
-        hostname: "**.strapiapp.com",
-        pathname: "/uploads/**",
-      },
       {
         protocol: "https",
         hostname: "cdn.simpleicons.org",
@@ -46,8 +36,25 @@ const nextConfig: NextConfig = {
         hostname: "res.cloudinary.com",
         pathname: "/**",
       },
+      {
+        protocol: "https",
+        hostname: "*.public.blob.vercel-storage.com",
+        pathname: "/**",
+      },
     ],
+  },
+  webpack: (webpackConfig) => {
+    webpackConfig.resolve.extensionAlias = {
+      ".cjs": [".cts", ".cjs"],
+      ".js": [".ts", ".tsx", ".js", ".jsx"],
+      ".mjs": [".mts", ".mjs"],
+    };
+
+    return webpackConfig;
+  },
+  turbopack: {
+    root: path.resolve(dirname),
   },
 };
 
-export default nextConfig;
+export default withPayload(nextConfig, { devBundleServerPackages: false });

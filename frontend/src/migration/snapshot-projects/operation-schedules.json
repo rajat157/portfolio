@@ -1,0 +1,24 @@
+{
+  "slug": "operation-schedules",
+  "title": "Operation Schedules",
+  "description": "FastAPI-based scheduling system for managing complex operational workflows with calendar integration and automated notifications.",
+  "content_markdown": "# Operation Schedules\n\nA scheduling and workflow management system built with FastAPI for managing complex operational processes.\n\n## Features\n\n- **Calendar Integration**: Sync with Google Calendar and Outlook\n- **Automated Scheduling**: Conflict detection and optimal time slot suggestions\n- **Workflow Automation**: Multi-step approval processes\n- **Notifications**: Email and Slack notifications for schedule changes\n- **Reporting**: Generate operational reports and analytics\n\n## Technical Implementation\n\nThe system is built on FastAPI for high-performance async operations, with PostgreSQL for persistent storage and Redis for caching frequently accessed schedule data.\n",
+  "technologies": [
+    "FastAPI",
+    "PostgreSQL",
+    "Redis",
+    "Python",
+    "Celery",
+    "Flask",
+    "Flask-ASPScheduler"
+  ],
+  "category": "Backend",
+  "featured": null,
+  "live_url": null,
+  "github_url": null,
+  "start_date": null,
+  "end_date": null,
+  "year": "2024",
+  "cover_image_url": "https://res.cloudinary.com/dpw6gp3ck/image/upload/v1770296951/operation_schedules_a8fc16e352.webp",
+  "gallery_urls": []
+}

@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
-import { fetchAPI, getStrapiMedia } from "@/lib/strapi";
-import type { StrapiResponse, BlogPost, Category } from "@/lib/strapi/types";
+import { getStrapiMedia } from "@/lib/strapi";
+import { cmsBlogPosts, cmsCategories } from "@/lib/cms";
+import type { BlogPost } from "@/lib/strapi/types";
 import { Reveal } from "@/components/animations/reveal";
 import { BlogPageClient } from "./blog-page-client";
 import type { Article } from "@/components/blog";
@@ -72,25 +73,10 @@ function transformBlogPostToArticle(post: BlogPost): Article | null {
 
 async function getBlogPosts(): Promise<Article[]> {
   try {
-    const response = await fetchAPI<StrapiResponse<BlogPost[]>>({
-      endpoint: "/blog-posts",
-      query: {
-        populate: ["cover_image", "category"],
-        sort: ["published_date:desc"],
-        pagination: {
-          pageSize: 100,
-        },
-      },
-      tags: ["blog-posts"],
-      revalidate: 3600,
-    });
-
-    if (!response?.data || !Array.isArray(response.data) || response.data.length === 0) {
-      return [];
-    }
+    const posts = await cmsBlogPosts({ limit: 100 });
 
     // Transform and filter out any null results
-    return response.data
+    return posts
       .map(transformBlogPostToArticle)
       .filter((article): article is Article => article !== null);
   } catch (error) {
@@ -101,26 +87,8 @@ async function getBlogPosts(): Promise<Article[]> {
 
 async function getBlogCategories(): Promise<string[]> {
   try {
-    const response = await fetchAPI<StrapiResponse<Category[]>>({
-      endpoint: "/categories",
-      query: {
-        filters: {
-          type: {
-            $in: ["blog", "both"],
-          },
-        },
-        sort: ["name:asc"],
-      },
-      tags: ["categories"],
-      revalidate: 3600,
-    });
-
-    if (!response?.data || response.data.length === 0) {
-      return [];
-    }
-
-    // Strapi 5 flat response format
-    return response.data.map((cat) => cat.name);
+    const categories = await cmsCategories("blog");
+    return categories.map((cat) => cat.name);
   } catch (error) {
     console.error("Failed to fetch categories:", error);
     return [];

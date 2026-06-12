@@ -1,0 +1,131 @@
+{
+  "source": "projects.html (live snapshot 2026-06-12)",
+  "note": "technologies_preview shows only the badges rendered on the listing card (max 4); technologies_hidden_count is the \"+N\" overflow badge. Full technology lists for projects with detail snapshots are in projects/<slug>.json.",
+  "projects": [
+    {
+      "slug": "tredye-trading-platform",
+      "title": "Tredye Trading Platform",
+      "description": "Real-time trading platform for NSE's 214 FNO stocks with RSI-based AI screening. Built with Next.js 16, Docker, Redis, Kafka, and PostgreSQL. Features high-frequency data streaming, real-time order book updates, and advanced charting capabilities.",
+      "category": "Web Dev",
+      "technologies_preview": [
+        "Next.js",
+        "Docker",
+        "Redis",
+        "Kafka"
+      ],
+      "technologies_hidden_count": 3,
+      "cover_image_url": "https://res.cloudinary.com/dpw6gp3ck/image/upload/v1770296849/tredye_trading_1e8f77a305.webp"
+    },
+    {
+      "slug": "labbuild-dashboard",
+      "title": "Labbuild Dashboard",
+      "description": "Flask and MongoDB dashboard for monitoring lab infrastructure, user sessions, and resource utilization across multiple cloud providers.",
+      "category": "Backend",
+      "technologies_preview": [
+        "Flask",
+        "MongoDB",
+        "Python",
+        "Chart.js"
+      ],
+      "technologies_hidden_count": 1,
+      "cover_image_url": "https://res.cloudinary.com/dpw6gp3ck/image/upload/v1770296884/labbuild_dashboard_0dd95216db.webp"
+    },
+    {
+      "slug": "supercomputer-dashboard",
+      "title": "Supercomputer Dashboard",
+      "description": "Django dashboard for monitoring SahasraT supercomputer at IISc - India's fastest supercomputer with 33,000 cores.",
+      "category": "DevOps",
+      "technologies_preview": [
+        "Django",
+        "Python",
+        "Linux",
+        "HPC"
+      ],
+      "technologies_hidden_count": 6,
+      "cover_image_url": "https://res.cloudinary.com/dpw6gp3ck/image/upload/v1770296917/sahasrat_supercomputer_d6e61961e7.webp"
+    },
+    {
+      "slug": "operation-schedules",
+      "title": "Operation Schedules",
+      "description": "FastAPI-based scheduling system for managing complex operational workflows with calendar integration and automated notifications.",
+      "category": "Backend",
+      "technologies_preview": [
+        "FastAPI",
+        "PostgreSQL",
+        "Redis",
+        "Python"
+      ],
+      "technologies_hidden_count": 3,
+      "cover_image_url": "https://res.cloudinary.com/dpw6gp3ck/image/upload/v1770296951/operation_schedules_a8fc16e352.webp"
+    },
+    {
+      "slug": "labbuild-2",
+      "title": "Labbuild 2.0",
+      "description": "High-performance lab infrastructure system achieving 90% faster performance compared to the previous version. Built with Python, Flask, FastAPI, and MongoDB.",
+      "category": "Backend",
+      "technologies_preview": [
+        "Python",
+        "Flask",
+        "FastAPI",
+        "MongoDB"
+      ],
+      "technologies_hidden_count": 4,
+      "cover_image_url": "https://res.cloudinary.com/dpw6gp3ck/image/upload/v1770296867/labbuild_2_44816a6dfb.webp"
+    },
+    {
+      "slug": "pro-fit-club-dashboard",
+      "title": "Pro Fit Club Dashboard",
+      "description": "Full-stack fitness club management system with member tracking, class scheduling, and payment processing.",
+      "category": "Web Dev",
+      "technologies_preview": [
+        "Django",
+        "PostgreSQL",
+        "Svelte"
+      ],
+      "technologies_hidden_count": 0,
+      "cover_image_url": "https://res.cloudinary.com/dpw6gp3ck/image/upload/v1770296986/fitness_club_dashboard_fe4ca5f241.webp"
+    },
+    {
+      "slug": "email-validation-tool",
+      "title": "Email Validation Tool",
+      "description": "A Python and Selenium-based automation tool for validating email addresses, boosting marketing team's outreach effectiveness and accuracy.",
+      "category": "Automation Tools",
+      "technologies_preview": [
+        "Python",
+        "Selenium",
+        "Pandas",
+        "SMTP"
+      ],
+      "technologies_hidden_count": 3,
+      "cover_image_url": "https://res.cloudinary.com/dpw6gp3ck/image/upload/v1770708540/email_validation_tool_e6adc0d198.webp"
+    },
+    {
+      "slug": "ecommerce-platform-fulfillment",
+      "title": "E-commerce Platform & Fulfillment System",
+      "description": "Led a team of six in building a comprehensive e-commerce platform with integrated fulfillment processes, leveraging modern web technologies and agile methodologies.",
+      "category": "Full-Stack Development",
+      "technologies_preview": [
+        "Python",
+        "Django",
+        "PostgreSQL",
+        "Git"
+      ],
+      "technologies_hidden_count": 5,
+      "cover_image_url": "https://res.cloudinary.com/dpw6gp3ck/image/upload/v1770708514/ecommerce_platform_81d23d4e64.webp"
+    },
+    {
+      "slug": "cloud-testing-automation-suite",
+      "title": "Cloud Testing Automation Suite",
+      "description": "Comprehensive test automation framework for cloud firewall solutions at Palo Alto Networks, featuring multi-cloud infrastructure testing and Kubernetes orchestration.",
+      "category": "DevOps",
+      "technologies_preview": [
+        "Python",
+        "Pytest",
+        "Jenkins",
+        "Kubernetes"
+      ],
+      "technologies_hidden_count": 8,
+      "cover_image_url": "https://res.cloudinary.com/dpw6gp3ck/image/upload/v1770708492/cloud_testing_automation_933641a9a6.webp"
+    }
+  ]
+}

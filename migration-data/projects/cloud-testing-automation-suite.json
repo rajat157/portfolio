@@ -1,0 +1,29 @@
+{
+  "slug": "cloud-testing-automation-suite",
+  "title": "Cloud Testing Automation Suite",
+  "description": "Comprehensive test automation framework for cloud firewall solutions at Palo Alto Networks, featuring multi-cloud infrastructure testing and Kubernetes orchestration.",
+  "content_markdown": "## Overview\n\nAs Lead Engineer - SQA at HCL Technologies, serving Palo Alto Networks, I led a team of six engineers in developing and maintaining a comprehensive cloud testing automation suite. This project encompassed test case development, automation framework creation, and multi-cloud infrastructure management.\n\n## Key Achievements\n\n### Team Leadership\n\n- Led a team of 6 QA engineers\n- Focused on developing test cases for cloud security solutions\n- Streamlined bug tracking and resolution using Jira\n- Created detailed documentation on Confluence\n\n### Test Automation Framework\n\n#### Core Automation\n\n- Developed automated test cases using **Pytest Framework** and Python\n- Orchestrated test execution through **Jenkins CI/CD pipelines**\n- Significantly reduced manual testing effort\n- Enhanced product reliability and release efficiency\n\n#### Test Coverage\n\n- Regression Testing\n- Smoke Testing\n- Acceptance Testing\n- Integration Testing\n\n### Multi-Cloud Infrastructure\n\nEngineered complex test beds across major cloud platforms:\n\n| Platform | Purpose |\n| --- | --- |\n| VMware ESXi | On-premise virtualization testing |\n| AWS | Cloud native testing scenarios |\n| GCP | Cross-cloud compatibility |\n| Azure | Enterprise cloud testing |\n\n## Kubernetes Firewall Testing\n\n### Container Firewall APIs\n\n- Crafted core APIs for a novel containerized firewall application\n- Deployed within Kubernetes clusters\n- Enhanced testing capabilities for QA and Development teams\n\n### Kubernetes Test Infrastructure\n\n- Established intricate Kubernetes clusters\n- Designed to test various scenarios for container firewall application\n- Supported complex network policy testing\n- Multi-node cluster configurations\n\n## Technical Details\n\n### Technology Stack\n\n- **Testing Framework:** Pytest, Python\n- **CI/CD:** Jenkins\n- **Cloud Platforms:** AWS, GCP, Azure, VMware ESXi\n- **Container Orchestration:** Kubernetes, Docker\n- **Bug Tracking:** Jira\n- **Documentation:** Confluence\n- **Version Control:** Git\n\n### Testing Architecture\n\n```\nJenkins Pipeline\n      ↓\nTest Orchestration Layer\n      ↓\n┌─────────────────────────────────────┐\n│    Multi-Cloud Test Environments    │\n├─────────┬─────────┬─────────┬───────┤\n│  ESXi   │   AWS   │   GCP   │ Azure │\n└─────────┴─────────┴─────────┴───────┘\n      ↓\nKubernetes Clusters (Firewall Testing)\n      ↓\nResults → Jira → Confluence Reports\n```\n\n## Impact\n\n- **Efficiency:** Reduced manual testing by 80%+\n- **Coverage:** Comprehensive multi-cloud test coverage\n- **Quality:** Improved release quality through automated regression\n- **Speed:** Faster release cycles through CI/CD integration\n- **Documentation:** Complete test documentation and knowledge base\n",
+  "technologies": [
+    "Python",
+    "Pytest",
+    "Jenkins",
+    "Kubernetes",
+    "Docker",
+    "AWS",
+    "GCP",
+    "Azure",
+    "VMware ESXi",
+    "Jira",
+    "Confluence",
+    "REST API"
+  ],
+  "category": "DevOps",
+  "featured": null,
+  "live_url": null,
+  "github_url": null,
+  "start_date": null,
+  "end_date": null,
+  "year": "2022",
+  "cover_image_url": "https://res.cloudinary.com/dpw6gp3ck/image/upload/v1770708492/cloud_testing_automation_933641a9a6.webp",
+  "gallery_urls": []
+}

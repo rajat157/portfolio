@@ -1,0 +1,26 @@
+{
+  "slug": "ecommerce-platform-fulfillment",
+  "title": "E-commerce Platform & Fulfillment System",
+  "description": "Led a team of six in building a comprehensive e-commerce platform with integrated fulfillment processes, leveraging modern web technologies and agile methodologies.",
+  "content_markdown": "## Overview\n\nAs Senior Developer at Offpriced Canada Inc., I led a team of six developers in establishing a complete e-commerce platform and its fulfillment process.\n\n## Key Responsibilities\n\n### Team Leadership\n\n- Managed a cross-functional team of 6 developers\n- Utilized Notion for effective progress tracking\n- Conducted daily stand-up calls\n- Implemented Kanban board for task tracking\n\n### Technical Architecture\n\n- Pioneered scalable web applications using Python\n- Ensured high performance and maintainability\n- Employed Git for version control\n\n### Platform Features\n\n- Full e-commerce storefront with product catalog\n- Shopping cart and checkout system\n- Order management and fulfillment tracking\n- User account management with security protocols\n\n## Technology Stack\n\n- Backend: Python, Django\n- Frontend: HTML, CSS, JavaScript\n- Database: PostgreSQL\n- Version Control: Git\n- Project Management: Notion\n",
+  "technologies": [
+    "Python",
+    "Django",
+    "PostgreSQL",
+    "Git",
+    "HTML",
+    "CSS",
+    "JavaScript",
+    "Notion",
+    "REST API"
+  ],
+  "category": "Full-Stack Development",
+  "featured": null,
+  "live_url": "https://givingz.com",
+  "github_url": null,
+  "start_date": null,
+  "end_date": null,
+  "year": "2023",
+  "cover_image_url": "https://res.cloudinary.com/dpw6gp3ck/image/upload/v1770708514/ecommerce_platform_81d23d4e64.webp",
+  "gallery_urls": []
+}

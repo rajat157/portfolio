@@ -1,0 +1,24 @@
+{
+  "slug": "tredye-trading-platform",
+  "title": "Tredye Trading Platform",
+  "description": "Real-time trading platform for NSE's 214 FNO stocks with RSI-based AI screening. Built with Next.js 16, Docker, Redis, Kafka, and PostgreSQL. Features high-frequency data streaming, real-time order book updates, and advanced charting capabilities.",
+  "content_markdown": "# Tredye Trading Platform\n\nA comprehensive real-time trading platform designed for high-frequency trading operations.\n\n## Key Features\n\n- **Real-time Data Streaming**: WebSocket-based live price feeds with sub-millisecond latency\n- **Order Book Management**: Live order book updates with depth visualization\n- **Advanced Charting**: TradingView-style interactive charts with multiple timeframes\n- **Portfolio Management**: Real-time P&L tracking and position management\n- **Risk Management**: Configurable stop-loss, take-profit, and position limits\n\n## Technical Architecture\n\nThe platform is built on a microservices architecture:\n\n- **Frontend**: Next.js 16 with App Router for server-side rendering and optimal performance\n- **Message Queue**: Apache Kafka for reliable, ordered event streaming\n- **Cache Layer**: Redis for session management and real-time data caching\n- **Database**: PostgreSQL with TimescaleDB extension for time-series data\n- **Containerization**: Docker and Docker Compose for development and deployment\n\n## Challenges & Solutions\n\n### High-Frequency Updates\n\nThe main challenge was handling thousands of price updates per second without overwhelming the UI. We implemented a tick batching system that aggregates updates within a 16ms window (matching 60fps refresh rate) and uses React's concurrent features for smooth rendering.\n\n### Data Consistency\n\nEnsuring data consistency across distributed services was critical. We used Kafka's exactly-once semantics combined with PostgreSQL's ACID transactions to maintain order integrity.\n",
+  "technologies": [
+    "Next.js",
+    "Docker",
+    "Redis",
+    "Kafka",
+    "PostgreSQL",
+    "WebSocket",
+    "TypeScript"
+  ],
+  "category": "Web Dev",
+  "featured": null,
+  "live_url": "https://tredye.com",
+  "github_url": null,
+  "start_date": null,
+  "end_date": null,
+  "year": "2026",
+  "cover_image_url": "https://res.cloudinary.com/dpw6gp3ck/image/upload/v1770296849/tredye_trading_1e8f77a305.webp",
+  "gallery_urls": []
+}

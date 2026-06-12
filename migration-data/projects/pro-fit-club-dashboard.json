@@ -1,0 +1,20 @@
+{
+  "slug": "pro-fit-club-dashboard",
+  "title": "Pro Fit Club Dashboard",
+  "description": "Full-stack fitness club management system with member tracking, class scheduling, and payment processing.",
+  "content_markdown": "# Pro Fit Club Dashboard\n\nA dynamic dashboard designed for Pro Fit Club, a local gym, built as a freelance project.\n\n## Features\n\n- **Member Management**: Track memberships, attendance, and fitness progress\n- **Class Scheduling**: Interactive calendar for booking group classes\n- **Data Visualization**: Real-time analytics and reporting\n\n## Technical Stack\n\n- **Frontend**: Svelte\n- **Backend**: Django\n- **Database**: PostgreSQL\n",
+  "technologies": [
+    "Django",
+    "PostgreSQL",
+    "Svelte"
+  ],
+  "category": "Web Dev",
+  "featured": null,
+  "live_url": null,
+  "github_url": null,
+  "start_date": null,
+  "end_date": null,
+  "year": "2023",
+  "cover_image_url": "https://res.cloudinary.com/dpw6gp3ck/image/upload/v1770296986/fitness_club_dashboard_fe4ca5f241.webp",
+  "gallery_urls": []
+}

@@ -1,0 +1,24 @@
+{
+  "slug": "email-validation-tool",
+  "title": "Email Validation Tool",
+  "description": "A Python and Selenium-based automation tool for validating email addresses, boosting marketing team's outreach effectiveness and accuracy.",
+  "content_markdown": "## Overview\n\nDeveloped an innovative automation tool for the marketing team at Offpriced Canada to validate email addresses at scale. This tool significantly improved email campaign effectiveness by ensuring deliverability and reducing bounce rates.\n\n## Problem Statement\n\nThe marketing team was facing challenges with:\n\n- High email bounce rates\n- Manual validation was time-consuming\n- Inaccurate contact databases affecting campaign ROI\n- Need for bulk validation capability\n\n## Solution\n\nBuilt a Python-based automation tool using Selenium for web automation to validate email addresses through multiple verification methods.\n\n## Features\n\n### Core Functionality\n\n- **Bulk email validation** - Process thousands of emails efficiently\n- **Syntax validation** - Check for proper email format\n- **Domain verification** - Verify MX records and domain existence\n- **SMTP validation** - Verify mailbox existence without sending emails\n- **Disposable email detection** - Flag temporary email services\n\n### Automation Capabilities\n\n- Selenium-based browser automation for web-based validations\n- Headless browser support for server deployment\n- CSV import/export functionality\n- Detailed validation reports\n\n## Technical Implementation\n\n### Technology Stack\n\n- **Language:** Python 3.x\n- **Automation:** Selenium WebDriver\n- **Email Validation:** DNS/MX lookup, SMTP verification\n- **Data Processing:** Pandas for CSV handling\n- **Reporting:** Excel/CSV export\n\n### Architecture\n\n```\nInput (CSV) → Parser → Validation Engine → Results → Report Generation\n                           ↓\n                    - Syntax Check\n                    - Domain Lookup\n                    - MX Record Check\n                    - SMTP Verification\n```\n\n## Impact\n\n- **Improved deliverability:** Reduced email bounce rate by 60%+\n- **Time savings:** Automated validation of 10,000+ emails per hour\n- **Cost reduction:** Fewer wasted marketing emails\n- **Better ROI:** Higher engagement from cleaner contact lists\n",
+  "technologies": [
+    "Python",
+    "Selenium",
+    "Pandas",
+    "SMTP",
+    "DNS",
+    "Web Automation",
+    "CSV Processing"
+  ],
+  "category": "Automation Tools",
+  "featured": null,
+  "live_url": null,
+  "github_url": null,
+  "start_date": null,
+  "end_date": null,
+  "year": "2022",
+  "cover_image_url": "https://res.cloudinary.com/dpw6gp3ck/image/upload/v1770708540/email_validation_tool_e6adc0d198.webp",
+  "gallery_urls": []
+}

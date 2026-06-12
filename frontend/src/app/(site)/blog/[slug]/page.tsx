@@ -1,7 +1,8 @@
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
-import { fetchAPI, getStrapiMedia } from "@/lib/strapi";
-import type { StrapiResponse, BlogPost } from "@/lib/strapi/types";
+import { getStrapiMedia } from "@/lib/strapi";
+import { cmsBlogPosts, cmsBlogPostBySlug } from "@/lib/cms";
+import type { BlogPost } from "@/lib/strapi/types";
 import { ArticleContent, type ArticleData } from "@/components/blog/article-content";
 import { generateToc } from "@/lib/utils/generate-toc";
 
@@ -34,25 +35,7 @@ function transformBlogPostToArticleData(post: BlogPost): ArticleData | null {
 
 async function getBlogPost(slug: string): Promise<BlogPost | null> {
   try {
-    const response = await fetchAPI<StrapiResponse<BlogPost[]>>({
-      endpoint: "/blog-posts",
-      query: {
-        filters: {
-          slug: {
-            $eq: slug,
-          },
-        },
-        populate: ["cover_image", "category"],
-      },
-      tags: [`blog-post-${slug}`],
-      revalidate: 3600,
-    });
-
-    if (!response?.data || response.data.length === 0) {
-      return null;
-    }
-
-    return response.data[0];
+    return await cmsBlogPostBySlug(slug);
   } catch (error) {
     console.error(`Failed to fetch blog post with slug "${slug}":`, error);
     return null;
@@ -61,26 +44,8 @@ async function getBlogPost(slug: string): Promise<BlogPost | null> {
 
 async function getAllBlogPostSlugs(): Promise<string[]> {
   try {
-    const response = await fetchAPI<StrapiResponse<BlogPost[]>>({
-      endpoint: "/blog-posts",
-      query: {
-        fields: ["slug"],
-        pagination: {
-          pageSize: 100,
-        },
-      },
-      tags: ["blog-posts"],
-      revalidate: 3600,
-    });
-
-    if (!response?.data || !Array.isArray(response.data)) {
-      return [];
-    }
-
-    // Filter out any posts without a valid slug (Strapi 5 flat response format)
-    return response.data
-      .filter((post) => post?.slug)
-      .map((post) => post.slug);
+    const posts = await cmsBlogPosts({ limit: 100 });
+    return posts.filter((post) => post?.slug).map((post) => post.slug);
   } catch (error) {
     console.error("Failed to fetch all blog posts for static params:", error);
     return [];
@@ -92,30 +57,10 @@ async function getRelatedPosts(
   limit: number = 3
 ): Promise<ArticleData[]> {
   try {
-    const response = await fetchAPI<StrapiResponse<BlogPost[]>>({
-      endpoint: "/blog-posts",
-      query: {
-        filters: {
-          slug: {
-            $ne: currentSlug,
-          },
-        },
-        populate: ["category", "cover_image"],
-        sort: ["published_date:desc"],
-        pagination: {
-          pageSize: limit,
-        },
-      },
-      tags: ["blog-posts"],
-      revalidate: 3600,
-    });
-
-    if (!response?.data || !Array.isArray(response.data) || response.data.length === 0) {
-      return [];
-    }
+    const posts = await cmsBlogPosts({ excludeSlug: currentSlug, limit });
 
     // Transform and filter out any null results
-    return response.data
+    return posts
       .map(transformBlogPostToArticleData)
       .filter((article): article is ArticleData => article !== null);
   } catch (error) {

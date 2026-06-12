@@ -10,8 +10,9 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Reveal } from "@/components/animations/reveal";
-import { fetchAPI, getStrapiMedia } from "@/lib/strapi/client";
-import { Project as StrapiProject, StrapiResponse, StrapiMedia } from "@/lib/strapi/types";
+import { getStrapiMedia } from "@/lib/strapi/client";
+import { cmsProjects, cmsProjectBySlug } from "@/lib/cms";
+import { Project as StrapiProject, StrapiMedia } from "@/lib/strapi/types";
 
 // Regenerate at most hourly — keeps ISR cadence fixed even if data fetches skip the cache
 export const revalidate = 3600;
@@ -41,24 +42,7 @@ interface ProjectDetail {
 // Fetch single project by slug
 async function getProjectBySlug(slug: string): Promise<StrapiProject | null> {
   try {
-    const response = await fetchAPI<StrapiResponse<StrapiProject[]>>({
-      endpoint: "/projects",
-      query: {
-        filters: {
-          slug: {
-            $eq: slug,
-          },
-        },
-        populate: ["cover_image", "gallery", "category"],
-      },
-      tags: ["projects", `project-${slug}`],
-    });
-
-    if (!response.data || response.data.length === 0) {
-      return null;
-    }
-
-    return response.data[0];
+    return await cmsProjectBySlug(slug);
   } catch (error) {
     console.error(`Failed to fetch project with slug "${slug}":`, error);
     return null;
@@ -68,21 +52,7 @@ async function getProjectBySlug(slug: string): Promise<StrapiProject | null> {
 // Fetch all projects for related section and static params
 async function getAllProjects(): Promise<StrapiProject[]> {
   try {
-    const response = await fetchAPI<StrapiResponse<StrapiProject[]>>({
-      endpoint: "/projects",
-      query: {
-        populate: ["cover_image", "category"],
-        sort: ["featured:desc", "createdAt:desc"],
-      },
-      tags: ["projects"],
-    });
-
-    // Ensure we always return an array
-    if (!response || !response.data || !Array.isArray(response.data)) {
-      return [];
-    }
-
-    return response.data;
+    return await cmsProjects();
   } catch (error) {
     console.error("Failed to fetch all projects:", error);
     return [];

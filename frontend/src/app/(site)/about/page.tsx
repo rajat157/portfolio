@@ -16,8 +16,8 @@ import {
   ChefHat,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { fetchAPI } from "@/lib/strapi";
-import type { About, StrapiResponse } from "@/lib/strapi/types";
+import { cmsAbout } from "@/lib/cms";
+import type { About } from "@/lib/strapi/types";
 
 // Regenerate at most hourly — keeps ISR cadence fixed even if data fetches skip the cache
 export const revalidate = 3600;
@@ -50,14 +50,7 @@ const defaultAboutData = {
 
 async function getAboutData(): Promise<About | null> {
   try {
-    const response = await fetchAPI<StrapiResponse<About>>({
-      endpoint: "/about",
-      query: {
-        populate: "*",
-      },
-      tags: ["about"],
-    });
-    return response.data;
+    return await cmsAbout();
   } catch (error) {
     console.error("Failed to fetch about data:", error);
     return null;
