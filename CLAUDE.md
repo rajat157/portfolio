@@ -86,6 +86,8 @@ Dev uses drizzle push (automatic). Production uses committed migrations in `fron
 3. Commit; Vercel's `npm run ci` applies it over `DATABASE_URL_UNPOOLED` before building.
 - Never point `npm run dev` at the prod DB without `PAYLOAD_DB_PUSH=false` (env-gated in payload.config.ts).
 - Do NOT add `sharp` back to payload.config — its libvips native lib gets dropped from the Vercel function bundle and 500s `/admin`.
+- The Vercel Blob plugin only loads in prod (token-gated), so it registers an admin component (`VercelBlobClientUploadHandler`) only in prod. `admin/importMap.js` MUST contain that entry or `/admin` 500s in prod ("PayloadComponent not found in importMap"). `npm run generate:importmap` is wrapped (`scripts/generate-importmap.mjs`) to force a placeholder token so it never strips the entry — always regenerate via that script, never bare `payload generate:importmap`.
+- Admin password-reset email uses the Resend adapter (`@payloadcms/email-resend`) from `onboarding@resend.dev` (Resend sandbox sender — only delivers to the account owner's address; fine for the single admin).
 
 ## Code Conventions
 - TypeScript strict mode; absolute imports via `@/`; `@payload-config` resolves to src/payload.config.ts

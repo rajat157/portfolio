@@ -2,6 +2,7 @@ import path from "path";
 import { fileURLToPath } from "url";
 
 import { postgresAdapter } from "@payloadcms/db-postgres";
+import { resendAdapter } from "@payloadcms/email-resend";
 import { lexicalEditor } from "@payloadcms/richtext-lexical";
 import { vercelBlobStorage } from "@payloadcms/storage-vercel-blob";
 import { buildConfig } from "payload";
@@ -45,6 +46,16 @@ export default buildConfig({
   collections: [Users, Media, Categories, Projects, BlogPosts],
   globals: [About, SiteSettings],
   editor: lexicalEditor(),
+  // Password-reset / verification email via Resend. onboarding@resend.dev is
+  // Resend's shared sandbox sender (delivers to the account owner's address) —
+  // matches the contact form; swap for a verified domain to email others.
+  email: process.env.RESEND_API_KEY
+    ? resendAdapter({
+        defaultFromAddress: "onboarding@resend.dev",
+        defaultFromName: "Rajat Kumar R",
+        apiKey: process.env.RESEND_API_KEY,
+      })
+    : undefined,
   secret: process.env.PAYLOAD_SECRET || "",
   typescript: {
     outputFile: path.resolve(dirname, "payload-types.ts"),
@@ -62,11 +73,16 @@ export default buildConfig({
   // No `sharp`: media uploads are served as-is (no imageSizes/cropping
   // configured), and sharp's native libvips kept breaking the Vercel
   // function bundle. next/image handles rendering-time optimization.
+  //
   // Vercel Blob in production; local disk uploads in dev (no token set).
-  // clientUploads off: uploads proxy through the server (fine under Vercel's
-  // 4.5MB body limit) and the admin importMap stays identical in dev and prod.
   // disablePayloadAccessControl: media is public (read: () => true), so serve
   // absolute Blob CDN URLs instead of proxying files through a function.
+  //
+  // IMPORTANT: this plugin is only active when BLOB_READ_WRITE_TOKEN is set, so
+  // it registers the VercelBlobClientUploadHandler component ONLY in prod. The
+  // committed admin/importMap.js MUST include that entry or /admin 500s in prod
+  // ("PayloadComponent not found in importMap"). `npm run generate:importmap`
+  // is hardened to set a placeholder token so it never strips the entry.
   plugins: process.env.BLOB_READ_WRITE_TOKEN
     ? [
         vercelBlobStorage({

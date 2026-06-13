@@ -10,12 +10,13 @@
     "lint": "eslint",
     "payload": "payload",
     "generate:types": "payload generate:types",
-    "generate:importmap": "payload generate:importmap",
+    "generate:importmap": "node scripts/generate-importmap.mjs",
     "ci": "DATABASE_URI=\"${DATABASE_URL_UNPOOLED:-${DATABASE_URI:-$DATABASE_URL}}\" payload migrate && next build"
   },
   "dependencies": {
     "@hookform/resolvers": "^5.2.2",
     "@payloadcms/db-postgres": "^3.85.1",
+    "@payloadcms/email-resend": "^3.85.1",
     "@payloadcms/next": "^3.85.1",
     "@payloadcms/richtext-lexical": "^3.85.1",
     "@payloadcms/storage-vercel-blob": "^3.85.1",
