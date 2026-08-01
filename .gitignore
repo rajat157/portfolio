@@ -62,7 +62,14 @@ coverage/
 
 # Optional stylelint cache
 .stylelintcache
-.claude/
+.claude/*
+!.claude/agents/
+!.claude/commands/
+!.claude/skills/
+!.claude/settings.json
+.claude/agents/**
+!.claude/agents/**/
+!.claude/agents/**/*.md
 
 .vercel
 
