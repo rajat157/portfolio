@@ -27,6 +27,11 @@ export const metadata: Metadata = {
   authors: [{ name: "Rajat Kumar R" }],
   creator: "Rajat Kumar R",
   metadataBase: new URL(siteUrl),
+  icons: {
+    icon: [{ url: "/icon.svg", type: "image/svg+xml" }],
+    apple: "/apple-icon",
+    shortcut: "/favicon.ico",
+  },
   openGraph: {
     type: "website",
     locale: "en_US",
