@@ -307,7 +307,7 @@ export default async function ProjectDetailPage({
       {/* Content Section */}
       <section className="py-16 px-4">
         <div className="container mx-auto">
-          <div className="grid grid-cols-1 lg:grid-cols-3 gap-12">
+          <div className="grid grid-cols-1 lg:grid-cols-3 gap-12 lg:pl-[calc(50%-var(--container-4xl)/2)]">
             {/* Main Content - Description */}
             <div className="lg:col-span-2">
               <Reveal delay={0.2}>
