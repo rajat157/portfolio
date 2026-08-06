@@ -16,6 +16,22 @@ export const metadata: Metadata = {
 const defaultProjects = [
   {
     id: "1",
+    slug: "staffing-operations-platform",
+    title: "Staffing Operations Platform — Five Portals on One System",
+    description: "Five portals, one login, and every company's data walled off inside the database itself. Admin, client, worker, partner and onboarding, over one permission model and one workflow engine.",
+    technologies: ["Next.js", "React", "TypeScript", "Turborepo", "Drizzle ORM", "PostgreSQL", "Better Auth", "CASL", "Row-Level Security", "State Machines"],
+    category: "Web Dev",
+  },
+  {
+    id: "2",
+    slug: "b2b-wholesale-platform",
+    title: "B2B Wholesale Platform — Buyer Portal, CRM & CMS in One App",
+    description: "One app for buyers, staff and editors — with a site the owner updates by talking to an AI. Public storefront, buyer portal, internal operations app and admin CMS in one codebase.",
+    technologies: ["Next.js", "React", "TypeScript", "Payload CMS", "PostgreSQL", "Cloudflare R2", "Resend", "Vercel", "Progressive Web Apps", "Web Push", "Model Context Protocol"],
+    category: "Web Dev",
+  },
+  {
+    id: "3",
     slug: "tredye-trading-platform",
     title: "Tredye Trading Platform",
     description: "Real-time trading platform built with Next.js 16, Docker, Redis, Kafka, and PostgreSQL. Features live market data, order management, and portfolio tracking.",
@@ -24,7 +40,7 @@ const defaultProjects = [
     imageUrl: "/images/covers/tredye-trading-platform.svg",
   },
   {
-    id: "2",
+    id: "4",
     slug: "labbuild-2",
     title: "Labbuild 2.0",
     description: "High-performance lab infrastructure system achieving 90% faster performance. Rebuilt from ground up with modern Python stack.",
@@ -33,7 +49,7 @@ const defaultProjects = [
     imageUrl: "/images/covers/labbuild-2.svg",
   },
   {
-    id: "3",
+    id: "5",
     slug: "supercomputer-dashboard",
     title: "Supercomputer Dashboard",
     description: "Django dashboard for monitoring SahasraT supercomputer at IISc with 33,000 cores. Real-time job tracking and resource monitoring.",
@@ -42,7 +58,7 @@ const defaultProjects = [
     imageUrl: "/images/covers/supercomputer-dashboard.svg",
   },
   {
-    id: "4",
+    id: "6",
     slug: "labbuild-dashboard",
     title: "Labbuild Dashboard",
     description: "Internal monitoring dashboard for Labbuild infrastructure. Real-time metrics, user sessions, and system health monitoring.",
@@ -51,7 +67,7 @@ const defaultProjects = [
     imageUrl: "/images/covers/labbuild-dashboard.svg",
   },
   {
-    id: "5",
+    id: "7",
     slug: "operation-schedules",
     title: "Operation Schedules",
     description: "Automated workflow scheduling system for batch operations. Handles complex dependencies and parallel execution.",
@@ -60,7 +76,7 @@ const defaultProjects = [
     imageUrl: "/images/covers/operation-schedules.svg",
   },
   {
-    id: "6",
+    id: "8",
     slug: "pro-fit-club-dashboard",
     title: "Pro Fit Club Dashboard",
     description: "Fitness club management dashboard with member tracking, class scheduling, and revenue analytics.",
