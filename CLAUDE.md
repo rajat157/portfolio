@@ -88,6 +88,9 @@ Dev uses drizzle push (automatic). Production uses committed migrations in `fron
 - Do NOT add `sharp` back to payload.config — its libvips native lib gets dropped from the Vercel function bundle and 500s `/admin`.
 - The Vercel Blob plugin only loads in prod (token-gated), so it registers an admin component (`VercelBlobClientUploadHandler`) only in prod. `admin/importMap.js` MUST contain that entry or `/admin` 500s in prod ("PayloadComponent not found in importMap"). `npm run generate:importmap` is wrapped (`scripts/generate-importmap.mjs`) to force a placeholder token so it never strips the entry — always regenerate via that script, never bare `payload generate:importmap`.
 - Admin password-reset email uses the Resend adapter (`@payloadcms/email-resend`) from `onboarding@resend.dev` (Resend sandbox sender — only delivers to the account owner's address; fine for the single admin).
+- `payload run` rewrites `process.argv` — a flag passed normally (`npx payload run scripts/x.ts --execute`) is invisible to the script; it only registers after a bare `--` (`npx payload run scripts/x.ts -- --execute`). An "execute" run without it silently no-ops into dry-run.
+- `payload run` calls `loadEnv()` before importing the target script, so `frontend/.env.local`'s `DATABASE_URI` shadows a production URL you meant to target — the script hits the local DB while appearing to run against prod. Pre-setting the var in the process environment before invoking does override it (`@next/env` won't clobber an already-set var). See `frontend/scripts/import-case-studies.ts`: defaults to dry-run, prints a `local | REMOTE / production` banner, forces `PAYLOAD_DB_PUSH=false`.
+- `featured_order` on `projects` sorts nothing — no query uses it; featured display order comes from `start_date` (`frontend/src/lib/cms/index.ts`).
 
 ## Code Conventions
 - TypeScript strict mode; absolute imports via `@/`; `@payload-config` resolves to src/payload.config.ts
