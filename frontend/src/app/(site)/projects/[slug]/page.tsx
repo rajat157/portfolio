@@ -198,7 +198,7 @@ export default async function ProjectDetailPage({
   return (
     <main className="min-h-screen">
       {/* Back Navigation */}
-      <div className="container mx-auto px-4 pt-8">
+      <div className="container mx-auto px-4 md:px-8 lg:px-12 pt-8">
         <Reveal direction="left">
           <Link
             href="/projects"
@@ -211,7 +211,7 @@ export default async function ProjectDetailPage({
       </div>
 
       {/* Hero Section */}
-      <section className="py-16 px-4">
+      <section className="py-16 px-4 md:px-8 lg:px-12">
         <div className="container mx-auto">
           <Reveal>
             <div className="max-w-4xl mx-auto text-center">
@@ -279,7 +279,7 @@ export default async function ProjectDetailPage({
       </section>
 
       {/* Cover Image */}
-      <section className="px-4 mb-16">
+      <section className="px-4 md:px-8 lg:px-12 mb-16">
         <Reveal delay={0.1}>
           <div className="container mx-auto">
             {project.coverImageUrl ? (
@@ -305,9 +305,9 @@ export default async function ProjectDetailPage({
       </section>
 
       {/* Content Section */}
-      <section className="py-16 px-4">
+      <section className="py-16 px-4 md:px-8 lg:px-12">
         <div className="container mx-auto">
-          <div className="grid grid-cols-1 lg:grid-cols-3 gap-12 lg:pl-[calc(50%-var(--container-4xl)/2)]">
+          <div className="grid grid-cols-1 lg:grid-cols-3 gap-12">
             {/* Main Content - Description */}
             <div className="lg:col-span-2">
               <Reveal delay={0.2}>
@@ -420,7 +420,7 @@ export default async function ProjectDetailPage({
 
       {/* Image Gallery */}
       {project.gallery.length > 0 && (
-        <section className="py-16 px-4 bg-muted/30">
+        <section className="py-16 px-4 md:px-8 lg:px-12 bg-muted/30">
           <div className="container mx-auto">
             <Reveal delay={0.1}>
               <h2 className="text-2xl font-bold mb-8">Project Gallery</h2>
@@ -445,7 +445,7 @@ export default async function ProjectDetailPage({
 
       {/* Related Projects Section */}
       {relatedProjects.length > 0 && (
-        <section className="py-16 px-4">
+        <section className="py-16 px-4 md:px-8 lg:px-12">
           <div className="container mx-auto">
             <Reveal>
               <h2 className="text-2xl font-bold mb-8">Related Projects</h2>
@@ -505,7 +505,7 @@ export default async function ProjectDetailPage({
       )}
 
       {/* Back to Projects CTA */}
-      <section className="py-16 px-4 border-t">
+      <section className="py-16 px-4 md:px-8 lg:px-12 border-t">
         <div className="container mx-auto text-center">
           <Reveal>
             <p className="text-muted-foreground mb-4">
