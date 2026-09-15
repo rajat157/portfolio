@@ -10,6 +10,7 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Reveal } from "@/components/animations/reveal";
+import { GalleryVideo } from "@/components/gallery-video";
 import { cmsProjects, cmsProjectBySlug, getMediaURL } from "@/lib/cms";
 import { Project as StrapiProject, StrapiMedia } from "@/lib/cms/types";
 
@@ -35,6 +36,7 @@ interface ProjectDetail {
   gallery: Array<{
     url: string;
     alt: string | null;
+    mimeType: string | null;
   }>;
 }
 
@@ -100,6 +102,7 @@ function transformProject(strapiProject: StrapiProject): ProjectDetail {
     gallery: galleryImages.map((img: StrapiMedia) => ({
       url: getMediaURL(img.url) || "",
       alt: img.alternativeText,
+      mimeType: img.mimeType,
     })),
   };
 }
@@ -429,12 +432,19 @@ export default async function ProjectDetailPage({
               {project.gallery.map((image, i) => (
                 <Reveal key={i} delay={0.1 + i * 0.05}>
                   <div className="aspect-video relative rounded-lg overflow-hidden border border-border">
-                    <Image
-                      src={image.url}
-                      alt={image.alt || `Gallery image ${i + 1}`}
-                      fill
-                      className="object-cover"
-                    />
+                    {image.mimeType?.startsWith("video/") ? (
+                      <GalleryVideo
+                        src={image.url}
+                        label={image.alt || `Gallery video ${i + 1}`}
+                      />
+                    ) : (
+                      <Image
+                        src={image.url}
+                        alt={image.alt || `Gallery image ${i + 1}`}
+                        fill
+                        className="object-cover"
+                      />
+                    )}
                   </div>
                 </Reveal>
               ))}

@@ -31,6 +31,14 @@ const defaultProjects = [
     category: "Web Dev",
   },
   {
+    id: "9",
+    slug: "esports-talent-portfolio",
+    title: "Esports Talent Portfolio — Broadcast-Style Motion & a Custom Control Room",
+    description: "A booking site that feels like a live broadcast — kept current by the talent, not a developer.",
+    technologies: ["Next.js", "React", "TypeScript", "Payload CMS", "PostgreSQL", "Tailwind CSS", "Lenis", "Vercel Blob", "Resend", "Cloudflare Turnstile", "Vitest", "Playwright", "Vercel"],
+    category: "Web Dev",
+  },
+  {
     id: "3",
     slug: "tredye-trading-platform",
     title: "Tredye Trading Platform",

@@ -27,6 +27,7 @@ export interface StrapiMedia {
     large?: StrapiImageFormat;
   } | null;
   url: string;
+  mimeType: string | null;
 }
 
 export interface StrapiImageFormat {

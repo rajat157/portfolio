@@ -6,7 +6,7 @@ export const Media: CollectionConfig = {
     read: () => true,
   },
   upload: {
-    mimeTypes: ["image/*", "application/pdf"],
+    mimeTypes: ["image/*", "application/pdf", "video/mp4"],
   },
   fields: [
     {

@@ -39,6 +39,7 @@ function toMedia(m: any): StrapiMedia | null {
     height: m.height ?? 0,
     formats: null,
     url: m.url,
+    mimeType: m.mimeType ?? null,
   };
 }
 

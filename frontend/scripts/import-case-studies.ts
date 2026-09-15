@@ -1,15 +1,26 @@
 /**
- * Publish the two 2026 case studies (B2B wholesale + staffing operations) into
- * Payload, and unfeature everything that is not part of the new featured set.
+ * Publish the 2026 case studies listed in CASE_STUDIES into Payload, and align
+ * the featured set to exactly those slugs. A slug that already exists is left
+ * untouched except for its `featured` flag; a new slug gets its media uploaded
+ * and the project created.
  *
  *   dry-run (default):  npx payload run scripts/import-case-studies.ts
  *   execute:            npx payload run scripts/import-case-studies.ts -- --execute
  *
  * The bare `--` is required: `payload run` rewrites process.argv and only
  * forwards what follows it. Without it the flag is invisible and the script
- * dry-runs — safe, but it will look like nothing happened.
+ * dry-runs — safe, but it will look like nothing happened. In PowerShell, npx
+ * itself drops the bare `--` — use
+ * `node_modules\.bin\payload.cmd run scripts/import-case-studies.ts -- --execute`
+ * instead.
  *
- * Idempotent: media dedupe on filename, projects upsert on slug.
+ * A production run must pre-set BOTH `DATABASE_URI` (the production unpooled
+ * URL) and `BLOB_READ_WRITE_TOKEN` in the process environment before invoking
+ * `payload run` — otherwise its loadEnv step lets frontend/.env.local's local
+ * `DATABASE_URI` win and the script silently targets the dev DB.
+ *
+ * Idempotent: media dedupe on filename; existing project slugs are left
+ * unchanged except for their `featured` flag, only new slugs get created.
  *
  * Source content lives in src/migration/case-studies/ (alongside the existing
  * migration import sources) rather than a temp dir, so a later production run
@@ -28,8 +39,6 @@ const EXECUTE = process.argv.includes("--execute");
 // The public site only ever renders this category's projects correctly; a
 // project with no category shows "Uncategorized" and disappears behind filters.
 const CATEGORY_SLUG = "web-dev";
-// Kept featured alongside the two new case studies.
-const KEEP_FEATURED = "tredye-trading-platform";
 
 /**
  * start_date is what actually orders the cards: the public query sorts
@@ -38,6 +47,7 @@ const KEEP_FEATURED = "tredye-trading-platform";
  * (`git log --reverse --format=%as | head -1`), captured 2026-08-05:
  *   D:\Projects\offpriced          -> 2026-05-15
  *   D:\Projects\laborithm web app  -> 2026-07-01
+ *   D:\Projects\sam-portfolio      -> 2026-05-12
  */
 const CASE_STUDIES = [
   {
@@ -64,6 +74,18 @@ const CASE_STUDIES = [
       ["offpriced-admin-cms.png", "Admin CMS where the business edits every page of the public site"],
     ],
   },
+  {
+    file: "case-study-esports-talent.md",
+    start_date: "2026-05-12",
+    featured_order: 3,
+    images: [
+      ["lucif3r-hero.jpg", "lucif3r home page hero with the glitch wordmark, booking status, headline stats and stage portrait"],
+      ["lucif3r-hero-motion.mp4", "Screen recording of the hero: the RGB-split glitch on the wordmark and the gold shimmer sweep"],
+      ["lucif3r-scroll-tour.mp4", "Screen recording of a smooth-scroll pass through the home page sections"],
+      ["lucif3r-mobile.jpg", "Three mobile screens: the hero, the services accordion and the swipeable event carousel"],
+      ["lucif3r-event-case-study.jpg", "An event case-study page with its title, event tags and the broadcast video preview"],
+    ],
+  },
 ] as const;
 
 /* ---------------------------------------------------------------- guards --
@@ -84,6 +106,14 @@ if (!isLocal && !process.env.BLOB_READ_WRITE_TOKEN) {
   throw new Error(
     "target database is not local but BLOB_READ_WRITE_TOKEN is unset — media " +
       "would upload to local disk and production image URLs would point at nothing"
+  );
+}
+
+// Reverse guard: never let a local dev run point at production Blob storage.
+if (isLocal && process.env.BLOB_READ_WRITE_TOKEN) {
+  throw new Error(
+    "target database is local but BLOB_READ_WRITE_TOKEN is set — refusing to upload " +
+      "media to production Blob storage for local rows"
   );
 }
 
@@ -198,22 +228,58 @@ async function ensureMedia(filename: string, alt: string): Promise<number | null
   return doc.id as number;
 }
 
+/**
+ * Guards a featured-flag write against clobbering a pending draft. Payload's
+ * update() without `draft` loads the LATEST version of the doc (which may be
+ * an unpublished draft) and carries forward every field not passed —
+ * including `_status` — so a bare `{ featured }` write can silently publish
+ * draft content and unpublish the project. Returns false (and prints SKIP)
+ * when the latest version is a draft ahead of a published main doc.
+ */
+async function draftSafe(slug: string, id: number, mainStatus: string | null | undefined): Promise<boolean> {
+  const latest = await payload.findByID({ collection: "projects", id, draft: true, depth: 0 });
+  if (latest._status === "draft" && mainStatus === "published") {
+    console.log(`SKIP ${slug}: has unpublished draft changes — publish or discard them in /admin, then re-run`);
+    return false;
+  }
+  return true;
+}
+
 const newSlugs: string[] = [];
 
 for (const cs of CASE_STUDIES) {
   const { meta, content } = parseCaseStudy(cs.file);
   newSlugs.push(meta.slug);
-  console.log(`${meta.slug}  (start_date ${cs.start_date}, ${content.length} chars of content)`);
-
-  const imageIds: (number | null)[] = [];
-  for (const [filename, alt] of cs.images) imageIds.push(await ensureMedia(filename, alt));
 
   const existing = await payload.find({
     collection: "projects",
     where: { slug: { equals: meta.slug } },
     limit: 1,
-    draft: true,
   });
+
+  // Existing slugs are create-only: no media upload, no content changes —
+  // only bring featured in line with the current set.
+  if (existing.docs[0]) {
+    const p = existing.docs[0];
+    const willFeature = !p.featured;
+    if (willFeature) {
+      const safe = await draftSafe(meta.slug, p.id, p._status);
+      if (safe) {
+        console.log(`${meta.slug}  exists — left unchanged, featured: no → yes`);
+        if (EXECUTE) {
+          await payload.update({ collection: "projects", id: p.id, data: { featured: true } });
+        }
+      }
+    } else {
+      console.log(`${meta.slug}  exists — left unchanged, featured: yes`);
+    }
+    continue;
+  }
+
+  console.log(`${meta.slug}  (start_date ${cs.start_date}, ${content.length} chars of content)`);
+
+  const imageIds: (number | null)[] = [];
+  for (const [filename, alt] of cs.images) imageIds.push(await ensureMedia(filename, alt));
 
   const data = {
     title: meta.title,
@@ -233,34 +299,34 @@ for (const cs of CASE_STUDIES) {
   };
 
   if (!EXECUTE) {
-    console.log(`  project WOULD ${existing.docs[0] ? `update #${existing.docs[0].id}` : "create"}\n`);
+    console.log(`  project WOULD create\n`);
     continue;
   }
-  const doc = existing.docs[0]
-    ? await payload.update({ collection: "projects", id: existing.docs[0].id, data })
-    : await payload.create({ collection: "projects", data });
-  console.log(`  project ${existing.docs[0] ? "update" : "create"} #${doc.id} _status=${doc._status}\n`);
+  const doc = await payload.create({ collection: "projects", data });
+  console.log(`  project create #${doc.id} _status=${doc._status}\n`);
 }
 
 /* --------------------------------------------------------- unfeaturing -- */
 
-const keep = new Set([KEEP_FEATURED, ...newSlugs]);
-const all = await payload.find({ collection: "projects", limit: 500, depth: 0, draft: true });
+const keep = new Set(newSlugs);
+const all = await payload.find({ collection: "projects", limit: 500, depth: 0 });
 console.log(`currently featured (${all.docs.filter((p) => p.featured).length} of ${all.docs.length} projects):`);
 for (const p of all.docs.filter((d) => d.featured)) console.log(`  ${p.slug}`);
 console.log("");
 
 for (const p of all.docs) {
   if (keep.has(p.slug) || !p.featured) continue;
+  const safe = await draftSafe(p.slug, p.id, p._status);
+  if (!safe) continue;
   if (!EXECUTE) {
-    console.log(`unfeature WOULD ${p.slug} (#${p.id})`);
+    console.log(`unfeature WOULD ${p.slug} (#${p.id}) _status=${p._status}`);
     continue;
   }
-  // Pass _status through so unfeaturing never changes publication state.
+  // Never pass _status here — unfeaturing must not change publication state.
   await payload.update({
     collection: "projects",
     id: p.id,
-    data: { featured: false, _status: p._status as "draft" | "published" },
+    data: { featured: false },
   });
   console.log(`unfeature ${p.slug} (#${p.id})`);
 }
@@ -278,6 +344,7 @@ if (!EXECUTE) {
   console.log("\nDRY RUN — nothing was written. To apply:");
   console.log("  npx payload run scripts/import-case-studies.ts -- --execute");
   console.log("  (the bare -- is required, or the flag never reaches this script)");
+  console.log("  (in PowerShell, npx drops the bare --; use node_modules\\.bin\\payload.cmd instead)");
 }
 
 process.exit(0);
