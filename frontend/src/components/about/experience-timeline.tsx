@@ -15,9 +15,18 @@ interface ExperienceItem {
 // Default fallback data when API returns empty
 const defaultExperiences: ExperienceItem[] = [
   {
+    company: "Independent",
+    role: "Freelance Software Architect & Developer",
+    period: "Feb 2026 - Present",
+    description: [
+      "Building full-stack web platforms for clients end to end — B2B commerce and CRM, multi-portal operations software and motion-led brand sites — with Next.js, Payload CMS and PostgreSQL.",
+    ],
+    technologies: [],
+  },
+  {
     company: "Voltvave Innovations",
     role: "Freelance Software Architect & Developer",
-    period: "Nov 2025 - Present",
+    period: "Nov 2025 - Jan 2026",
     description: [
       'Built "Tredye" trading platform with Next.js 16, Docker, Redis, Kafka, PostgreSQL',
     ],
@@ -92,7 +101,7 @@ const defaultExperiences: ExperienceItem[] = [
 function formatPeriod(startDate: string, endDate: string | null, isCurrent: boolean): string {
   const formatDate = (date: string) => {
     const d = new Date(date);
-    return d.toLocaleDateString("en-US", { month: "short", year: "numeric" });
+    return d.toLocaleDateString("en-US", { month: "short", year: "numeric", timeZone: "UTC" });
   };
 
   const start = formatDate(startDate);

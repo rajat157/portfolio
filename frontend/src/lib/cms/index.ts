@@ -122,7 +122,15 @@ export async function cmsProjects(
     limit: opts.limit ?? 100,
     depth: 1,
   });
-  return res.docs.map(toProject);
+  const projects = res.docs.map(toProject);
+  // ponytail: Postgres DESC puts NULL start_date first, so reorder in memory;
+  // only correct while every project fits in one page (limit)
+  return projects.sort((a, b) => {
+    if (a.featured !== b.featured) return a.featured ? -1 : 1;
+    const aDate = a.start_date ? Date.parse(a.start_date) : -Infinity;
+    const bDate = b.start_date ? Date.parse(b.start_date) : -Infinity;
+    return bDate - aDate; // Array.prototype.sort is stable: ties keep DB order (createdAt tiebreak)
+  });
 }
 
 export async function cmsProjectBySlug(slug: string): Promise<Project | null> {

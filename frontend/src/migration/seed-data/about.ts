@@ -99,13 +99,24 @@ When I'm not coding, you'll find me exploring photography, music production, or 
   ],
   experience: [
     {
+      company: "Independent",
+      position: "Freelance Software Architect & Developer",
+      description:
+        "Building full-stack web platforms for clients end to end — B2B commerce and CRM, multi-portal operations software and motion-led brand sites — with Next.js, Payload CMS and PostgreSQL.",
+      start_date: "2026-02-01T12:00:00.000Z",
+      end_date: null,
+      is_current: true,
+      location: "Remote",
+      company_url: null,
+    },
+    {
       company: "Voltvave Innovations",
       position: "Freelance Software Architect & Developer",
       description:
         'Built "Tredye" trading platform with Next.js 16, Docker, Redis, Kafka, PostgreSQL. Architected real-time data streaming and order management systems.',
       start_date: "2025-11-01",
-      end_date: null,
-      is_current: true,
+      end_date: "2026-01-31T12:00:00.000Z",
+      is_current: false,
       location: "Remote",
       company_url: null,
     },

@@ -55,11 +55,19 @@
   ],
   "experience": [
     {
+      "company": "Independent",
+      "position": "Freelance Software Architect & Developer",
+      "dates": "Feb 2026 - Present",
+      "start_date": "Feb 2026",
+      "end_date": "Present",
+      "description": "Building full-stack web platforms for clients end to end — B2B commerce and CRM, multi-portal operations software and motion-led brand sites — with Next.js, Payload CMS and PostgreSQL."
+    },
+    {
       "company": "Voltvave Innovations",
       "position": "Freelance Software Architect & Developer",
-      "dates": "Nov 2025 - Present",
+      "dates": "Nov 2025 - Jan 2026",
       "start_date": "Nov 2025",
-      "end_date": "Present",
+      "end_date": "Jan 2026",
       "description": "Built \"Tredye\" trading platform with Next.js 16, Docker, Redis, Kafka, PostgreSQL. Architected real-time data streaming and order management systems."
     },
     {
