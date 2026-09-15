@@ -68,7 +68,7 @@
       "dates": "Nov 2025 - Jan 2026",
       "start_date": "Nov 2025",
       "end_date": "Jan 2026",
-      "description": "Built \"Tredye\" trading platform with Next.js 16, Docker, Redis, Kafka, PostgreSQL. Architected real-time data streaming and order management systems."
+      "description": "Built \"Tredye\", a real-time market-monitoring platform for NSE stocks: Python services on Kafka, Redis and PostgreSQL, with a Next.js dashboard. Built the event-driven data pipeline, alerts and backtesting."
     },
     {
       "company": "Red Education",

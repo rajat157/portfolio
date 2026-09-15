@@ -113,7 +113,7 @@ When I'm not coding, you'll find me exploring photography, music production, or 
       company: "Voltvave Innovations",
       position: "Freelance Software Architect & Developer",
       description:
-        'Built "Tredye" trading platform with Next.js 16, Docker, Redis, Kafka, PostgreSQL. Architected real-time data streaming and order management systems.',
+        'Built "Tredye", a real-time market-monitoring platform for NSE stocks: Python services on Kafka, Redis and PostgreSQL, with a Next.js dashboard. Built the event-driven data pipeline, alerts and backtesting.',
       start_date: "2025-11-01",
       end_date: "2026-01-31T12:00:00.000Z",
       is_current: false,

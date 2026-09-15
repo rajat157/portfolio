@@ -28,7 +28,7 @@ const defaultExperiences: ExperienceItem[] = [
     role: "Freelance Software Architect & Developer",
     period: "Nov 2025 - Jan 2026",
     description: [
-      'Built "Tredye" trading platform with Next.js 16, Docker, Redis, Kafka, PostgreSQL',
+      'Built "Tredye", a real-time market-monitoring platform for NSE stocks: Python services on Kafka, Redis and PostgreSQL, with a Next.js dashboard. Built the event-driven data pipeline, alerts and backtesting.',
     ],
     technologies: ["Next.js", "Docker", "Redis", "Kafka", "PostgreSQL"],
   },
