@@ -62,31 +62,32 @@ Live data raises its own design questions. A status badge shows whether the mark
 
 Tredye is a set of small services connected by events. Market data flows through them in one direction, from the broker's feed to the browser.
 
-```text
-        Kite Connect live feed
-                  │
-                  ▼
-           data ingestion
-                  │  Kafka: ticks
-                  ▼
-           candle builder
-                  │  Kafka: candles
-          ┌───────┴────────┐
-          │                │
-   RSI calculator   MACD calculator
-   (writes Redis)          │
-          │                │
-     divergence      MACD strategy
-      detector          detector
-          │                │
-          └───────┬────────┘
-                  │  Kafka: alerts and setups
-                  │  Redis: live board, every 2 s
-                  ▼
-    API gateway (REST + WebSocket)
-                  │
-                  ▼
-          Next.js dashboard
+```flow
+[
+  { "node": "Kite Connect", "detail": "Live market feed", "kind": "external" },
+  { "edge": "WebSocket" },
+  { "node": "Data ingestion", "detail": "Follows NSE market hours", "stores": ["Kafka"] },
+  { "edge": "Kafka · ticks" },
+  { "node": "Candle builder", "detail": "Aligned to the 9:15 IST open", "stores": ["Kafka", "Redis", "PostgreSQL"] },
+  { "edge": "Kafka · candles" },
+  { "lanes": [
+    [
+      { "node": "RSI calculator", "detail": "TA-Lib · state in Redis", "stores": ["Kafka", "Redis", "PostgreSQL"] },
+      { "edge": "Kafka · RSI" },
+      { "node": "Divergence detector", "detail": "Stores confirmed divergences", "stores": ["Kafka", "Redis", "PostgreSQL"] }
+    ],
+    [
+      { "node": "MACD calculator", "detail": "Hourly, 4-hour and daily", "stores": ["Kafka", "Redis", "PostgreSQL"] },
+      { "edge": "Kafka · MACD" },
+      { "node": "MACD strategy detector", "detail": "Setups and triggers", "stores": ["Kafka", "Redis", "PostgreSQL"] }
+    ]
+  ] },
+  { "edge": ["Kafka · alerts and setups", "Redis · live board, every 2 s"] },
+  { "node": "API gateway", "detail": "FastAPI · REST + WebSocket", "stores": ["Kafka", "Redis", "PostgreSQL"] },
+  { "edge": "WebSocket" },
+  { "node": "Next.js dashboard", "detail": "Live board in the browser", "kind": "highlight" },
+  { "legend": "Kafka carries every stage-to-stage event · Redis holds live state · PostgreSQL stores candles, indicators, divergences and signals" }
+]
 ```
 
 **Ingestion.** One service holds the live WebSocket feed from Zerodha's Kite Connect and publishes every tick to Kafka. It follows NSE market hours, and reconnects on its own, fetching a fresh access token when the broker rejects the old one.

@@ -1,4 +1,5 @@
 import { Metadata } from "next";
+import { isValidElement, type ReactNode } from "react";
 import Image from "next/image";
 import Link from "next/link";
 import { notFound } from "next/navigation";
@@ -11,6 +12,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Reveal } from "@/components/animations/reveal";
 import { GalleryVideo } from "@/components/gallery-video";
+import { FlowDiagram, parseFlow } from "@/components/projects/flow-diagram";
 import { cmsProjects, cmsProjectBySlug, getMediaURL } from "@/lib/cms";
 import { Project as StrapiProject, StrapiMedia } from "@/lib/cms/types";
 
@@ -58,6 +60,18 @@ async function getAllProjects(): Promise<StrapiProject[]> {
     console.error("Failed to fetch all projects:", error);
     return [];
   }
+}
+
+// Extracts the raw text of a fenced ```flow code block from the <pre> override's children,
+// or null if this <pre> isn't a `flow` block.
+function getFlowSource(children: ReactNode): string | null {
+  const codeChild = Array.isArray(children) ? children[0] : children;
+  if (!isValidElement<{ className?: string; children?: ReactNode }>(codeChild)) return null;
+  if (codeChild.props.className !== "language-flow") return null;
+  const raw = codeChild.props.children;
+  if (typeof raw === "string") return raw;
+  if (Array.isArray(raw)) return raw.map(String).join("");
+  return null;
 }
 
 // Ensure URL has a protocol prefix
@@ -329,7 +343,12 @@ export default async function ProjectDetailPage({
                         ol: ({ children }) => <ol className="list-decimal list-outside ml-6 my-5 space-y-2 text-muted-foreground">{children}</ol>,
                         li: ({ children }) => <li className="pl-2 leading-relaxed">{children}</li>,
                         blockquote: ({ children }) => <blockquote className="border-l-4 border-primary/60 pl-6 py-3 my-6 bg-muted/30 rounded-r-lg italic text-muted-foreground/90">{children}</blockquote>,
-                        pre: ({ children }) => <pre className="bg-muted/80 border border-border rounded-lg p-4 my-5 overflow-x-auto">{children}</pre>,
+                        pre: ({ children }) => {
+                          const flowSource = getFlowSource(children);
+                          const flowItems = flowSource ? parseFlow(flowSource) : null;
+                          if (flowItems) return <FlowDiagram items={flowItems} />;
+                          return <pre className="bg-muted/80 border border-border rounded-lg p-4 my-5 overflow-x-auto">{children}</pre>;
+                        },
                         code: ({ className, children, ...props }) => {
                           const isInline = !className;
                           if (isInline) {

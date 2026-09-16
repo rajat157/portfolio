@@ -44,6 +44,8 @@
   --radius-2xl: calc(var(--radius) + 8px);
   --radius-3xl: calc(var(--radius) + 12px);
   --radius-4xl: calc(var(--radius) + 16px);
+  --animate-flow-dash-y: flow-dash-y 1.2s linear infinite;
+  --animate-flow-dash-x: flow-dash-x 1.2s linear infinite;
 }
 
 :root {
@@ -166,6 +168,20 @@ html.dark::view-transition-new(root) {
   }
   to {
     clip-path: circle(0px at var(--theme-x, 50%) var(--theme-y, 50%));
+  }
+}
+
+/* Flow diagram connectors - a continuously flowing dashed line, as a tiling
+   background whose position animates (real px dash size, never distorted by
+   the element's own width/height, unlike an SVG stroke in a scaled viewBox) */
+@keyframes flow-dash-y {
+  to {
+    background-position: 0 12px;
+  }
+}
+@keyframes flow-dash-x {
+  to {
+    background-position: 12px 0;
   }
 }
 
