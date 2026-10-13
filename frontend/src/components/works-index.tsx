@@ -295,6 +295,10 @@ function Row({
             onDraft();
           }
         }}
+        // Safari (iOS, and WebKit generally) turns a tap into a click only on elements it thinks are clickable,
+        // and a capture handler doesn't count: without this, tapping any cell but the title link does nothing.
+        // An onClick prop makes React set tr.onclick (its own iOS workaround), which does count.
+        onClick={() => {}}
       >
         <td className="sh">{pad2(s.sheetNo)}</td>
         <th scope="row">
