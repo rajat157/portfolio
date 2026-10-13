@@ -226,7 +226,7 @@ html.intro-run .cons, html:not([data-construction="on"]) .drafting .cons, html:n
 .cd.hot { opacity: 1; }
 .glyph { font-family: var(--font-sans), 'Arial Narrow', sans-serif; font-weight: 650; font-stretch: 75%; fill: var(--ink-c); stroke: var(--ink-c); stroke-width: 1; transition: fill var(--t16) var(--ease-attack), stroke var(--t16) var(--ease-attack), fill-opacity var(--t16) var(--ease-attack); }
 .dot { fill: var(--orange-c); stroke: none; transition: fill var(--t16) var(--ease-attack); }
-.dia { display: block; overflow: visible; }
+.dia { display: block; overflow: visible; max-width: 100%; height: auto; }
 .d-box { fill: none; stroke: var(--ink-c); stroke-width: 1.5; }
 .d-edge, .d-wall, .d-dim { fill: none; stroke: var(--ink-c); stroke-width: 1; }
 .d-arrow { fill: var(--ink-c); stroke: none; }
@@ -285,7 +285,9 @@ html:not(.js) .tbl-wrap { grid-column: 1 / -1; }
 .inspect .psheet { margin-top: 0; padding-top: 0; border-top: 0; }
 .dia-text { font-size: 14px; line-height: 1.5; color: var(--sub-c); max-width: 62ch; }
 .js .dia-text { position: absolute; width: 1px; height: 1px; margin: -1px; padding: 0; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; border: 0; }
-html:not(.js) .fig-box { display: none; }
+/* P3: unlike the prototype, the figure is SSR'd with real content (§4.3),
+   so it stays visible without JS instead of being hidden in favour of
+   .dia-text (the prototype's drafted.html:301-303 no-JS swap is dropped). */
 
 /* ---------- inspect sheet ---------- */
 .inspect { position: fixed; inset: 0; z-index: 50; background: var(--lab); overflow-y: auto; overscroll-behavior: contain; }
@@ -321,6 +323,24 @@ html:not(.js) .fig-box { display: none; }
 .blk.pre .ln::before { transform: scaleX(0); background: var(--blue); }
 .blk.pre.is-in .ln { color: var(--ink-c); transition: color var(--t32) var(--ease-attack) calc(var(--i) * var(--t16) + var(--d)); }
 .blk.pre.is-in .ln::before { transform: none; background: var(--rule-c); transition: transform var(--d) linear calc(var(--i) * var(--t16)), background-color var(--t16) var(--ease-attack) calc(var(--i) * var(--t16) + var(--d) + var(--t8)); }
+
+/* ---------- case study body + gallery (P3 addition, Drafted vocabulary, D11) ---------- */
+.prose { margin-top: 44px; max-width: 72ch; font-size: 16px; line-height: 1.6; color: var(--ink-c); }
+.prose h2 { font-family: var(--f-display); font-weight: 700; font-stretch: 75%; font-size: clamp(1.6rem, 1.3rem + 1.2vw, 2.25rem); line-height: 1.05; margin: 48px 0 16px; }
+.prose h3 { font-family: var(--f-display); font-weight: 650; font-stretch: 85%; font-size: 1.25rem; line-height: 1.2; margin: 36px 0 12px; }
+.prose h4 { font: 600 1rem/1.3 var(--font-sans), sans-serif; margin: 28px 0 8px; }
+.prose p { margin: 0 0 16px; max-width: 62ch; }
+.prose ul, .prose ol { margin: 0 0 16px; padding-left: 1.3em; }
+.prose li { margin-bottom: 6px; }
+.prose a { font-weight: 500; }
+.prose blockquote { margin: 0 0 16px; padding-left: 16px; border-left: 2px solid var(--hairline); color: var(--sub-c); }
+.prose code { font-family: var(--font-mono), ui-monospace, monospace; font-size: .9em; }
+.prose pre { overflow-x: auto; padding: 12px; border: 1px solid var(--hairline); background: var(--panel); }
+.plates { display: grid; grid-template-columns: repeat(2, 1fr); gap: 24px; margin: 44px 0 0; padding: 0; }
+.plate { margin: 0; border: 1px solid var(--hairline); }
+.plate img, .plate video { display: block; width: 100%; height: auto; }
+.plate figcaption { padding: 8px 12px; font-size: 13px; line-height: 1.4; color: var(--sub-c); }
+@media (max-width: 640px) { .plates { grid-template-columns: 1fr; } }
 
 /* ---------- footer ---------- */
 .foot { border-top: 1px solid var(--ink-c); }

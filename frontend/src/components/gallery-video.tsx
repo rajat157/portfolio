@@ -1,7 +1,6 @@
 "use client";
 
-import { useEffect, useRef } from "react";
-import { useInView } from "motion/react";
+import { useEffect, useRef, useState } from "react";
 
 interface GalleryVideoProps {
   src: string;
@@ -10,9 +9,17 @@ interface GalleryVideoProps {
 
 export function GalleryVideo({ src, label }: GalleryVideoProps) {
   const ref = useRef<HTMLVideoElement>(null);
-  const isInView = useInView(ref, { amount: 0.5 });
+  const [isInView, setIsInView] = useState(false);
   const autoPausing = useRef(false);
   const userPaused = useRef(false);
+
+  useEffect(() => {
+    const video = ref.current;
+    if (!video) return;
+    const io = new IntersectionObserver(([entry]) => setIsInView(entry.isIntersecting), { threshold: 0.5 });
+    io.observe(video);
+    return () => io.disconnect();
+  }, []);
 
   useEffect(() => {
     const video = ref.current;
@@ -39,7 +46,6 @@ export function GalleryVideo({ src, label }: GalleryVideoProps) {
       controls
       preload="metadata"
       aria-label={label}
-      className="absolute inset-0 h-full w-full object-cover"
       onPause={() => {
         if (autoPausing.current) {
           autoPausing.current = false;
