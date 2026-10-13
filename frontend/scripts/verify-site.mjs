@@ -13,10 +13,15 @@
  *
  * Exit code 0 + "VERIFY OK" on success, 1 + "VERIFY FAIL" otherwise.
  */
-import { chromium } from "playwright-core";
+import { chromium, webkit } from "playwright-core";
+import { mkdirSync } from "fs";
+import path from "path";
+import { fileURLToPath } from "url";
 
 const BASE_URL = process.env.VERIFY_BASE_URL || "http://localhost:3000";
 const CHROME_PATH = "C:/Program Files/Google/Chrome/Application/chrome.exe";
+const SCREENSHOT_DIR = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "../screenshots");
+mkdirSync(SCREENSHOT_DIR, { recursive: true });
 
 const argv = process.argv.slice(2);
 const routesIdx = argv.indexOf("--routes");
@@ -50,6 +55,12 @@ const CONTEXTS = [
   ["phone-390x844", { viewport: { width: 390, height: 844 }, deviceScaleFactor: 3, isMobile: true, hasTouch: true }],
   ["reduced-motion", { viewport: { width: 1440, height: 900 }, reducedMotion: "reduce" }],
   ["no-js", { viewport: { width: 1440, height: 900 }, javaScriptEnabled: false }],
+  // §4.7 Q6d: both fall under the inline-panel query, so the checks are the phone's.
+  ["tablet-768x1024", { viewport: { width: 768, height: 1024 }, deviceScaleFactor: 2, isMobile: true, hasTouch: true }],
+  ["tablet-1024x1366", { viewport: { width: 1024, height: 1366 }, deviceScaleFactor: 2, isMobile: true, hasTouch: true }],
+  // P5 step 3: WebKit — engine-feature smoke test, not real Safari (R2).
+  ["webkit-1440x900", { viewport: { width: 1440, height: 900 }, browserName: "webkit" }],
+  ["webkit-390x844", { viewport: { width: 390, height: 844 }, deviceScaleFactor: 3, isMobile: true, hasTouch: true, browserName: "webkit" }],
 ];
 
 async function bannedHit(page) {
@@ -76,7 +87,7 @@ async function bannedHit(page) {
   return m ? m[0] : null;
 }
 
-async function checkRoute(page, routePath) {
+async function checkRoute(page, routePath, contextName) {
   const out = [];
   const check = (ok, msg) => out.push({ ok: !!ok, msg });
 
@@ -89,6 +100,14 @@ async function checkRoute(page, routePath) {
 
   await page.goto(BASE_URL + routePath, { waitUntil: "load" });
   await page.waitForTimeout(300);
+
+  // P5 step 8: one screenshot per route/context, for the challenger review.
+  if (contextName) {
+    const safeRoute = routePath === "/" ? "home" : routePath.replace(/\//g, "_");
+    await page
+      .screenshot({ path: path.join(SCREENSHOT_DIR, `${contextName}${safeRoute}.png`) })
+      .catch(() => {});
+  }
 
   check(consoleErrors.length === 0, `no console errors${consoleErrors.length ? ": " + consoleErrors.join(" | ") : ""}`);
   check(pageErrors.length === 0, `no page errors${pageErrors.length ? ": " + pageErrors.join(" | ") : ""}`);
@@ -719,14 +738,30 @@ async function checkHomeOverflow390(browser) {
   return out;
 }
 
-// P3b step 6: home JS before interaction <=120KB excluding the three chunk;
-// LCP is the NameMark SVG; frame p95 while scrubbing at 4x CPU <= 25ms.
+// P3b step 6 / P5 step 3: home JS before interaction <=120KB excluding the three
+// chunk; LCP is the NameMark SVG; frame p95 while scrubbing at 4x CPU <= 25ms.
+// `browser` here is the GPU-launched instance (see main()), not the swiftshader
+// one used for the rest of the matrix: the frame-time number is only meaningful
+// on real hardware compositing (§4.7/R3 calls swiftshader numbers an upper bound,
+// not a gate).
 async function checkHomePerf(browser) {
   const out = [];
   const check = (ok, msg) => out.push({ ok: !!ok, msg });
   const ctx = await browser.newContext({ viewport: { width: 390, height: 844 }, deviceScaleFactor: 3, isMobile: true, hasTouch: true });
   const page = await ctx.newPage();
   const client = await ctx.newCDPSession(page);
+
+  const renderer = await page.evaluate(() => {
+    try {
+      const gl = document.createElement("canvas").getContext("webgl");
+      const info = gl && gl.getExtension("WEBGL_debug_renderer_info");
+      return info ? gl.getParameter(info.UNMASKED_RENDERER_WEBGL) : "unknown";
+    } catch {
+      return "unknown";
+    }
+  });
+  console.log(`[home perf] WebGL renderer: ${renderer}`);
+
   await client.send("Emulation.setCPUThrottlingRate", { rate: 4 });
 
   await page.goto(BASE_URL + "/", { waitUntil: "load" });
@@ -914,6 +949,24 @@ async function main() {
     headless: true,
     args: ["--enable-unsafe-swiftshader", "--use-angle=swiftshader", "--ignore-gpu-blocklist"],
   });
+  // P5 step 3: WebKit contexts use the Playwright-downloaded WebKit build (no
+  // executablePath override; `playwright-core install webkit` put it in
+  // %LOCALAPPDATA%\ms-playwright). Launched lazily, only if a WebKit context runs.
+  let webkitBrowser = null;
+  const needsWebkit = CONTEXTS.some(([, opts]) => opts.browserName === "webkit");
+  if (needsWebkit) webkitBrowser = await webkit.launch({ headless: true });
+
+  // P5 step 3: a second, GPU-launched instance for "home perf" only — no
+  // swiftshader flags, tries ANGLE/D3D11 hardware compositing. Headless Chrome
+  // can still fall back to software; checkHomePerf logs the WebGL renderer
+  // string so the report can tell which actually happened.
+  const gpuBrowser = routes.includes("/")
+    ? await chromium.launch({
+        executablePath: CHROME_PATH,
+        headless: true,
+        args: ["--use-angle=d3d11", "--enable-gpu", "--ignore-gpu-blocklist"],
+      })
+    : null;
 
   // P3: "/projects/*" expands to the live featured-sheet and earlier-work
   // routes (read once from the running app, not hardcoded).
@@ -937,14 +990,16 @@ async function main() {
   const slugOf = (routePath) => routePath.replace("/projects/", "");
 
   let allOk = true;
-  for (const [name, opts] of CONTEXTS) {
+  for (const [name, rawOpts] of CONTEXTS) {
+    const { browserName, ...opts } = rawOpts;
     const isJs = opts.javaScriptEnabled !== false;
-    const isTouch = name.startsWith("phone");
-    const context = await browser.newContext(opts);
+    const isTouch = opts.hasTouch === true;
+    const targetBrowser = browserName === "webkit" ? webkitBrowser : browser;
+    const context = await targetBrowser.newContext(opts);
     const page = await context.newPage();
 
     for (const routePath of expandedRoutes) {
-      const lines = await checkRoute(page, routePath);
+      const lines = await checkRoute(page, routePath, name);
       for (const r of lines) {
         console.log(`${r.ok ? "PASS" : "FAIL"} [${name}${routePath}] ${r.msg}`);
         if (!r.ok) allOk = false;
@@ -1024,7 +1079,6 @@ async function main() {
       ["stage touch", checkStageTouch],
       ["stage scroll story", checkStageScrollStep],
       ["home overflow 390", checkHomeOverflow390],
-      ["home perf", checkHomePerf],
       ["contact armed+sent", checkContactArmedAndSent],
       ["contact field error", checkContactFieldError],
       ["contact empty submit", checkContactEmptySubmitBlocked],
@@ -1036,9 +1090,15 @@ async function main() {
         if (!r.ok) allOk = false;
       }
     }
+    for (const r of await checkHomePerf(gpuBrowser)) {
+      console.log(`${r.ok ? "PASS" : "FAIL"} [home perf] ${r.msg}`);
+      if (!r.ok) allOk = false;
+    }
   }
 
   await browser.close();
+  if (webkitBrowser) await webkitBrowser.close();
+  if (gpuBrowser) await gpuBrowser.close();
   console.log(allOk ? "VERIFY OK" : "VERIFY FAIL");
   process.exit(allOk ? 0 : 1);
 }

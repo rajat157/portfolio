@@ -42,6 +42,9 @@ yarn-error.log*
 # backups written by scripts/import-case-studies.ts before it overwrites a field
 /scripts/backups/
 
+# per-route/context screenshots saved by scripts/verify-site.mjs for challenger review
+/screenshots/
+
 # typescript
 *.tsbuildinfo
 next-env.d.ts
