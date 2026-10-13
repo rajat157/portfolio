@@ -5,10 +5,10 @@ live_url: https://www.offpriced.com
 description: "One app for buyers, staff and editors — with a site the owner updates by talking to an AI."
 technologies:
   - Next.js
-  - React
-  - TypeScript
   - Payload CMS
   - PostgreSQL
+  - React
+  - TypeScript
   - Cloudflare R2
   - Resend
   - Vercel

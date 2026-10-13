@@ -1,0 +1,126 @@
+{
+  "b2b-wholesale-platform": {
+    "featured_order": 1,
+    "description": "One app for buyers, staff and editors — with a site the owner updates by talking to an AI.",
+    "technologies": ["Next.js", "Payload CMS", "PostgreSQL", "React", "TypeScript", "Cloudflare R2", "Resend", "Vercel", "Progressive Web Apps", "Web Push", "Model Context Protocol"],
+    "sheet": {
+      "short_title": "Offpriced",
+      "kind": "B2B Wholesale Platform",
+      "client": "a Montréal stocklot house — selling clothing by the lot to retailers and wholesalers buying surplus, cancelled orders and factory over-runs in bulk",
+      "problem": "Deals were negotiated by email with no single record of what was promised, and because every lot is a one-off with no restock, a public site nobody in the business could edit quickly became stale and a liability.",
+      "built": [
+        "The public site — a shop window centred on ‘The Floor’, the catalogue of lots currently available.",
+        "The buyer portal — line sheets, enquiries, quotes and orders tracked end to end instead of scattered across inboxes.",
+        "The internal operations app — a mobile-first CRM for staff to keep The Floor current and manage quotes and fulfilment.",
+        "The admin CMS, plus an MCP-based AI publishing flow so the owner can draft and publish articles by talking to Claude."
+      ],
+      "decisions": [
+        "Embedded Payload CMS in the same Next.js codebase rather than running it as a second service, so there is one deployment and one login model instead of two systems to keep in sync.",
+        "Built the MCP server as a deliberately small, fixed set of actions behind a secret token, because the point was giving the AI assistant specific controls, not open access.",
+        "Modelled the sales lifecycle end to end with an automatic email and a permanent record at each transition, so a buyer dispute over a missed quote is a lookup, not an argument.",
+        "Segregated push notifications by audience, so an internal alert about a deal or a late shipment never reaches a customer’s phone.",
+        "Fixed the design system — colour, type and spacing — before building any screens, so a new screen is assembly, not invention."
+      ],
+      "outcome": "One system where there were several disconnected ones. Buyers self-serve instead of waiting on a reply, staff work deals from a phone, and the site is edited by the people who know what it should say. Every enquiry, quote and order has a trail. And the owner publishes by talking."
+    },
+    "drawing": {
+      "nodes": {"public": "The public", "buyers": "Signed-in buyers", "staff": "The team working those deals", "editors": "Whoever edits the site", "app": "One application", "db": "One database"},
+      "edges": [["public", "app"], ["buyers", "app"], ["staff", "app"], ["editors", "app"], ["app", "db", "one codebase, one database"]],
+      "lay": {"dir": "TB", "layers": [["public", "buyers", "staff", "editors"], ["app"], ["db"]], "span": ["app", "db"]},
+      "notes": [[["public", "buyers", "staff", "editors"], "four audiences, one application"], [["public"], "The Floor: lots from 57 factories, trade only"], [["app"], "Payload CMS embedded: one deployment, one login"]]
+    }
+  },
+  "staffing-operations-platform": {
+    "featured_order": 2,
+    "description": "Five portals, one login, and every company's data walled off inside the database itself.",
+    "technologies": ["Next.js", "Drizzle ORM", "PostgreSQL", "React", "TypeScript", "Turborepo", "Better Auth", "CASL", "Row-Level Security", "State Machines"],
+    "sheet": {
+      "short_title": "Staffing operations platform",
+      "kind": "a small ERP, built from scratch",
+      "client": "a staffing company",
+      "problem": "A staffing company manages five relationships at once — its own team, the client companies, the people it places, the recruiters who source them, and the prospects it chases. On spreadsheets, that produces the two failure modes that hurt: money that quietly leaks, and information reaching the wrong company. The requirement: one system, five doors into it, and doors that do not connect.",
+      "built": [
+        "Five portals — Admin, Client, Worker, Partner, and an Onboarding flow that converts a prospect into a client once money changes hands.",
+        "Permissions through CASL, precise enough to say a person may approve a specific record, not just that they hold a role.",
+        "A workflow engine of state machines for approvals, so a request can’t skip a step and changing a process happens in one place.",
+        "An invoicing engine on integer minor-currency units with one written rounding rule, and an append-only audit log."
+      ],
+      "decisions": [
+        "Enforced tenant isolation as row-level security inside the database itself rather than in application code, because an application filter can be forgotten in one query and leak another company’s payroll.",
+        "Ran ordinary traffic through a deliberately powerless database account that cannot switch the row-level security checks off; a separate privileged account exists only for maintenance.",
+        "Stored money as whole numbers of the smallest currency unit rather than binary floating point, because floating point cannot represent most money amounts exactly and the error accumulates.",
+        "Made the audit log append-only, so rewriting history takes deliberate action through the maintenance account rather than a quiet edit from inside the app.",
+        "Deliberately left out the codebase knowledge graph used on another project, because five portals over one shared core is a structure that fits in one person’s head."
+      ],
+      "outcome": "Five groups, one platform, each seeing only its own slice. Work approved once and billed from the same record, commissions calculated rather than reconstructed, a history that cannot be quietly rewritten."
+    },
+    "drawing": {
+      "nodes": {"admin": "Admin", "client": "Client", "worker": "Worker", "partner": "Partner", "onboarding": "Onboarding", "core": "Shared core", "db": "Database — row-level security"},
+      "edges": [["admin", "core"], ["client", "core"], ["worker", "core"], ["partner", "core"], ["onboarding", "core"], ["core", "db"]],
+      "lay": {"dir": "LR", "layers": [["admin", "client", "worker", "partner", "onboarding"], ["core"], ["db"]], "span": ["core", "db"], "walls": "db"},
+      "notes": [[["all"], "927 automated tests run against all of it"], [["admin", "client", "worker", "partner", "onboarding"], "five portals, one login"], [["db"], "row-level security checks every read and write"]]
+    }
+  },
+  "esports-talent-portfolio": {
+    "featured_order": 3,
+    "description": "A booking site that feels like a live broadcast — kept current by the talent, not a developer.",
+    "technologies": ["Payload CMS", "Lenis", "Vercel Blob", "Next.js", "React", "TypeScript", "PostgreSQL", "Tailwind CSS", "Resend", "Cloudflare Turnstile", "Vitest", "Playwright", "Vercel"],
+    "sheet": {
+      "short_title": "lucif3r",
+      "kind": "a website with one job — turn a tournament organiser or a brand’s event manager into a booking enquiry",
+      "client": "an esports caster, stage host and broadcast voice — working across esports finals, brand launches and live conventions",
+      "problem": "Generic talent sites and link-in-bio pages don’t sell a broadcaster, and the site needed to turn organisers, brand managers and sponsors into booking enquiries, with content the talent could keep current without a developer for each new event.",
+      "built": [
+        "A broadcast-style design system — near-black ground, one magenta accent, gold for highlights, square corners by rule, and a film-grain texture layer.",
+        "Motion with a reduced-motion off switch: a glitching wordmark, a gold shimmer, a ticker, and smoothed scrolling.",
+        "A home page built around one path to the booking form, with a bento grid of past events and a gallery from the stage.",
+        "A custom Control Room on top of embedded Payload CMS, with live preview, draft/publish, and even the brand colours editable."
+      ],
+      "decisions": [
+        "Kept all effects to plain CSS plus one small scrolling library, so nothing heavy has to download before the page comes alive.",
+        "Gave mobile its own layout rather than a squeezed desktop one, because a booking often starts with a link opened on a phone.",
+        "Settled the look through two HTML prototypes rather than debating directions, and removed a layered custom cursor once the grain layer supplied the same depth.",
+        "Validated the booking form in the browser and again on the server against the same rules, and used Cloudflare Turnstile to keep bots out.",
+        "Kept analytics and Speed Insights on the public site only, never inside the Control Room."
+      ],
+      "outcome": "A site that looks like the job: broadcast energy from the first frame, proof of the stages already worked, and a booking form at the end of every path. It stays current because the talent keeps it current — new events, new photos, even new colours — without waiting on anyone."
+    },
+    "drawing": {
+      "nodes": {"cms": "Control Room (Payload CMS)", "db": "PostgreSQL", "live": "Live pages"},
+      "edges": [["cms", "db", "stores content"], ["cms", "live", "publish"], ["db", "live", "serves"]],
+      "lay": {"dir": "TB", "layers": [["cms"], ["db"], ["live"]], "side": [["cms", "live"]], "shift": 0.4},
+      "notes": [[["cms"], "live preview, draft/publish, editable brand colours"], [["live"], "measured in qualified enquiries, not pageviews"]]
+    }
+  },
+  "tredye-trading-platform": {
+    "featured_order": 4,
+    "description": "Roughly 800 live RSI streams, divergence alerts and MACD setups — computed as the market moves and streamed to the browser.",
+    "technologies": ["Python", "Apache Kafka", "Redis", "FastAPI", "PostgreSQL", "TA-Lib", "Kite Connect", "Next.js", "React", "TypeScript", "Tailwind CSS", "WebSockets", "Docker", "Nginx", "Razorpay"],
+    "sheet": {
+      "short_title": "Tredye",
+      "kind": "Real-Time NSE Market Monitoring on an Event-Driven Stack",
+      "client": "Voltvave Innovations",
+      "problem": "A divergence between price and RSI can form and dissolve within a quarter of an hour, and across roughly 200 stocks on four timeframes that is about 800 charts — more than anyone can watch by eye — so the watching had to move off the screen and into a system.",
+      "built": [
+        "A live monitoring board showing RSI across four timeframes per stock, with divergence highlighting and search.",
+        "A divergence history view, filterable by stock, timeframe, type and confidence.",
+        "A MACD strategy view showing daily market bias and the setups and triggers that follow on shorter timeframes.",
+        "Accounts and subscriptions with phone-verified sign-up, Razorpay payments, and an admin console for users, payments and feedback."
+      ],
+      "decisions": [
+        "Aligned candles to the 9:15 IST market open rather than the Unix clock, so a 15-minute candle on Tredye matches the one on a charting terminal.",
+        "Backfilled months of history on start-up before computing indicators, and gated the detectors behind a warm-up announcement on Kafka for up to half an hour.",
+        "Consolidated candle history onto PostgreSQL instead of the dedicated time-series database the original blueprint specified, to run one fewer datastore.",
+        "Put a single FastAPI gateway in front holding one WebSocket per browser, pushing the live board from Redis every two seconds rather than on every tick.",
+        "Compiled TA-Lib once in a shared Docker build stage, with each service built as a thin target on top of it."
+      ],
+      "outcome": "Tredye keeps roughly 800 live RSI streams current through an event-driven pipeline and surfaces the patterns worth a second look while they still matter — on a phone or at a desk, from the opening bell to the close. Each stage runs in its own container, and subscriptions, payments and an admin console are built in."
+    },
+    "drawing": {
+      "nodes": {"kite": "Kite Connect", "ingestion": "Data ingestion", "candles": "Candle builder", "rsi": "RSI calculator", "divergence": "Divergence detector", "macd": "MACD calculator", "macdstrategy": "MACD strategy detector", "gateway": "API gateway", "dashboard": "Next.js dashboard"},
+      "edges": [["kite", "ingestion", "WebSocket"], ["ingestion", "candles", "Kafka · ticks"], ["candles", "rsi", "Kafka · candles"], ["candles", "macd", "Kafka · candles"], ["rsi", "divergence", "Kafka · RSI"], ["macd", "macdstrategy", "Kafka · MACD"], ["divergence", "gateway", "Kafka · alerts and setups"], ["macdstrategy", "gateway", "Kafka · alerts and setups"], ["gateway", "dashboard", "WebSocket"]],
+      "lay": {"dir": "TB", "layers": [["kite"], ["ingestion"], ["candles"], ["rsi", "macd"], ["divergence", "macdstrategy"], ["gateway"], ["dashboard"]]},
+      "notes": [[["rsi", "divergence"], "~800 live RSI streams: ~200 NSE stocks × 4 timeframes"], [["candles"], "candles aligned to the 9:15 IST open"], [["gateway"], "live board pushed from Redis every 2 s"], [["all"], "Kafka 4.1 in KRaft mode, no ZooKeeper to operate"]]
+    }
+  }
+}

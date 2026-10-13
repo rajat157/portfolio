@@ -8,11 +8,14 @@
 import config from "@payload-config";
 import { getPayload } from "payload";
 
+import { parseDrawing } from "@/lib/drawing";
+
 import type {
   About,
   BlogPost,
   Category,
   Project,
+  Sheet,
   StrapiMedia,
 } from "./types";
 
@@ -56,6 +59,26 @@ function toCategory(c: any): Category | null {
   };
 }
 
+// built/decisions are stored as a textarea, one item per line (D4).
+function splitLines(s: string | null | undefined): string[] {
+  return (s ?? "").split("\n").map((l) => l.trim()).filter(Boolean);
+}
+
+function toSheet(doc: any): Sheet | null {
+  const s = doc.sheet;
+  if (!s || typeof s !== "object") return null;
+  if (!s.short_title && !s.kind && !s.client && !s.problem && !s.built && !s.decisions && !s.outcome) return null;
+  return {
+    short_title: s.short_title ?? null,
+    kind: s.kind ?? null,
+    client: s.client ?? null,
+    problem: s.problem ?? null,
+    built: splitLines(s.built),
+    decisions: splitLines(s.decisions),
+    outcome: s.outcome ?? null,
+  };
+}
+
 function toProject(doc: any): Project {
   return {
     id: doc.id,
@@ -76,6 +99,8 @@ function toProject(doc: any): Project {
     github_url: doc.github_url ?? null,
     start_date: doc.start_date ?? null,
     end_date: doc.end_date ?? null,
+    sheet: toSheet(doc),
+    drawing: parseDrawing(doc.drawing),
     createdAt: doc.createdAt,
     updatedAt: doc.updatedAt,
     publishedAt: doc.createdAt,
@@ -129,6 +154,13 @@ export async function cmsProjects(
     if (a.featured !== b.featured) return a.featured ? -1 : 1;
     const aDate = a.start_date ? Date.parse(a.start_date) : -Infinity;
     const bDate = b.start_date ? Date.parse(b.start_date) : -Infinity;
+    // Featured sheets order by featured_order (nulls last); older seeds left
+    // stale featured_order on non-featured docs, so those ignore it entirely.
+    if (a.featured && b.featured) {
+      const aOrder = a.featured_order ?? Infinity;
+      const bOrder = b.featured_order ?? Infinity;
+      if (aOrder !== bOrder) return aOrder - bOrder;
+    }
     return bDate - aDate; // Array.prototype.sort is stable: ties keep DB order (createdAt tiebreak)
   });
 }

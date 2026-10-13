@@ -1,17 +1,18 @@
 /**
  * Publish the 2026 case studies listed in CASE_STUDIES into Payload, and align
- * the featured set to exactly those slugs. A slug that already exists is left
- * untouched except for its `featured` flag; a new slug gets its media uploaded
- * and the project created.
+ * the featured set to exactly those slugs. A slug that already exists gets a
+ * field-level sync (title, description, technologies, live_url, featured,
+ * featured_order, sheet, drawing, and — with --content — the markdown body
+ * itself); a new slug gets its media uploaded and the project created.
  *
- *   dry-run (default):  npx payload run scripts/import-case-studies.ts
- *   execute:            npx payload run scripts/import-case-studies.ts -- --execute
+ *   dry-run (default):  npx payload run scripts/import-case-studies.ts -- --content
+ *   execute:             npx payload run scripts/import-case-studies.ts -- --content --execute
  *
  * The bare `--` is required: `payload run` rewrites process.argv and only
- * forwards what follows it. Without it the flag is invisible and the script
+ * forwards what follows it. Without it the flags are invisible and the script
  * dry-runs — safe, but it will look like nothing happened. In PowerShell, npx
  * itself drops the bare `--` — use
- * `node_modules\.bin\payload.cmd run scripts/import-case-studies.ts -- --execute`
+ * `node_modules\.bin\payload.cmd run scripts/import-case-studies.ts -- --content --execute`
  * instead.
  *
  * A production run must pre-set BOTH `DATABASE_URI` (the production unpooled
@@ -19,8 +20,11 @@
  * `payload run` — otherwise its loadEnv step lets frontend/.env.local's local
  * `DATABASE_URI` win and the script silently targets the dev DB.
  *
- * Idempotent: media dedupe on filename; existing project slugs are left
- * unchanged except for their `featured` flag, only new slugs get created.
+ * Idempotent: media dedupe on filename; an existing slug's fields are synced
+ * only when they actually differ (printed per field, `same` or `change`).
+ * `--content` is separate from `--execute` because it governs whether the
+ * markdown body itself is one of the synced fields — the riskiest one, since
+ * an admin edit to the prose would be overwritten.
  *
  * Source content lives in src/migration/case-studies/ (alongside the existing
  * migration import sources) rather than a temp dir, so a later production run
@@ -29,12 +33,15 @@
 import fs from "fs";
 import path from "path";
 import { fileURLToPath } from "url";
+import { isDeepStrictEqual } from "util";
 
 const HERE = path.dirname(fileURLToPath(import.meta.url));
 const SRC = path.resolve(HERE, "..", "src", "migration", "case-studies");
 const IMAGES = path.join(SRC, "captures");
+const SHEETS_JSON_PATH = path.join(SRC, "sheets.json");
 
 const EXECUTE = process.argv.includes("--execute");
+const SYNC_CONTENT = process.argv.includes("--content");
 
 // The public site only ever renders this category's projects correctly; a
 // project with no category shows "Uncategorized" and disappears behind filters.
@@ -42,9 +49,11 @@ const CATEGORY_SLUG = "web-dev";
 
 /**
  * start_date is what actually orders the cards: the public query sorts
- * ["-featured", "-start_date", "-createdAt"] and ignores featured_order
- * entirely. These are the real first-commit dates of each source repo
- * (`git log --reverse --format=%as | head -1`), captured 2026-08-05:
+ * ["-featured", "-start_date", "-createdAt"] for non-featured ties and
+ * featured_order (from sheets.json) for featured ones. These are the real
+ * first-commit dates of each source repo
+ * (`git log --reverse --format=%as | head -1`), captured 2026-08-05 (Tredye:
+ * the case study's own start_date, set when it was added as a sheet):
  *   D:\Projects\offpriced          -> 2026-05-15
  *   D:\Projects\laborithm web app  -> 2026-07-01
  *   D:\Projects\sam-portfolio      -> 2026-05-12
@@ -53,7 +62,6 @@ const CASE_STUDIES = [
   {
     file: "case-study-staffing.md",
     start_date: "2026-07-01",
-    featured_order: 1,
     images: [
       ["staffing-platform-admin.png", "Staffing platform admin portal: placements, client companies, invoicing and approvals"],
       ["staffing-platform-client-portal.png", "Client portal where a hiring company reviews its workforce, signs off work and sees its invoices"],
@@ -65,7 +73,6 @@ const CASE_STUDIES = [
   {
     file: "case-study-wholesale.md",
     start_date: "2026-05-15",
-    featured_order: 2,
     images: [
       ["offpriced-storefront.png", "Offpriced public storefront showing The Floor, the catalogue of wholesale clothing lots currently available"],
       ["offpriced-buyer-portal.png", "Signed-in buyer portal with the line sheet a buyer assembles from The Floor"],
@@ -77,7 +84,6 @@ const CASE_STUDIES = [
   {
     file: "case-study-esports-talent.md",
     start_date: "2026-05-12",
-    featured_order: 3,
     images: [
       ["lucif3r-hero.jpg", "lucif3r home page hero with the glitch wordmark, booking status, headline stats and stage portrait"],
       ["lucif3r-hero-motion.mp4", "Screen recording of the hero: the RGB-split glitch on the wordmark and the gold shimmer sweep"],
@@ -85,6 +91,11 @@ const CASE_STUDIES = [
       ["lucif3r-mobile.jpg", "Three mobile screens: the hero, the services accordion and the swipeable event carousel"],
       ["lucif3r-event-case-study.jpg", "An event case-study page with its title, event tags and the broadcast video preview"],
     ],
+  },
+  {
+    file: "case-study-tredye.md",
+    start_date: "2025-11-01",
+    images: [] as [string, string][],
   },
 ] as const;
 
@@ -122,7 +133,7 @@ if (isLocal && process.env.BLOB_READ_WRITE_TOKEN) {
 // migration-managed database.
 process.env.PAYLOAD_DB_PUSH = "false";
 
-console.log(`mode      : ${EXECUTE ? "EXECUTE (writes)" : "DRY RUN (reads only)"}`);
+console.log(`mode      : ${EXECUTE ? "EXECUTE (writes)" : "DRY RUN (reads only)"}${SYNC_CONTENT ? ", syncing content" : ""}`);
 console.log(`database  : ${isLocal ? "local" : "REMOTE / production"} (${dbUrl.replace(/:[^:@/]*@/, ":***@")})`);
 console.log(`blob store: ${process.env.BLOB_READ_WRITE_TOKEN ? "Vercel Blob" : "local disk"}`);
 console.log("");
@@ -186,11 +197,35 @@ function parseCaseStudy(file: string) {
   };
 }
 
+/* ------------------------------------------------------------- sheets.json --
+ * Read with fs, never through @/lib/cms: a static import of that module
+ * reaches @payload-config and would drizzle-push the target DB before
+ * PAYLOAD_DB_PUSH=false above takes effect for a later dynamic import.
+ */
+type SheetFields = {
+  short_title: string | null;
+  kind: string | null;
+  client: string | null;
+  problem: string | null;
+  built: string[];
+  decisions: string[];
+  outcome: string | null;
+};
+type SheetSource = {
+  featured_order: number;
+  description: string;
+  technologies: string[];
+  sheet: SheetFields;
+  drawing: unknown;
+};
+const sheetsJson: Record<string, SheetSource> = JSON.parse(fs.readFileSync(SHEETS_JSON_PATH, "utf8"));
+
 /* ------------------------------------------------------------------ run -- */
 
 const { default: config } = await import("@payload-config");
 const { getPayload } = await import("payload");
 const { cmsProjects } = await import("@/lib/cms");
+const { parseDrawing } = await import("@/lib/drawing");
 
 const payload = await getPayload({ config });
 
@@ -229,10 +264,10 @@ async function ensureMedia(filename: string, alt: string): Promise<number | null
 }
 
 /**
- * Guards a featured-flag write against clobbering a pending draft. Payload's
- * update() without `draft` loads the LATEST version of the doc (which may be
- * an unpublished draft) and carries forward every field not passed —
- * including `_status` — so a bare `{ featured }` write can silently publish
+ * Guards a write against clobbering a pending draft. Payload's update()
+ * without `draft` loads the LATEST version of the doc (which may be an
+ * unpublished draft) and carries forward every field not passed —
+ * including `_status` — so a bare partial write can silently publish
  * draft content and unpublish the project. Returns false (and prints SKIP)
  * when the latest version is a draft ahead of a published main doc.
  */
@@ -245,11 +280,56 @@ async function draftSafe(slug: string, id: number, mainStatus: string | null | u
   return true;
 }
 
+function charLen(v: unknown): number {
+  return typeof v === "string" ? v.length : JSON.stringify(v ?? null).length;
+}
+
+/** Up to 40 lines on each side that differ, for a changed multi-line text field. */
+function printLineDiff(oldStr: string, newStr: string) {
+  const oldLines = new Set(oldStr.split("\n"));
+  const newLines = new Set(newStr.split("\n"));
+  const onlyOld = [...oldLines].filter((l) => !newLines.has(l)).slice(0, 40);
+  const onlyNew = [...newLines].filter((l) => !oldLines.has(l)).slice(0, 40);
+  if (onlyOld.length) console.log(`    only in current value:\n${onlyOld.map((l) => "      " + l).join("\n")}`);
+  if (onlyNew.length) console.log(`    only in new value:\n${onlyNew.map((l) => "      " + l).join("\n")}`);
+}
+
+/** Prints `<label>  same` or `<label>  change (...)` (+ a line diff for text fields). Returns whether it changed. */
+function diffField(label: string, oldVal: unknown, newVal: unknown, isText: boolean): boolean {
+  if (isDeepStrictEqual(oldVal, newVal)) {
+    console.log(`  ${label}  same`);
+    return false;
+  }
+  console.log(`  ${label}  change (old ${charLen(oldVal)} chars -> new ${charLen(newVal)} chars)`);
+  if (isText) printLineDiff(String(oldVal ?? ""), String(newVal ?? ""));
+  return true;
+}
+
 const newSlugs: string[] = [];
 
 for (const cs of CASE_STUDIES) {
   const { meta, content } = parseCaseStudy(cs.file);
   newSlugs.push(meta.slug);
+
+  const sheetSrc = sheetsJson[meta.slug];
+  if (!sheetSrc) throw new Error(`${meta.slug}: missing from sheets.json`);
+  if (!isDeepStrictEqual(sheetSrc.description, meta.description)) {
+    throw new Error(`${meta.slug}: sheets.json description does not match the md header — keep them in sync`);
+  }
+  if (!isDeepStrictEqual(sheetSrc.technologies, meta.technologies)) {
+    throw new Error(`${meta.slug}: sheets.json technologies does not match the md header — keep them in sync`);
+  }
+  const wantSheet = {
+    short_title: sheetSrc.sheet.short_title,
+    kind: sheetSrc.sheet.kind,
+    client: sheetSrc.sheet.client,
+    problem: sheetSrc.sheet.problem,
+    built: sheetSrc.sheet.built.join("\n"),
+    decisions: sheetSrc.sheet.decisions.join("\n"),
+    outcome: sheetSrc.sheet.outcome,
+  };
+  const wantDrawing = parseDrawing(sheetSrc.drawing);
+  if (!wantDrawing) throw new Error(`${meta.slug}: sheets.json drawing failed to parse`);
 
   const existing = await payload.find({
     collection: "projects",
@@ -257,22 +337,77 @@ for (const cs of CASE_STUDIES) {
     limit: 1,
   });
 
-  // Existing slugs are create-only: no media upload, no content changes —
-  // only bring featured in line with the current set.
   if (existing.docs[0]) {
-    const p = existing.docs[0];
-    const willFeature = !p.featured;
-    if (willFeature) {
-      const safe = await draftSafe(meta.slug, p.id, p._status);
-      if (safe) {
-        console.log(`${meta.slug}  exists — left unchanged, featured: no → yes`);
-        if (EXECUTE) {
-          await payload.update({ collection: "projects", id: p.id, data: { featured: true } });
-        }
-      }
-    } else {
-      console.log(`${meta.slug}  exists — left unchanged, featured: yes`);
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const p = existing.docs[0] as any;
+    console.log(`${meta.slug}  exists — syncing fields`);
+    const safe = await draftSafe(meta.slug, p.id, p._status);
+    if (!safe) {
+      console.log("");
+      continue;
     }
+
+    const fields: [string, unknown, unknown, boolean][] = [
+      ["title", p.title, meta.title, false],
+      ["description", p.description, meta.description, true],
+      ["technologies", (p.technologies ?? []).map((t: { name: string }) => t.name), meta.technologies, false],
+      ["live_url", p.live_url ?? null, meta.live_url ?? null, false],
+      ["featured", p.featured, true, false],
+      ["featured_order", p.featured_order ?? null, sheetSrc.featured_order, false],
+      ["sheet.short_title", p.sheet?.short_title ?? null, wantSheet.short_title, false],
+      ["sheet.kind", p.sheet?.kind ?? null, wantSheet.kind, false],
+      ["sheet.client", p.sheet?.client ?? null, wantSheet.client, false],
+      ["sheet.problem", p.sheet?.problem ?? null, wantSheet.problem, true],
+      ["sheet.built", p.sheet?.built ?? null, wantSheet.built, true],
+      ["sheet.decisions", p.sheet?.decisions ?? null, wantSheet.decisions, true],
+      ["sheet.outcome", p.sheet?.outcome ?? null, wantSheet.outcome, true],
+      ["drawing", p.drawing ?? null, wantDrawing, false],
+      ...(SYNC_CONTENT ? ([["content", p.content ?? null, content, true]] as [string, unknown, unknown, boolean][]) : []),
+    ];
+
+    const changedTop = new Set<string>();
+    for (const [label, oldVal, newVal, isText] of fields) {
+      if (diffField(label, oldVal, newVal, isText)) changedTop.add(label.split(".")[0]);
+    }
+
+    const effectiveContent = SYNC_CONTENT ? content : p.content ?? "";
+    console.log(`  flow fences: ${(effectiveContent.match(/```flow/g) ?? []).length}`);
+
+    if (changedTop.size === 0) {
+      console.log("  no changes");
+    } else if (!EXECUTE) {
+      console.log(`  WOULD update: ${[...changedTop].join(", ")}`);
+    } else {
+      const backup: Record<string, unknown> = {};
+      for (const key of changedTop) {
+        if (key === "technologies") backup.technologies = (p.technologies ?? []).map((t: { name: string }) => t.name);
+        else backup[key] = p[key] ?? null;
+      }
+      const backupDir = path.join(HERE, "backups");
+      fs.mkdirSync(backupDir, { recursive: true });
+      const backupPath = path.join(backupDir, `${meta.slug}-${Date.now()}.json`);
+      try {
+        fs.writeFileSync(backupPath, JSON.stringify(backup, null, 2));
+      } catch (err) {
+        throw new Error(`${meta.slug}: failed writing backup to ${backupPath}: ${err}`);
+      }
+
+      const data: Record<string, unknown> = {};
+      if (changedTop.has("title")) data.title = meta.title;
+      if (changedTop.has("description")) data.description = meta.description;
+      if (changedTop.has("technologies")) data.technologies = meta.technologies.map((name) => ({ name }));
+      if (changedTop.has("live_url")) data.live_url = meta.live_url ?? null;
+      if (changedTop.has("featured")) data.featured = true;
+      if (changedTop.has("featured_order")) data.featured_order = sheetSrc.featured_order;
+      if (changedTop.has("sheet")) data.sheet = wantSheet;
+      if (changedTop.has("drawing")) data.drawing = wantDrawing;
+      if (SYNC_CONTENT && changedTop.has("content")) data.content = content;
+
+      // Never pass _status — a sync must not change publication state.
+      await payload.update({ collection: "projects", id: p.id, data });
+      console.log(`  updated: ${[...changedTop].join(", ")} (backup: ${path.relative(HERE, backupPath)})`);
+    }
+    console.log("");
     continue;
   }
 
@@ -289,9 +424,11 @@ for (const cs of CASE_STUDIES) {
     technologies: meta.technologies.map((name) => ({ name })),
     category: categoryId,
     featured: true,
-    featured_order: cs.featured_order,
+    featured_order: sheetSrc.featured_order,
     live_url: meta.live_url ?? null,
     start_date: cs.start_date,
+    sheet: wantSheet,
+    drawing: wantDrawing,
     cover_image: imageIds[0],
     gallery: imageIds.slice(1).filter((id): id is number => id !== null),
     // Without this the row is a draft and every public query filters it out.
@@ -342,8 +479,8 @@ featured.forEach((p, i) =>
 
 if (!EXECUTE) {
   console.log("\nDRY RUN — nothing was written. To apply:");
-  console.log("  npx payload run scripts/import-case-studies.ts -- --execute");
-  console.log("  (the bare -- is required, or the flag never reaches this script)");
+  console.log("  npx payload run scripts/import-case-studies.ts -- --content --execute");
+  console.log("  (the bare -- is required, or the flags never reach this script)");
   console.log("  (in PowerShell, npx drops the bare --; use node_modules\\.bin\\payload.cmd instead)");
 }
 
