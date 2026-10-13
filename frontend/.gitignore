@@ -39,6 +39,9 @@ yarn-error.log*
 # payload local media uploads (prod uses Vercel Blob)
 /media
 
+# backups written by scripts/import-case-studies.ts before it overwrites a field
+/scripts/backups/
+
 # typescript
 *.tsbuildinfo
 next-env.d.ts

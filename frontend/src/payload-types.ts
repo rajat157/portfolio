@@ -207,6 +207,45 @@ export interface Project {
    * Full case study in Markdown
    */
   content?: string | null;
+  /**
+   * Featured case studies only: the sheet's title block and its four blocks.
+   */
+  sheet?: {
+    /**
+     * Index and sheet title, e.g. Offpriced
+     */
+    short_title?: string | null;
+    /**
+     * What it is. The index shows the part before ' — '.
+     */
+    kind?: string | null;
+    /**
+     * Who it was for (never name an anonymous client). The index shows the part before ' — '.
+     */
+    client?: string | null;
+    problem?: string | null;
+    /**
+     * What I built — one item per line
+     */
+    built?: string | null;
+    /**
+     * Key decisions — one item per line
+     */
+    decisions?: string | null;
+    outcome?: string | null;
+  };
+  /**
+   * Architecture drawing shown as the sheet's figure (shape: src/lib/drawing.ts).
+   */
+  drawing?:
+    | {
+        [k: string]: unknown;
+      }
+    | unknown[]
+    | string
+    | number
+    | boolean
+    | null;
   cover_image?: (number | null) | Media;
   gallery?: (number | Media)[] | null;
   technologies?:
@@ -217,6 +256,9 @@ export interface Project {
     | null;
   category?: (number | null) | Category;
   featured?: boolean | null;
+  /**
+   * Sheet order among featured projects, 1 = first
+   */
   featured_order?: number | null;
   live_url?: string | null;
   github_url?: string | null;
@@ -406,6 +448,18 @@ export interface ProjectsSelect<T extends boolean = true> {
   slug?: T;
   description?: T;
   content?: T;
+  sheet?:
+    | T
+    | {
+        short_title?: T;
+        kind?: T;
+        client?: T;
+        problem?: T;
+        built?: T;
+        decisions?: T;
+        outcome?: T;
+      };
+  drawing?: T;
   cover_image?: T;
   gallery?: T;
   technologies?:
