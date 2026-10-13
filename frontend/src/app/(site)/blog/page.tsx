@@ -1,147 +1,98 @@
 import type { Metadata } from "next";
-import { cmsBlogPosts, cmsCategories, getMediaURL } from "@/lib/cms";
+import Link from "next/link";
+import { cmsBlogPosts } from "@/lib/cms";
+import { FALLBACK_POSTS, type FallbackPost } from "@/lib/cms/fallback";
 import type { BlogPost } from "@/lib/cms/types";
-import { Reveal } from "@/components/animations/reveal";
-import { BlogPageClient } from "./blog-page-client";
-import type { Article } from "@/components/blog";
+import { pad2 } from "@/lib/sheet-format";
 
 // Regenerate at most hourly — keeps ISR cadence fixed even if data fetches skip the cache
 export const revalidate = 3600;
 
 export const metadata: Metadata = {
-  title: "Blog | Rajat Kumar R",
+  title: "Blog",
   description:
     "Thoughts on software development, architecture, DevOps, and lessons learned from building scalable systems.",
 };
 
-// Default fallback articles when API is unavailable
-const defaultArticles: Article[] = [
-  {
-    id: "1",
-    slug: "building-real-time-trading-platforms",
-    title: "Building Real-Time Trading Platforms",
-    excerpt: "Lessons learned from architecting high-frequency trading systems with modern tech stack. Covers Kafka, WebSocket, and low-latency design patterns.",
-    category: "Architecture",
-    readingTime: 8,
-    publishedAt: "2026-01-15",
-    imageUrl: "/images/covers/building-real-time-trading-platforms.svg",
-  },
-  {
-    id: "2",
-    slug: "ai-accelerated-development",
-    title: "AI-Accelerated Development",
-    excerpt: "How I use Claude and Gemini to 10x my development productivity. Practical tips and workflow optimizations.",
-    category: "AI",
-    readingTime: 5,
-    publishedAt: "2026-01-10",
-    imageUrl: "/images/covers/ai-accelerated-development.svg",
-  },
-  {
-    id: "3",
-    slug: "managing-supercomputers",
-    title: "Managing India's Fastest Supercomputer",
-    excerpt: "My experience managing SahasraT at IISc with 33,000 cores. SLURM job scheduling, monitoring, and performance optimization.",
-    category: "DevOps",
-    readingTime: 12,
-    publishedAt: "2026-01-05",
-    imageUrl: "/images/covers/managing-supercomputers.svg",
-  },
-];
+type PostRow = {
+  slug: string;
+  title: string;
+  excerpt: string;
+  category: string;
+  date: string;
+  readingTime: number;
+};
 
-const defaultBlogCategories = ["All", "Architecture", "AI", "DevOps"];
-
-// Transform Strapi BlogPost to Article format used by components
-// Strapi 5 uses flat response format (no .attributes wrapper)
-function transformBlogPostToArticle(post: BlogPost): Article | null {
-  // Defensive check for valid post structure
-  if (!post || !post.slug) {
-    return null;
-  }
-
+function toPostRow(p: BlogPost): PostRow {
   return {
-    id: post.id?.toString() || "",
-    slug: post.slug || "",
-    title: post.title || "Untitled",
-    excerpt: post.excerpt || "",
-    category: post.category?.name || "Uncategorized",
-    readingTime: post.reading_time || 5,
-    publishedAt: post.published_date || post.publishedAt || new Date().toISOString(),
-    imageUrl: post.cover_image?.url ? getMediaURL(post.cover_image.url) || undefined : undefined,
+    slug: p.slug,
+    title: p.title,
+    excerpt: p.excerpt,
+    category: p.category?.name || "Uncategorized",
+    date: (p.published_date || p.publishedAt || new Date().toISOString()).slice(0, 10),
+    readingTime: p.reading_time || 5,
   };
 }
 
-async function getBlogPosts(): Promise<Article[]> {
-  try {
-    const posts = await cmsBlogPosts({ limit: 100 });
+function toPostRowFromFallback(p: FallbackPost): PostRow {
+  return { slug: p.slug, title: p.title, excerpt: p.excerpt, category: p.category, date: p.publishedAt, readingTime: p.readingTime };
+}
 
-    // Transform and filter out any null results
-    return posts
-      .map(transformBlogPostToArticle)
-      .filter((article): article is Article => article !== null);
+async function getPosts(): Promise<BlogPost[]> {
+  try {
+    return await cmsBlogPosts();
   } catch (error) {
     console.error("Failed to fetch blog posts:", error);
     return [];
   }
 }
 
-async function getBlogCategories(): Promise<string[]> {
-  try {
-    const categories = await cmsCategories("blog");
-    return categories.map((cat) => cat.name);
-  } catch (error) {
-    console.error("Failed to fetch categories:", error);
-    return [];
-  }
-}
-
 export default async function BlogPage() {
-  const [apiArticles, categoryNames] = await Promise.all([
-    getBlogPosts(),
-    getBlogCategories(),
-  ]);
-
-  // Use API articles or fallback to defaults
-  const articles = apiArticles.length > 0 ? apiArticles : defaultArticles;
-
-  // Build categories array with "All" as first option
-  let categories: string[];
-  if (categoryNames.length > 0) {
-    categories = ["All", ...categoryNames];
-  } else if (apiArticles.length > 0) {
-    // Extract unique categories from articles if API categories are empty
-    categories = ["All", ...Array.from(new Set(articles.map((a) => a.category))).sort()];
-  } else {
-    // Use default categories when no API data
-    categories = defaultBlogCategories;
-  }
+  const docs = await getPosts();
+  const posts: PostRow[] = docs.length > 0 ? docs.map(toPostRow) : FALLBACK_POSTS.map(toPostRowFromFallback);
 
   return (
-    <>
-      {/* Hero Section */}
-      <section className="pt-32 pb-16 px-4">
-        <div className="container mx-auto max-w-4xl text-center">
-          <Reveal delay={0.1}>
-            <h1 className="text-hero font-bold tracking-tight mb-6">Blog</h1>
-          </Reveal>
-
-          <Reveal delay={0.2}>
-            <p className="text-lg md:text-xl text-muted-foreground max-w-2xl mx-auto">
-              Thoughts on software development, architecture, DevOps, and
-              lessons learned from building scalable systems.
-            </p>
-          </Reveal>
+    <section id="blog" aria-labelledby="blog-h">
+      <div className="container gv">
+        <div className="sec-head">
+          <h1 id="blog-h" className="t-h2" data-cons="text">
+            Blog
+          </h1>
+          <p className="lab">{posts.length} posts · newest first</p>
         </div>
-      </section>
-
-      {/* Category Filter & Articles */}
-      <section className="py-12 px-4">
-        <div className="container mx-auto">
-          <BlogPageClient
-            articles={articles}
-            categories={categories}
-          />
-        </div>
-      </section>
-    </>
+        <table className="idx">
+          <caption className="sr-only">Blog posts, newest first. Each title links to the full post.</caption>
+          <thead>
+            <tr>
+              <th scope="col">No.</th>
+              <th scope="col">Title</th>
+              <th scope="col" className="k">Category</th>
+              <th scope="col" className="st">Date · read</th>
+            </tr>
+          </thead>
+          <tbody>
+            {posts.map((p, i) => (
+              <tr className="prow" key={p.slug}>
+                <td className="sh">{pad2(i + 1)}</td>
+                <th scope="row">
+                  <Link className="rowbtn" href={`/blog/${p.slug}`}>
+                    {p.title}
+                  </Link>
+                  <p className="row-sub" data-fact>
+                    {p.excerpt}
+                  </p>
+                </th>
+                <td className="k" data-fact>
+                  {p.category}
+                </td>
+                <td className="st" data-fact>
+                  {p.date} · {p.readingTime} min
+                </td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
+    </section>
   );
 }
