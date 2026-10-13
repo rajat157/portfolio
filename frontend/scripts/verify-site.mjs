@@ -287,6 +287,9 @@ async function checkWorksIndex(page, touch) {
       `${slug} panel drawing is labelled "${lab.label.slice(0, 44)}…"; its heading is not a live region`
     );
     if (touch) {
+      // the panel scrolls into view on the frame after the tap (bringPanelIntoView); WebKit's tap() returns before
+      // that frame, Chromium's after it, so give it two frames before measuring
+      await page.evaluate(() => new Promise((r) => requestAnimationFrame(() => requestAnimationFrame(r))));
       const inl = await page.evaluate((k) => {
         const rows = [...document.querySelectorAll("#rows tr.prow")];
         const panel = document.querySelector(".panel");
