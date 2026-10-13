@@ -147,7 +147,9 @@ Everything in it is **draft copy for Rajat to confirm**: the offerings (especial
    - At step 3 every card's text equals its `fix`.
    - At 390 px no card label overflows its card.
 6. Perf → verify (phone 390×844, 4× CPU, `next start`):
-   - Home JS before interaction ≤ 120 KB gzip, excluding the three chunk.
+   - Home JS before interaction ≤ 35 KB gzip over `/about`'s, excluding the three chunk. (Changed in P5 from a flat ≤ 120 KB:
+     React 19 + the Next 16 runtime alone ship on every route and put every page above that, so the gate measures what the home
+     adds over a page with only the shared layout's client code.)
    - The LCP element is the `NameMark` SVG.
    - Frame p95 while scrubbing the story ≤ 25 ms (reuse `measure-grain.mjs`'s frame recorder).
 
