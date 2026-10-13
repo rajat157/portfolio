@@ -1,31 +1,51 @@
 import type { Metadata } from "next";
-import { Geist, Geist_Mono } from "next/font/google";
+import { Instrument_Sans, Martian_Mono, Caveat, Doto } from "next/font/google";
 import "./globals.css";
-import "@/styles/custom.css";
-import { Providers } from "@/providers";
-import { Header, Footer, ScrollToTop, BottomNav } from "@/components/layout";
+import { Header, Footer } from "@/components/site-chrome";
+import { Guides, CursorReadout } from "@/components/construction";
 
-const geistSans = Geist({
-  variable: "--font-geist-sans",
+const sans = Instrument_Sans({
   subsets: ["latin"],
+  axes: ["wdth"],
+  variable: "--font-sans",
+  display: "swap",
 });
 
-const geistMono = Geist_Mono({
-  variable: "--font-geist-mono",
+const mono = Martian_Mono({
   subsets: ["latin"],
+  variable: "--font-mono",
+  display: "swap",
+});
+
+const hand = Caveat({
+  subsets: ["latin"],
+  weight: ["500", "600", "700"],
+  variable: "--font-hand",
+  display: "swap",
+});
+
+const count = Doto({
+  subsets: ["latin"],
+  weight: ["700", "800", "900"],
+  variable: "--font-count",
+  display: "swap",
 });
 
 const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || "http://localhost:3000";
 
+// Pre-paint state, before React hydrates (D13): the root layout never
+// re-renders, so this is the only place `html.js` is ever set.
+const BOOT = "(function(){document.documentElement.classList.add('js')})()";
+
 export const metadata: Metadata = {
   title: {
-    default: "Rajat Kumar R | Software Architect & Developer",
-    template: "%s | Rajat Kumar R",
+    default: "Rajat | Software Architect & Developer",
+    template: "%s | Rajat",
   },
-  description: "Portfolio of Rajat Kumar R - Software Architect & Developer specializing in Python, Django, FastAPI, Next.js, and cloud technologies.",
+  description: "Portfolio of Rajat - Software Architect & Developer specializing in Python, Django, FastAPI, Next.js, and cloud technologies.",
   keywords: ["software architect", "developer", "Python", "Django", "FastAPI", "Next.js", "React", "portfolio", "blog"],
-  authors: [{ name: "Rajat Kumar R" }],
-  creator: "Rajat Kumar R",
+  authors: [{ name: "Rajat" }],
+  creator: "Rajat",
   metadataBase: new URL(siteUrl),
   icons: {
     icon: [{ url: "/icon.svg", type: "image/svg+xml" }],
@@ -35,15 +55,15 @@ export const metadata: Metadata = {
   openGraph: {
     type: "website",
     locale: "en_US",
-    siteName: "Rajat Kumar R",
-    title: "Rajat Kumar R | Software Architect & Developer",
-    description: "Portfolio of Rajat Kumar R - Software Architect & Developer specializing in Python, Django, FastAPI, Next.js, and cloud technologies.",
+    siteName: "Rajat",
+    title: "Rajat | Software Architect & Developer",
+    description: "Portfolio of Rajat - Software Architect & Developer specializing in Python, Django, FastAPI, Next.js, and cloud technologies.",
     images: [
       {
         url: "/og-image.png",
         width: 1200,
         height: 630,
-        alt: "Rajat Kumar R | Software Architect & Developer",
+        alt: "Rajat | Software Architect & Developer",
       },
     ],
   },
@@ -64,8 +84,8 @@ const jsonLd = {
       "@type": "WebSite",
       "@id": `${siteUrl}/#website`,
       url: siteUrl,
-      name: "Rajat Kumar R",
-      description: "Portfolio of Rajat Kumar R - Software Architect & Developer",
+      name: "Rajat",
+      description: "Portfolio of Rajat - Software Architect & Developer",
       publisher: {
         "@id": `${siteUrl}/#person`,
       },
@@ -73,7 +93,7 @@ const jsonLd = {
     {
       "@type": "Person",
       "@id": `${siteUrl}/#person`,
-      name: "Rajat Kumar R",
+      name: "Rajat",
       jobTitle: "Software Architect & Developer",
       url: siteUrl,
       sameAs: [
@@ -104,23 +124,28 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="en" suppressHydrationWarning>
+    <html
+      lang="en"
+      className={`${sans.variable} ${mono.variable} ${hand.variable} ${count.variable}`}
+      suppressHydrationWarning
+    >
       <head>
+        <script dangerouslySetInnerHTML={{ __html: BOOT }} />
         <script
           type="application/ld+json"
           dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
         />
       </head>
-      <body
-        className={`${geistSans.variable} ${geistMono.variable} antialiased min-h-screen flex flex-col`}
-      >
-        <Providers>
-          <ScrollToTop />
-          <Header />
-          <main className="flex-1 pt-16 pb-20 md:pb-0">{children}</main>
-          <Footer className="hidden md:block" />
-          <BottomNav />
-        </Providers>
+      <body>
+        <a className="skip" href="#main">
+          Skip to content
+        </a>
+        <div className="kit-grain" aria-hidden="true" />
+        <Header />
+        <main id="main">{children}</main>
+        <Footer />
+        <Guides />
+        <CursorReadout />
       </body>
     </html>
   );
