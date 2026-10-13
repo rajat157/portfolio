@@ -187,12 +187,19 @@ export async function POST(request: NextRequest) {
   const contentType = request.headers.get("content-type") || "";
   const isForm = !contentType.includes("application/json");
 
+  // A form post needs no CORS preflight, so another site could auto-submit one through its visitors' browsers
+  // and spend the Resend quota. Browsers send Origin on every POST; refuse one that isn't this site's.
+  const origin = request.headers.get("origin");
+  if (isForm && origin && origin !== request.nextUrl.origin) {
+    return NextResponse.redirect(redirectTarget(request, "#send-error"), 303);
+  }
+
   try {
     const body = await readBody(request, isForm);
 
-    // A filled honeypot `company` field is only ever set by a bot -- answer
+    // A filled honeypot `website` field is only ever set by a bot -- answer
     // with the normal success response and send nothing (D28).
-    if (typeof body.company === "string" && body.company !== "") {
+    if (typeof body.website === "string" && body.website !== "") {
       if (isForm) return NextResponse.redirect(redirectTarget(request, "#sent"), 303);
       return NextResponse.json(
         { success: true, message: "Message sent successfully! I will get back to you soon." },

@@ -71,7 +71,8 @@ export default async function ProjectSheetPage({
   const project = await getProjectBySlug(slug);
   if (!project) notFound();
 
-  const isSheet = !!(project.sheet && project.drawing);
+  // the index's rule: only a featured project with a sheet and a drawing is numbered as a sheet
+  const isSheet = !!(project.featured && project.sheet && project.drawing);
   let sheetNo = 0;
   let total = 0;
   if (isSheet) {

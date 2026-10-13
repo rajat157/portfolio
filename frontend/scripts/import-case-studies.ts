@@ -288,10 +288,13 @@ function charLen(v: unknown): number {
 function printLineDiff(oldStr: string, newStr: string) {
   const oldLines = new Set(oldStr.split("\n"));
   const newLines = new Set(newStr.split("\n"));
-  const onlyOld = [...oldLines].filter((l) => !newLines.has(l)).slice(0, 40);
-  const onlyNew = [...newLines].filter((l) => !oldLines.has(l)).slice(0, 40);
-  if (onlyOld.length) console.log(`    only in current value:\n${onlyOld.map((l) => "      " + l).join("\n")}`);
-  if (onlyNew.length) console.log(`    only in new value:\n${onlyNew.map((l) => "      " + l).join("\n")}`);
+  const show = (head: string, lines: string[]) => {
+    if (!lines.length) return;
+    const more = lines.length > 40 ? `\n      … ${lines.length - 40} more lines` : "";
+    console.log(`    ${head}:\n${lines.slice(0, 40).map((l) => "      " + l).join("\n")}${more}`);
+  };
+  show("only in current value", [...oldLines].filter((l) => !newLines.has(l)));
+  show("only in new value", [...newLines].filter((l) => !oldLines.has(l)));
 }
 
 /** Prints `<label>  same` or `<label>  change (...)` (+ a line diff for text fields). Returns whether it changed. */
@@ -300,7 +303,10 @@ function diffField(label: string, oldVal: unknown, newVal: unknown, isText: bool
     console.log(`  ${label}  same`);
     return false;
   }
-  console.log(`  ${label}  change (old ${charLen(oldVal)} chars -> new ${charLen(newVal)} chars)`);
+  const [o, n] = [JSON.stringify(oldVal ?? null), JSON.stringify(newVal ?? null)];
+  // short values print in full, so a dry run shows exactly what a run would overwrite
+  if (!isText && o.length <= 160 && n.length <= 160) console.log(`  ${label}  change: ${o} -> ${n}`);
+  else console.log(`  ${label}  change (old ${charLen(oldVal)} chars -> new ${charLen(newVal)} chars)`);
   if (isText) printLineDiff(String(oldVal ?? ""), String(newVal ?? ""));
   return true;
 }

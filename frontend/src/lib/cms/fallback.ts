@@ -11,15 +11,9 @@
  * projects; this keeps that existing list rather than inventing 3 more
  * that no fallback has ever shown.
  */
-import fs from "fs";
-import path from "path";
-import { fileURLToPath } from "url";
-
 import { parseDrawing, type Drawing } from "@/lib/drawing";
+import sheetsJson from "@/migration/case-studies/sheets.json";
 import type { Sheet } from "./types";
-
-const HERE = path.dirname(fileURLToPath(import.meta.url));
-const SHEETS_JSON = path.resolve(HERE, "..", "..", "migration", "case-studies", "sheets.json");
 
 type RawSheetEntry = {
   featured_order: number;
@@ -29,7 +23,9 @@ type RawSheetEntry = {
   drawing: unknown;
 };
 
-const raw: Record<string, RawSheetEntry> = JSON.parse(fs.readFileSync(SHEETS_JSON, "utf8"));
+// Imported, not read with fs: the import is bundled into the server chunk, while a runtime read of a source-tree
+// path isn't in the deployed function's file traces, so ISR regeneration would fail with ENOENT on Vercel.
+const raw: Record<string, RawSheetEntry> = sheetsJson;
 
 export type FallbackSheet = {
   slug: string;

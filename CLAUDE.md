@@ -71,9 +71,9 @@ Other scripts (`frontend/scripts/`):
 - `node scripts/og-image.mjs` — regenerates `public/og-image.png` from an HTML template via Playwright + system Chrome.
 - `scripts/font-metrics.py` (fontTools; generates `src/lib/font-metrics.ts` and `src/lib/name-outline.ts`) — run with the miniconda
   Python environment (fontTools + brotli installed there), not whatever `python` resolves to by default.
-- `node_modules\.bin\payload.cmd run scripts/import-case-studies.ts -- --content [--execute]` — content import/sync; the `--content`
-  flag is required to touch the `sheet`/`drawing` fields (plain `import-case-studies.ts` without it only syncs the legacy fields).
-  Defaults to dry-run; add `--execute` to write.
+- `node_modules\.bin\payload.cmd run scripts/import-case-studies.ts -- --content [--execute]` — content import/sync. Every run syncs
+  title, description, technologies, live_url, featured/featured_order, `sheet` and `drawing` (overwriting admin edits to them);
+  `--content` also syncs the markdown body. Defaults to dry-run; add `--execute` to write.
 
 ## Content Model (frontend/src/payload/)
 - **Collections**: `projects`, `blog-posts` (both with drafts), `categories`, `media` (upload), `users` (admin auth)
@@ -119,7 +119,7 @@ Dev uses drizzle push (automatic). Production uses committed migrations in `fron
 
 ## Code Conventions
 - TypeScript strict mode; absolute imports via `@/`; `@payload-config` resolves to src/payload.config.ts
-- Components PascalCase; `Reveal`/`PenBlocks` (`src/components/reveal.tsx`) for scroll-in animation; light only, no dark mode
+- Components PascalCase; `PenBlocks` (`src/components/reveal.tsx`) for the sheet blocks' scroll-in drafting; light only, no dark mode
 - Pages keep hardcoded fallback content for when the DB returns nothing — preserve this pattern
 - ISR: all CMS pages export `revalidate = 3600`
 

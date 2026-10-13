@@ -204,8 +204,9 @@ export function ContactForm({ subjects, replyHours }: ContactFormProps) {
     wasArmed.current = nowArmed;
   }
 
+  // "idle", not removed: any data-status switches off the no-JS :target views (globals.css)
   function resetSentView() {
-    delete wrapRef.current?.dataset.status;
+    if (wrapRef.current) wrapRef.current.dataset.status = "idle";
   }
 
   async function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
@@ -213,7 +214,7 @@ export function ContactForm({ subjects, replyHours }: ContactFormProps) {
     const form = formRef.current;
     if (!form) return;
     const data = new FormData(form);
-    if (data.get("company")) return; // the hidden field only bots fill in
+    if (data.get("website")) return; // the hidden field only bots fill in
 
     const reduced = reducedMotion();
     const rows = Array.from(form.querySelectorAll<HTMLElement>(".brief-row, .brief-send"));
@@ -286,7 +287,8 @@ export function ContactForm({ subjects, replyHours }: ContactFormProps) {
       const reason = Object.values(details).flat()[0] ?? "please check the form";
       setStatusMsg(`Not sent: ${reason}. Please try again.`);
     } else {
-      setStatusMsg(`Not sent: ${json.error ?? "something went wrong"}. Please try again.`);
+      // the server's error copy already ends with what to do next
+      setStatusMsg(json.error ? `Not sent: ${json.error}` : "Not sent: something went wrong. Please try again.");
     }
   }
 
@@ -475,9 +477,10 @@ export function ContactForm({ subjects, replyHours }: ContactFormProps) {
           </span>
         </button>
 
+        {/* "website", not "company": no autofill profile has a website field to fill it with */}
         <div className="hp" aria-hidden="true">
-          <label htmlFor={`${uid}-company`}>Leave this empty</label>
-          <input id={`${uid}-company`} name="company" tabIndex={-1} autoComplete="off" />
+          <label htmlFor={`${uid}-website`}>Leave this empty</label>
+          <input id={`${uid}-website`} name="website" tabIndex={-1} autoComplete="off" />
         </div>
       </form>
 

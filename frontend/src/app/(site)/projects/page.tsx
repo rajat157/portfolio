@@ -78,7 +78,8 @@ async function getProjects(): Promise<Project[]> {
 export default async function ProjectsPage() {
   const projects = await getProjects();
   const featuredDocs = projects.filter((p) => p.featured && p.sheet && p.drawing);
-  const earlierDocs = projects.filter((p) => !p.featured);
+  // everything that isn't drawn as a sheet, so a featured project missing its sheet or drawing still lists
+  const earlierDocs = projects.filter((p) => !featuredDocs.includes(p));
 
   const sheets: SheetRow[] =
     featuredDocs.length > 0

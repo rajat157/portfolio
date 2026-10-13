@@ -191,7 +191,7 @@ export default async function AboutPage() {
   const headline = aboutData?.headline || defaultAboutData.headline;
   const bio = aboutData?.bio_short || defaultAboutData.bio_short;
   const location = aboutData?.location || defaultAboutData.location;
-  const resumeUrl = aboutData?.resume_url || "/resume.pdf";
+  const resumeUrl = aboutData?.resume_url; // no fallback: public/ has no résumé to point at
   const experience = aboutData?.experience?.length ? aboutData.experience : FALLBACK_EXPERIENCE;
   const education = aboutData?.education?.length ? aboutData.education : defaultAboutData.education;
   const skillGroups = aboutData?.skills?.length ? groupSkills(aboutData.skills) : FALLBACK_SKILL_GROUPS;
@@ -225,11 +225,13 @@ export default async function AboutPage() {
               <dd data-fact>10+ years</dd>
             </div>
           </dl>
-          <a className="tb-link" href={resumeUrl} target="_blank" rel="noopener noreferrer">
-            <span>Résumé</span>
-            <span aria-hidden="true">↗</span>
-            <span className="sr-only"> (opens in a new tab)</span>
-          </a>
+          {resumeUrl && (
+            <a className="tb-link" href={resumeUrl} target="_blank" rel="noopener noreferrer">
+              <span>Résumé</span>
+              <span aria-hidden="true">↗</span>
+              <span className="sr-only"> (opens in a new tab)</span>
+            </a>
+          )}
         </aside>
       </div>
 

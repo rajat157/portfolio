@@ -88,14 +88,14 @@ body {
   background-size: 48px 48px;
 }
 
-/* --- grain overlay (static, 4% opacity) --- */
+/* --- grain overlay (static, 4% opacity). Normal blend, not multiply: at 4% they differ by 0.53/255 and normal
+   needs no blend pass (§4.7 Q6b, measure-grain.mjs) --- */
 .kit-grain {
   position: fixed;
   inset: 0;
   pointer-events: none;
   opacity: 0.04;
   z-index: 9999;
-  mix-blend-mode: multiply;
   background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='200' height='200'><filter id='n'><feTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='2' stitchTiles='stitch'/></filter><rect width='100%25' height='100%25' filter='url(%23n)'/></svg>");
 }
 
@@ -113,15 +113,6 @@ body {
   font: 400 11px/1 var(--font-mono), ui-monospace, monospace;
   color: var(--ink);
   white-space: nowrap;
-}
-
-/* --- reveal helper: visible at rest, animates from a visible state --- */
-.kit-reveal {
-  transform: translateY(12px);
-  transition: transform 500ms var(--ease-weight);
-}
-.kit-reveal.is-in {
-  transform: translateY(0);
 }
 
 /* --- accessibility --- */
@@ -500,7 +491,8 @@ a.btn { display: inline-flex; align-items: center; text-decoration: none; }
 .end-copy { grid-column: 1 / span 4; }
 .end-reply { margin-top: 18px; }
 @media (min-width: 960px) { .end-copy { align-self: stretch; display: flex; flex-direction: column; } .end-reply { margin-top: auto; padding: 18px 0 24px; } }
-.hp { position: absolute; left: -9999px; width: 1px; height: 1px; overflow: hidden; }
+/* display:none, not off-screen: browsers autofill focusable fields, and an autofilled honeypot drops a real brief */
+.hp { display: none; }
 .end .foot-in { margin-top: 44px; border-top: 1px solid var(--hairline); }
 @media (max-width: 959px) { .end-copy { grid-column: 1 / -1; } }
 
@@ -600,11 +592,13 @@ a.btn { display: inline-flex; align-items: center; text-decoration: none; }
 /* D28 refined: the server-rendered receipt (#sent) and error note
    (#send-error) are hidden by default and shown by CSS :target (no-JS 303
    round trip) or by the JS submit handler toggling data-status on the
-   wrapper directly. While the receipt is showing, the form is hidden. */
+   wrapper directly. While the receipt is showing, the form is hidden. Once
+   JS has set data-status, :target no longer counts: a send made before
+   hydration must not keep its #sent/#send-error view after JS takes over. */
 #sent, #send-error { display: none; }
-#sent:target, .brief-wrap[data-status="sent"] #sent { display: block; }
-#send-error:target { display: block; }
-#sent:target ~ #cform, .brief-wrap[data-status="sent"] #cform { display: none; }
+.brief-wrap:not([data-status]) #sent:target, .brief-wrap[data-status="sent"] #sent { display: block; }
+.brief-wrap:not([data-status]) #send-error:target { display: block; }
+.brief-wrap:not([data-status]) #sent:target ~ #cform, .brief-wrap[data-status="sent"] #cform { display: none; }
 
 /* Prevent iOS zoom on input focus - ensure 16px minimum font size */
 @media screen and (max-width: 768px) {

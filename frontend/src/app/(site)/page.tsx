@@ -32,7 +32,8 @@ async function getCounts(): Promise<{ featured: number; earlier: number }> {
   if (projects.length === 0) {
     return { featured: FALLBACK_SHEETS.length, earlier: FALLBACK_EARLIER.length };
   }
-  const featured = projects.filter((p) => p.featured).length;
+  // /projects' rule, so the counts match what it shows as sheets and earlier works
+  const featured = projects.filter((p) => p.featured && p.sheet && p.drawing).length;
   return { featured, earlier: projects.length - featured };
 }
 
@@ -126,7 +127,7 @@ export default async function HomePage() {
           <p className="sr-only" id="hookLive" aria-live="polite" />
         </div>
       </div>
-      <Stage />
+      <Stage problems={HOME.problems} />
 
       <section className="sect" id="who" aria-labelledby="who-h">
         <div className="container gv">

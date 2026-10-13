@@ -37,16 +37,8 @@ function hasWebGL(): boolean {
   }
 }
 
-// A business's parts (home-prototype.html:1190-1197): problem on the shard's
-// front, fix on its back.
-const PARTS: [string, string][] = [
-  ["Orders arrive by email", "Orders tracked end to end"],
-  ["Stock lives in a spreadsheet", "Live stock, one source"],
-  ["Only a developer can update the site", "A site your team edits"],
-  ["A login for every tool", "One login, the right access"],
-  ["Reports built by hand", "Reports that build themselves"],
-  ["The same data typed in four places", "Data entered once"],
-];
+// Links between a business's six parts (`problems`, from HOME.problems: problem
+// on a card's front, fix on its back).
 const PAIRS: [number, number][] = [
   [0, 1],
   [0, 5],
@@ -56,7 +48,7 @@ const PAIRS: [number, number][] = [
   [4, 5],
 ];
 
-export function Stage() {
+export function Stage({ problems }: { problems: readonly { problem: string; fix: string }[] }) {
   useEffect(() => {
     if (matchMedia("(prefers-reduced-motion: reduce)").matches) return;
     if (!hasWebGL()) return;
@@ -291,8 +283,11 @@ export function Stage() {
 
         const ks = depths(cuts.length + 1);
         const list: Piece[] = [];
+        // forceSinglePass: a flat piece can't overlap itself, so one pass draws the same pixels as three's
+        // back-then-front pass for transparent DoubleSide, at half the draws and without re-resolving the
+        // program twice a frame (that pass flips material.side and sets needsUpdate).
         cuts.forEach((pc, i) => {
-          const mesh = new THREE.Mesh(pc.g, new THREE.MeshBasicMaterial({ map: tex, color: BLUE.clone(), transparent: true, depthWrite: false, side: THREE.DoubleSide }));
+          const mesh = new THREE.Mesh(pc.g, new THREE.MeshBasicMaterial({ map: tex, color: BLUE.clone(), transparent: true, depthWrite: false, side: THREE.DoubleSide, forceSinglePass: true }));
           const edge = new THREE.LineSegments(new THREE.EdgesGeometry(pc.g), lineMat(0.3));
           mesh.add(edge);
           scene.add(mesh);
@@ -302,7 +297,7 @@ export function Stage() {
         // the orange square: the full stop
         const dm = new THREE.Mesh(
           new THREE.PlaneGeometry(NameOutline.NAME_DOT * U, NameOutline.NAME_DOT * U),
-          new THREE.MeshBasicMaterial({ color: ORANGE, transparent: true, side: THREE.DoubleSide })
+          new THREE.MeshBasicMaterial({ color: ORANGE, transparent: true, side: THREE.DoubleSide, forceSinglePass: true })
         );
         scene.add(dm);
         list.push(piece(wpt(NameOutline.NAME_RUN + NameOutline.NAME_GAP + NameOutline.NAME_DOT / 2, NameOutline.NAME_CAP - NameOutline.NAME_DOT / 2), ks[ks.length - 1], dm, null));
@@ -345,6 +340,7 @@ export function Stage() {
         if (line) lines.push(line);
         return lines;
       };
+      const faceTex: InstanceType<typeof THREE.CanvasTexture>[] = [];
       const face = (text: string, ink: boolean) => {
         const c = document.createElement("canvas");
         c.width = TWd * CPX;
@@ -366,6 +362,7 @@ export function Stage() {
         const t = new THREE.CanvasTexture(c);
         t.colorSpace = THREE.SRGBColorSpace;
         t.anisotropy = Math.min(8, renderer.capabilities.getMaxAnisotropy());
+        faceTex.push(t);
         return t;
       };
       type Shard = {
@@ -380,8 +377,8 @@ export function Stage() {
         G: InstanceType<typeof THREE.Vector3>;
         S: InstanceType<typeof THREE.Vector3>;
       };
-      const cards = PARTS.map(([prob, fix]) => {
-        const front = face(prob, false);
+      const cards = problems.map(({ problem, fix }) => {
+        const front = face(problem, false);
         const back = face(fix, true);
         const shards: Shard[] = [];
         const xs = [0, Math.round((TWd * (1 + (rand() - 0.5) * 0.5)) / 3), Math.round((TWd * (2 + (rand() - 0.5) * 0.5)) / 3), TWd];
@@ -477,7 +474,7 @@ export function Stage() {
         const narrow = W < 640;
         Dn = Math.max(WORLD_NAME_W / (narrow ? 0.88 : 0.64) / (2 * tan * camera.aspect), nameH / 0.42 / (2 * tan));
         const cols = narrow ? 2 : 3;
-        const rows = PARTS.length / cols;
+        const rows = problems.length / cols;
         const gw = cols * TWd + (cols - 1) * GAP;
         const gh = rows * THd + (rows - 1) * GAP;
         Dt = Math.max(gw / (narrow ? 0.9 : 0.62) / (2 * tan * camera.aspect), gh / 0.46 / (2 * tan));
@@ -694,12 +691,16 @@ export function Stage() {
           p.mesh.visible = fade > 0.001;
           if (p.edge) {
             mat.color.lerpColors(BLUE, INK, inked);
-            (p.edge.material as InstanceType<typeof THREE.LineBasicMaterial>).opacity = (cons ? 0.55 : 0.3 * (1 - inked)) * fade;
+            const eo = (cons ? 0.55 : 0.3 * (1 - inked)) * fade;
+            (p.edge.material as InstanceType<typeof THREE.LineBasicMaterial>).opacity = eo;
+            p.edge.visible = eo > 0; // a line at opacity 0 draws nothing: skip the draw (here and below)
           }
           projPos.set([P.x, P.y, P.z, p.c.x, p.c.y, 0], i * 6);
         });
         projGeo.attributes.position.needsUpdate = true;
-        (projectors.material as InstanceType<typeof THREE.LineBasicMaterial>).opacity = (cons ? 0.5 : 0.18) * (1 - goU);
+        const po = (cons ? 0.5 : 0.18) * (1 - goU);
+        (projectors.material as InstanceType<typeof THREE.LineBasicMaterial>).opacity = po;
+        projectors.visible = po > 0;
 
         const appear = seg(sS, 0.08, 0.26);
         const settle = seg(sS, 0.44, 0.58);
@@ -710,14 +711,20 @@ export function Stage() {
           const lf = local(flipU, s.rank, n);
           const k = s.k + (1 - s.k) * ls;
           const op = local(appear, s.rank, n);
+          const turn = Math.PI * lf;
           s.pivot.position.lerpVectors(s.S, s.G, ls);
           s.pivot.scale.setScalar(k);
-          s.pivot.rotation.set(0, Math.PI * lf, 0);
+          s.pivot.rotation.set(0, turn, 0);
           s.pivot.visible = op > 0.001;
+          // only one face points at the camera; skip the draw the GPU would cull anyway
+          const front = Math.sin(turn) * (camera.position.x - s.pivot.position.x) + Math.cos(turn) * (camera.position.z - s.pivot.position.z) > 0;
+          s.fm.visible = front;
+          s.bm.visible = !front;
           (s.fm.material as InstanceType<typeof THREE.MeshBasicMaterial>).opacity = op;
           (s.bm.material as InstanceType<typeof THREE.MeshBasicMaterial>).opacity = op;
           const edgeMat = s.edge.material as InstanceType<typeof THREE.LineBasicMaterial>;
           edgeMat.opacity = op * (cons ? 0.7 : 0.45 * (1 - ls));
+          s.edge.visible = edgeMat.opacity > 0;
           edgeMat.color.lerpColors(BLUE, INK, seg(lf, 0.4, 0.6));
         });
         cards.forEach((cd) => {
@@ -735,9 +742,12 @@ export function Stage() {
         });
         linkGeo.attributes.position.needsUpdate = true;
         links.computeLineDistances();
-        (links.material as InstanceType<typeof THREE.LineDashedMaterial>).opacity = (cons ? 0.8 : 0.5) * seg(sS, 0.34, 0.46) * (1 - seg(sS, 0.64, 0.76));
+        const lo = (cons ? 0.8 : 0.5) * seg(sS, 0.34, 0.46) * (1 - seg(sS, 0.64, 0.76));
+        (links.material as InstanceType<typeof THREE.LineDashedMaterial>).opacity = lo;
+        links.visible = lo > 0;
         const fo = seg(sS, 0.76, 0.88);
         (frame.material as InstanceType<typeof THREE.LineBasicMaterial>).opacity = fo;
+        frame.visible = fo > 0;
         sysEl.style.opacity = fo.toFixed(3);
 
         let r1 = "";
@@ -811,6 +821,10 @@ export function Stage() {
       alignBtn.hidden = false;
       hud.hidden = false;
       layout();
+      // compile every program and upload the card faces now (everything is still visible), so the first
+      // scroll into the story doesn't stall on them mid-scrub
+      renderer.compile(scene, camera);
+      faceTex.forEach((t) => renderer.initTexture(t));
       raf = requestAnimationFrame(frameLoop);
 
       return () => {
@@ -842,7 +856,7 @@ export function Stage() {
       window.removeEventListener("load", onLoad);
       teardown?.();
     };
-  }, []);
+  }, [problems]);
 
   return null;
 }

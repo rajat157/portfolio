@@ -1,7 +1,7 @@
 // BUILD-PLAN.md §4.7 Q6b: grain cost. System Chrome via playwright-core, context
 // 390x844 @3 touch, against `next start` (VERIFY_BASE_URL or http://localhost:3000).
 // CDP Emulation.setCPUThrottlingRate {rate: 4}. Three variants: grain off
-// (.kit-grain{display:none}), multiply (shipped), normal (mix-blend-mode: normal).
+// (.kit-grain{display:none}), multiply (the prototype's), normal (shipped).
 // For each: load /, then in-page scroll scrollBy(0, 8) per rAF for 300 frames down
 // and 300 up, recording performance.now() deltas. 3 runs, report median p50/p95
 // frame ms and % frames > 25ms. Visual: screenshot /projects/staffing-operations-platform
@@ -19,8 +19,8 @@ const CHROME_PATH = "C:/Program Files/Google/Chrome/Application/chrome.exe";
 
 const VARIANTS = {
   off: `.kit-grain{display:none !important}`,
-  multiply: ``, // shipped: mix-blend-mode: multiply
-  normal: `.kit-grain{mix-blend-mode:normal !important}`,
+  multiply: `.kit-grain{mix-blend-mode:multiply !important}`, // the prototype's blend
+  normal: ``, // shipped since the P5 run: 0.53/255 from multiply, perf within budget
 };
 
 function percentile(sorted, p) {
