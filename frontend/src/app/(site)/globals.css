@@ -233,6 +233,12 @@ html.intro-run .cons, html:not([data-construction="on"]) .drafting .cons, html:n
 .d-label { fill: var(--ink-c); font-family: var(--font-sans), sans-serif; font-weight: 500; }
 .d-elabel { fill: var(--sub-c); font-family: var(--font-mono), ui-monospace, monospace; letter-spacing: .02em; }
 .d-note { fill: var(--ink-c); font-family: var(--font-mono), ui-monospace, monospace; letter-spacing: .02em; }
+.drafting .a-pen, .drafting .a-ink { stroke-dasharray: 1 1; animation: dash var(--dur) linear var(--at) backwards; }
+.drafting .a-ink { animation-timing-function: var(--ease-attack); }
+.drafting .a-set { animation: appear var(--t32) var(--ease-attack) var(--at) backwards; }
+@keyframes dash { from { stroke-dashoffset: 1; } to { stroke-dashoffset: 0; } }
+@keyframes appear { from { opacity: 0; } }
+@media (prefers-reduced-motion: reduce) { .drafting * { animation: none !important; } }
 #guides { position: absolute; left: 0; top: 0; pointer-events: none; z-index: 30; }
 
 /* ---------- works index ---------- */
