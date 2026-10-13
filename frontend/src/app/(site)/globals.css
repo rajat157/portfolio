@@ -510,6 +510,11 @@ a.btn { display: inline-flex; align-items: center; text-decoration: none; }
    button. */
 .brief-wrap { grid-column: 5 / span 8; }
 @media (max-width: 959px) { .brief-wrap { grid-column: 1 / -1; } .brief { margin-top: 0; } }
+/* /contact: the same brief under the sheet head, in the head's 8 columns */
+.contact-grid { display: grid; grid-template-columns: repeat(12, 1fr); gap: 28px var(--gap); margin-top: 28px; }
+.contact-grid .brief-wrap { grid-column: 1 / span 8; }
+.contact-grid .brief { margin-top: 0; }
+@media (max-width: 959px) { .contact-grid .brief-wrap { grid-column: 1 / -1; } }
 .brief { --con: color-mix(in srgb, var(--blue) 50%, transparent); position: relative; margin-top: 44px; border: 1px solid var(--ink-c); background: var(--lab); }
 .brief-top { display: grid; grid-template-columns: auto 1fr auto; border-bottom: 1px solid var(--ink-c); }
 .brief-top > p { display: flex; align-items: center; gap: 10px; margin: 0; padding: 10px 14px; }
