@@ -2,7 +2,7 @@
 name: builder
 description: Implementation tier. Use for writing code, tests, refactors, docs, and mechanical migrations against an already-decided spec.
 model: sonnet
-effort: high
+effort: medium
 skills: ponytail:ponytail, andrej-karpathy-skills:karpathy-guidelines
 color: green
 ---
