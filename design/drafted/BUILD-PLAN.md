@@ -11,7 +11,14 @@ $env:Path = "C:\Users\rajat\.nvm\versions\node\v24.13.0\bin;" + $env:Path   # No
 Set-Location D:\Projects\portfolio\frontend
 podman start portfolio-payload-pg                                             # dev DB, port 5434
 $env:DATABASE_URI = "postgresql://payload:payload@localhost:5434/payload"     # pre-set: always wins over .env files
+$env:NODE_OPTIONS = "--network-family-autoselection-attempt-timeout=3000"     # podman answers on ::1 only; under build load the
+                                                                              # default 250 ms per-address try times out -> pages fall back
 ```
+- **Worktrees (P3b and P4 run in parallel):** each worktree's `frontend/.env.local` is a copy of the main one with
+  `RESEND_API_KEY` blanked, so `/api/contact` only logs and never emails Rajat. `frontend/media` is a junction to the main
+  tree's `media/`. There is no `.env.production.local`. Ports: main 3000, P3b 3001, P4 3002, with
+  `VERIFY_BASE_URL=http://localhost:<port>`. In the main tree `next start` loads the LIVE Resend key, so every harness
+  check of the contact form intercepts `/api/contact` with `page.route`.
 - Payload CLI: `node_modules\.bin\payload.cmd ...` (npx.ps1 drops a bare `--`). TS scripts: `node_modules\.bin\tsx.cmd`.
 - **`frontend/.env.production.local` exists and holds PRODUCTION secrets** (DATABASE_URL, DATABASE_URL_UNPOOLED,
   BLOB_READ_WRITE_TOKEN, RESEND_API_KEY …). `next build` / `next start` load it. The DB stays local only because
@@ -96,7 +103,7 @@ The prototype's name-style switcher was there to compare options only. Build Sha
 | D25 | "Rajat" everywhere: header mark, home, about heading, page titles, JSON-LD `name` | His stated preference | The full name, "RKR" |
 | D26 | **Type system, site-wide** (from the Take Apart build sheet; Rajat approved it 2026-10-13): **display** Instrument Sans 700 wdth 75 (name, section and sheet titles, step titles) · **body** Instrument Sans 400/500 wdth 100 (text, thesis) · **labels and data** Martian Mono 500–600 wdth 87.5 · **his voice** Caveat 600, for notes only · **readouts, counts and card numbers** Doto 800. Drafted's `.lab`, `.t-h2`, `.sheet-title` and `.blk-h` are adjusted to it, as in `home-prototype.html` | He rejected the earlier mix (semi-condensed headings with a large regular paragraph) and asked for this one | The Drafted defaults (`.t-h2` wdth 90 600, `.lab` 400) |
 | D27 | **No old design remains anywhere public**: every route, plus the OG image, favicon, apple icon, the 404 page and any empty or error state, moves to the new system | Rajat: "complete portfolio website will be rebuilt with the current design system" | Keeping the old OG image and favicon (previously a non-goal) |
-| D28 | **No email address on any public page or in JSON-LD.** One `ContactForm` component (home close and `/contact`) is the only way in. It works **without JavaScript**: a native `POST` to `/api/contact`, which also accepts `application/x-www-form-urlencoded` and answers with a `303` to the referring page plus `?sent=1#contact`, or `?error=<field>#contact`. JavaScript adds inline field errors and an `aria-live` status. The honeypot `company` is rejected server-side, and zod stays the trust boundary. `CONTACT_EMAIL` stays a server-only env var | Rajat: "it should not have my email, instead a contact form should suffice". With no email fallback, the form must work everywhere | Showing the email, or a JS-only form with an email fallback |
+| D28 | **No email address on any public page or in JSON-LD.** One `ContactForm` component (home close and `/contact`) is the only way in. It works **without JavaScript**: a native `POST` to `/api/contact`, which also accepts `application/x-www-form-urlencoded` and answers with a `303` to the referring page's path. **Refined 2026-10-13:** the redirect goes to `<path>#sent` or `<path>#send-error`, never `?sent=1`. Reading `searchParams` would make `/` and `/contact` dynamic and lose ISR. The receipt and the error note are server-rendered and shown by CSS `:target`, so pages stay static. The referer is used only when it is same-origin (otherwise `/contact`), so there is no open redirect. JSON requests (fetch) get JSON back, as today. JavaScript adds inline field errors and an `aria-live` status. A filled honeypot `company` gets the normal success answer (JSON 200 or 303 `#sent`) and sends nothing. zod stays the trust boundary. Error copy never points to an email ("Not sent: <reason>. Please try again."). `CONTACT_EMAIL` stays a server-only env var | Rajat: "it should not have my email, instead a contact form should suffice". With no email fallback, the form must work everywhere | Showing the email, or a JS-only form with an email fallback |
 
 **Supersedes**
 - D8, D13, §4.5's intro, §4.6's hero rows, §4.7 Q6a's per-letter overlay, P1 step 3 and P3's "Home" bullet: all replaced by P3b below.
@@ -119,8 +126,10 @@ Everything in it is **draft copy for Rajat to confirm**: the offerings (especial
   - `src/components/sound-toggle.tsx` + `src/lib/sound.ts`.
   - `src/content/home.ts`.
   - `src/lib/name-outline.ts` (generated).
+  - `src/components/contact-form.tsx` (client island; the routed brief, §0 item 6; also used by `/contact` after P4). It is built in P3b because the home close needs it.
 - **Changed:**
   - `src/app/(site)/page.tsx`.
+  - `src/app/api/contact/route.ts`: form-encoded plus `303 #sent`/`#send-error`, the same-origin referer, the honeypot and error copy (D28 refined).
   - `layout.tsx`: Caveat, the "Rajat" mark, the Sound toggle in the header tools.
   - `globals.css`: plus the prototype's home CSS (`.exp*`, `.hud`, `.cap*`, `.t3*`, `.sect`, `.who-*`, `.facts`, `.offer`, `.map-*`, `.node*`, `.end*`, `.hand`) and the routed brief's (`.brief*`, `.bin`, `.ruled`, `.msg-wrap`, `.count`, `.chips`/`.chip*`, `.sq`, `.w*`, `.send-*`, `.done-*`, `.hp`).
 - **Deps:** + `three` (runtime; a lazy chunk on the home only), + `@types/three` (dev).
@@ -715,6 +724,8 @@ Success: `node scripts/verify-site.mjs --routes /projects,/projects/*` → `VERI
 ### P4 — Blog, About, Contact
 Files: `src/app/(site)/blog/page.tsx`, `blog/[slug]/page.tsx`, `about/page.tsx`, `contact/page.tsx`, `src/components/contact-form.tsx`,
 `globals.css` (append), `scripts/verify-site.mjs` (extend). Delete `blog-page-client.tsx`, `src/components/{blog,about,forms}/*`.
+**Split 2026-10-13 (parallel run):** the P4 builder does Blog and About in its own worktree while P3b builds the home.
+`/contact` and the deletion of `src/components/forms/*` follow after P3b merges, because they need P3b's `ContactForm`.
 Structures (prototype primitives only):
 - **Blog index:** `.container.gv` → `.sec-head` (h1 `.t-h2` "Blog" `data-cons="text"`, lab "N posts · newest first") →
   `table.idx` (`caption.sr-only`): No. (`.sh` "01") | Title (`.rowbtn` link + `p.row-sub[data-fact]` excerpt) | Category (`.k`) | Date · read (`.st`, mono, `YYYY-MM-DD · 8 min`). No filter.
@@ -737,8 +748,8 @@ Structures (prototype primitives only):
   44 px targets), each with `aria-describedby` → its row's `p.err`. Rajat's row is the submit button. A `p.lab[aria-live=polite]` status sits under the sheet ("Sending…" / "Sent. …" /
   "Not sent — <server message>. Please try again."). Server 400 `details` map onto field errors. Error text in `--ink` with a
   2 px `--deep-orange` mark: `--deep-orange` on `--lab` is ~4.3:1, too low for small text. Without JS the native POST plus
-  the `303 ?sent=1` / `?error=` round trip shows the same status from the server-rendered page. **No email anywhere** (D28).
-  Verify: a grep of the built HTML of every route for `@outlook.com` → 0. The no-JS context submits the form and lands on `?sent=1`
+  the `303 #sent` / `#send-error` round trip shows the same status from the server-rendered page via `:target` (D28 refined). **No email anywhere** (D28).
+  Verify: a grep of the built HTML of every route for `@outlook.com` → 0. The no-JS context submits the form and lands on `#sent`
   (with `page.route` intercepting the API, so no real email is sent).
 - Verify (harness): every route clean in all contexts. `/contact` with `page.route('**/api/contact')`: 200 → status "Sent";
   400 with details → field error text plus `aria-invalid`; an empty submit is blocked natively (no request). No real email is ever sent.
