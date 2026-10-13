@@ -825,7 +825,11 @@ Policy:
       first, or drop `--content` → OK → `… -- --content --execute` (old values of every changed field land in `scripts/backups/`). The old site keeps working; visible effect: Tredye appears as a 4th featured card and its old body diagram is gone.
    c. *Ship.* Push the branch, open the PR. Its preview build's migrate is now a no-op and it renders real content. Use it for the real-device
       Safari/iOS check. Merge to master. The production build reads complete content, so there is no degraded window.
-   d. *Verify live:* `/`, the 4 sheets, `/blog`, `/about`, `/contact` load; Vercel runtime errors empty.
+   d. *Verify live:* `/`, the 4 sheets, `/blog`, `/about`, `/contact` load; Vercel runtime errors empty. The no-JS form path,
+      without sending an email: a form-encoded POST to `/api/contact` with the honeypot `website` filled and the site's own
+      `Origin` → 303 to `#sent`; the same with a foreign `Origin` → 303 to `#send-error`.
+   e. *About copy (P5 review M1).* Production's About `bio_short`/`bio_full` and Site settings `site_description` still say
+      "8+ years"; the code and fallbacks say "10+". Edit those three fields in the production `/admin` after 2d.
 3. **Rollback:** Vercel instant rollback to the previous deployment. The DB changes are additive and old code ignores them. Old Tredye pages just
    lose the in-body diagram. After a rollback, and before any edit in the new admin, re-run the sync comparing against the
    latest version (`draft: true`), not the live row.
