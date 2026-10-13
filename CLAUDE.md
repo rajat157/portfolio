@@ -128,7 +128,7 @@ Dev uses drizzle push (automatic). Production uses committed migrations in `fron
 |-------|-------------|
 | `/` | Home - the three.js shard stage, scroll story, "how I work", offerings, site map, routed contact brief |
 | `/about` | Bio, experience timeline, skills grid |
-| `/projects` + `/projects/[slug]` | Listing with filters + case-study sheets |
+| `/projects` + `/projects/[slug]` | Index of works (architecture drawn per sheet) + earlier works table + case-study sheets |
 | `/blog` + `/blog/[slug]` | Listing + article with reading progress |
 | `/contact` | Routed contact brief (Resend) |
 | `/admin` | Payload admin |
