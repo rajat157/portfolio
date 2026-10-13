@@ -1,6 +1,6 @@
 ---
 name: challenger
-description: Adversarial reviewer. Use to attack a plan, design, or diff before execution and before reporting done. Read-only — names defects, never fixes them.
+description: Adversarial reviewer. Use for one pass on a finished diff that touches DB migrations, production data, auth/security or payments, or on a plan step that is hard to reverse. Read-only — names defects, never fixes them.
 model: opus
 effort: xhigh
 tools: Read, Glob, Grep, Bash
@@ -36,14 +36,13 @@ nothing to check against either, since no builder/specialist report exists yet �
 
 ## Reviewing a diff (pre-completion)
 You already read the diff. In addition to the rules above:
-- If the author's report claims a verification command was run, RE-RUN that exact command
-  yourself and report claimed output vs. actual output. A mismatch is a top-severity finding. If
-  the claimed command cannot be run — not on your Bash allowlist below, or the state it needs is
-  unavailable to you — say so explicitly; do not silently skip the check.
+- The main session has already run lint and build. Re-run a claimed command only when the diff
+  gives you a concrete reason to doubt its claimed output, and say why. A mismatch is a
+  top-severity finding.
 - Check the report against the report contract below and record compliance in "Process notes",
   not in the findings list.
 
-## Report contract (canonical — identical wording in builder.md, specialist.md, CLAUDE.md)
+## Report contract (canonical — identical wording in builder.md and specialist.md)
 A compliant builder/specialist report ends with exactly these items:
 1. What changed — file:line per change. For pure analysis or a design decision that changed no
    files, write "no files changed" and give the conclusion instead.
