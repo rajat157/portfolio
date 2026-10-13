@@ -3,7 +3,7 @@ import { ImageResponse } from "next/og";
 export const size = { width: 180, height: 180 };
 export const contentType = "image/png";
 
-// Same mark as icon.svg: white serif "R" on a #09090b rounded square.
+// Same mark as icon.svg: the orange square on a #0D0F12 rounded square.
 export default function AppleIcon() {
   return new ImageResponse(
     (
@@ -13,11 +13,8 @@ export default function AppleIcon() {
         viewBox="0 0 32 32"
         xmlns="http://www.w3.org/2000/svg"
       >
-        <rect width={32} height={32} rx={6} fill="#09090b" />
-        <path
-          d="M6 26V6H15C17.2 6 18.9 6.6 20.2 7.8C21.5 9 22.1 10.6 22.1 12.6C22.1 14.2 21.7 15.5 20.8 16.6C19.9 17.7 18.6 18.4 17 18.7L24 26H20L13.5 19H10V26H6ZM10 15.5H14.5C15.8 15.5 16.8 15.2 17.5 14.5C18.2 13.8 18.5 13 18.5 12C18.5 10.9 18.2 10 17.5 9.4C16.8 8.8 15.8 8.5 14.5 8.5H10V15.5Z"
-          fill="white"
-        />
+        <rect width={32} height={32} rx={6} fill="#0D0F12" />
+        <rect x={11} y={11} width={10} height={10} fill="#FF4D12" />
       </svg>
     ),
     { ...size }
