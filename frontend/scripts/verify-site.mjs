@@ -412,6 +412,72 @@ async function checkSheetNavigation(browser) {
   return out;
 }
 
+// ======================= P4: blog + about (BUILD-PLAN.md §5 "P4 — Blog, About, Contact") =======================
+
+// P4: "/blog/*" expands to the live post routes, read once from the running
+// app's index (same approach as resolveProjectRoutes).
+async function resolveBlogRoutes(browser) {
+  const ctx = await browser.newContext({ viewport: { width: 1440, height: 900 } });
+  const page = await ctx.newPage();
+  await page.goto(BASE_URL + "/blog", { waitUntil: "load" });
+  const posts = await page.evaluate(() => [...document.querySelectorAll("#blog .rowbtn")].map((a) => a.getAttribute("href")));
+  await ctx.close();
+  return posts;
+}
+
+// P4: a blog article — its TOC links all scroll to ids that really exist in
+// the body, the reading-progress bar is driven by CSS alone (no JS), and the
+// share links are absolute URLs (so they still work once copied off-site).
+// None of this depends on JS, so it runs the same way in every context.
+async function checkBlogArticle(page, routePath) {
+  const out = [];
+  const check = (ok, msg) => out.push({ ok: !!ok, msg });
+
+  await page.goto(BASE_URL + routePath, { waitUntil: "load" });
+
+  const toc = await page.evaluate(() =>
+    [...document.querySelectorAll(".toc a")].map((a) => {
+      const href = a.getAttribute("href") || "";
+      return { href, exists: href.startsWith("#") && !!document.getElementById(href.slice(1)) };
+    })
+  );
+  const missingToc = toc.filter((t) => !t.exists);
+  check(toc.length > 0, `TOC has >=1 entry (${toc.length})`);
+  check(missingToc.length === 0, `every TOC link scrolls to an existing id${missingToc.length ? "; missing: " + missingToc.map((t) => t.href).join(", ") : ""}`);
+
+  const progress = await page.evaluate(() => {
+    const el = document.querySelector(".progress");
+    if (!el) return null;
+    const cs = getComputedStyle(el);
+    return { animationName: cs.animationName, timeline: cs.animationTimeline || null };
+  });
+  check(!!progress, "a .progress element is server-rendered (no JS needed to create it)");
+  check(
+    !progress || progress.animationName === "none" || progress.animationName === "grow",
+    `reading progress has no script-driven animation name (got "${progress?.animationName}")`
+  );
+
+  const shareHrefs = await page.evaluate(() => [...document.querySelectorAll(".share a")].map((a) => a.getAttribute("href") || ""));
+  check(shareHrefs.length >= 2, `share row has >=2 links (${shareHrefs.length})`);
+  check(
+    shareHrefs.length > 0 && shareHrefs.every((h) => /^https?:\/\//.test(h)),
+    `every share link is an absolute URL (${shareHrefs.join(", ") || "none"})`
+  );
+
+  return out;
+}
+
+// P4: /about shows exactly 8 experience rows (dev-seeded content and the
+// fallback both carry 8).
+async function checkAbout(page) {
+  const out = [];
+  const check = (ok, msg) => out.push({ ok: !!ok, msg });
+  await page.goto(BASE_URL + "/about", { waitUntil: "load" });
+  const expRows = await page.evaluate(() => document.querySelectorAll('section[aria-labelledby="exp-h"] tr.prow').length);
+  check(expRows === 8, `/about shows 8 experience rows (got ${expRows})`);
+  return out;
+}
+
 async function main() {
   const browser = await chromium.launch({
     executablePath: CHROME_PATH,
@@ -428,9 +494,16 @@ async function main() {
     featuredRoutes = resolved.featured;
     earlierRoute = resolved.earlierOne;
   }
-  const expandedRoutes = routes.flatMap((r) =>
-    r === "/projects/*" ? [...featuredRoutes, ...(earlierRoute ? [earlierRoute] : [])] : [r]
-  );
+  // P4: "/blog/*" expands to the live post routes, same approach.
+  let blogRoutes = [];
+  if (routes.includes("/blog/*")) {
+    blogRoutes = await resolveBlogRoutes(browser);
+  }
+  const expandedRoutes = routes.flatMap((r) => {
+    if (r === "/projects/*") return [...featuredRoutes, ...(earlierRoute ? [earlierRoute] : [])];
+    if (r === "/blog/*") return blogRoutes;
+    return [r];
+  });
   const slugOf = (routePath) => routePath.replace("/projects/", "");
 
   let allOk = true;
@@ -470,6 +543,25 @@ async function main() {
       const lines = isJs ? await checkSheet(page, slug) : await checkNoJsSheet(page, slug);
       for (const r of lines) {
         console.log(`${r.ok ? "PASS" : "FAIL"} [${name}${routePath}] ${r.msg}`);
+        if (!r.ok) allOk = false;
+      }
+    }
+
+    // P4: blog article + about checks — structural/CSS only, so they run the
+    // same way in every context (JS and no-JS alike).
+    for (const routePath of blogRoutes) {
+      if (!expandedRoutes.includes(routePath)) continue;
+      const lines = await checkBlogArticle(page, routePath);
+      for (const r of lines) {
+        console.log(`${r.ok ? "PASS" : "FAIL"} [${name}${routePath}] ${r.msg}`);
+        if (!r.ok) allOk = false;
+      }
+    }
+
+    if (expandedRoutes.includes("/about")) {
+      const lines = await checkAbout(page);
+      for (const r of lines) {
+        console.log(`${r.ok ? "PASS" : "FAIL"} [${name}/about] ${r.msg}`);
         if (!r.ok) allOk = false;
       }
     }
