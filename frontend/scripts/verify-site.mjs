@@ -172,6 +172,7 @@ async function checkConstruction(page, touch) {
 
   if (!touch) {
     const target = page.locator("[data-cons]").first();
+    await target.scrollIntoViewIfNeeded(); // P3b: the home stage pushes the first [data-cons] far below the fold
     const box = await target.boundingBox();
     if (box) {
       await page.mouse.move(box.x + box.width / 2, box.y + box.height / 2);
@@ -478,6 +479,435 @@ async function checkAbout(page) {
   return out;
 }
 
+// ========================================================================
+// P3b home block (BUILD-PLAN.md §0 "P3b"): the shard stage + the routed
+// contact brief. Self-contained -- every check below opens its own
+// context/page so it can attach network/console listeners before
+// navigating, independent of the shared per-context loop in main(). Kept in
+// its own functions/section so it is easy to merge with any other builder's
+// extension of this file.
+// ========================================================================
+
+const CHIP_FIXTURE = {
+  name: "Ada Lovelace",
+  email: "ada@example.com",
+  subject: "Internal tools",
+  message: "We need an internal tool to replace our spreadsheet workflow.",
+};
+
+async function fillBrief(page, data) {
+  await page.fill("#cform input[name=name]", data.name);
+  await page.fill("#cform input[name=email]", data.email);
+  await page.check(`#cform input[name=subject][value="${data.subject}"]`);
+  await page.fill("#cform textarea[name=message]", data.message);
+}
+
+// Chunk requests fired strictly after `load`, filtered to ones whose body
+// contains a string unique to the three.js bundle -- robust to hashed chunk
+// filenames and to Next's own unrelated <Link> route-prefetch chunks.
+async function threeChunksAfterLoad(page, routePath) {
+  const matches = [];
+  let loaded = false;
+  const onReq = async (req) => {
+    if (!loaded || !/_next\/static\/chunks\/.+\.js(\?|$)/.test(req.url())) return;
+    try {
+      const res = await req.response();
+      const body = res ? await res.text() : "";
+      if (body.includes("WebGLRenderer")) matches.push(req.url());
+    } catch {
+      // the response can race the test's own teardown -- not a finding either way
+    }
+  };
+  page.on("request", onReq);
+  await page.goto(BASE_URL + routePath, { waitUntil: "load" });
+  loaded = true;
+  await page.waitForTimeout(1500);
+  page.off("request", onReq);
+  return matches;
+}
+
+async function withNoWebGL(browser, fn) {
+  const ctx = await browser.newContext({ viewport: { width: 1440, height: 900 } });
+  await ctx.addInitScript(() => {
+    const proto = HTMLCanvasElement.prototype;
+    const orig = proto.getContext;
+    proto.getContext = function (type, ...args) {
+      if (typeof type === "string" && type.toLowerCase().includes("webgl")) return null;
+      return orig.apply(this, [type, ...args]);
+    };
+  });
+  const page = await ctx.newPage();
+  try {
+    return await fn(page);
+  } finally {
+    await ctx.close();
+  }
+}
+
+// P3b step 2/3: no-JS shows every section with no canvas and no three
+// request; reduced-motion and no-WebGL make no three request either; the
+// default context does, after `load`.
+async function checkStageLazyLoad(browser) {
+  const out = [];
+  const check = (ok, msg) => out.push({ ok: !!ok, msg });
+
+  const noJsCtx = await browser.newContext({ viewport: { width: 1440, height: 900 }, javaScriptEnabled: false });
+  const noJsPage = await noJsCtx.newPage();
+  await noJsPage.goto(BASE_URL + "/", { waitUntil: "load" });
+  const noJs = await noJsPage.evaluate(() => ({
+    canvas: !!document.querySelector(".exp-canvas"),
+    sections: ["#who", "#build", "#map", "#contact"].every((s) => !!document.querySelector(s)),
+  }));
+  check(!noJs.canvas, "no-JS renders no <canvas>");
+  check(noJs.sections, "no-JS renders every section (who/build/map/contact)");
+  const noJsChunks = await (async () => {
+    const chunks = [];
+    noJsPage.on("response", async (res) => {
+      if (!/_next\/static\/chunks\/.+\.js(\?|$)/.test(res.url())) return;
+      try {
+        if ((await res.text()).includes("WebGLRenderer")) chunks.push(res.url());
+      } catch {
+        /* ignore */
+      }
+    });
+    await noJsPage.reload({ waitUntil: "load" });
+    await noJsPage.waitForTimeout(1000);
+    return chunks;
+  })();
+  check(noJsChunks.length === 0, `no-JS requests no three chunk (${noJsChunks.length})`);
+  await noJsCtx.close();
+
+  const defaultCtx = await browser.newContext({ viewport: { width: 1440, height: 900 } });
+  const defaultPage = await defaultCtx.newPage();
+  const defaultChunks = await threeChunksAfterLoad(defaultPage, "/");
+  check(defaultChunks.length > 0, `the default context requests the three chunk after load (${defaultChunks.length})`);
+  await defaultCtx.close();
+
+  const reducedCtx = await browser.newContext({ viewport: { width: 1440, height: 900 }, reducedMotion: "reduce" });
+  const reducedPage = await reducedCtx.newPage();
+  const reducedChunks = await threeChunksAfterLoad(reducedPage, "/");
+  check(reducedChunks.length === 0, `reduced-motion requests no three chunk (${reducedChunks.length})`);
+  await reducedCtx.close();
+
+  const noWebglChunks = await withNoWebGL(browser, (page) => threeChunksAfterLoad(page, "/"));
+  check(noWebglChunks.length === 0, `--disable-webgl requests no three chunk (${noWebglChunks.length})`);
+
+  return out;
+}
+
+// P3b step 4: Enter locks the stage within 1.5s; HUD reads "Aligned · 0.0°".
+async function checkStageLock(browser) {
+  const out = [];
+  const check = (ok, msg) => out.push({ ok: !!ok, msg });
+  const ctx = await browser.newContext({ viewport: { width: 1440, height: 900 } });
+  const page = await ctx.newPage();
+  const consoleErrors = [];
+  page.on("console", (m) => {
+    if (m.type() === "error") consoleErrors.push(m.text());
+  });
+  await page.goto(BASE_URL + "/", { waitUntil: "load" });
+  await page
+    .waitForFunction(() => document.getElementById("exp")?.classList.contains("gl-ready"), null, { timeout: 8000 })
+    .catch(() => {});
+  await page.locator(".exp-pin").focus();
+  await page.keyboard.press("Enter");
+  const locked = await page
+    .waitForFunction(() => document.getElementById("exp")?.dataset.locked !== undefined, null, { timeout: 1500 })
+    .then(() => true, () => false);
+  check(locked, "Enter locks the stage ([data-locked]) within 1.5s");
+  const hud2 = await page.evaluate(() => document.getElementById("hudRow2")?.textContent ?? "");
+  check(hud2 === "Aligned · 0.0°", `HUD reads "Aligned · 0.0°" (got "${hud2}")`);
+  check(consoleErrors.length === 0, `no console errors${consoleErrors.length ? ": " + consoleErrors.join(" | ") : ""}`);
+  await ctx.close();
+  return out;
+}
+
+// P3b step 4: touch -- a sideways drag changes Turn; vertical scroll still scrolls.
+async function checkStageTouch(browser) {
+  const out = [];
+  const check = (ok, msg) => out.push({ ok: !!ok, msg });
+  const ctx = await browser.newContext({ viewport: { width: 390, height: 844 }, deviceScaleFactor: 3, isMobile: true, hasTouch: true });
+  const page = await ctx.newPage();
+  await page.goto(BASE_URL + "/", { waitUntil: "load" });
+  await page
+    .waitForFunction(() => document.getElementById("exp")?.classList.contains("gl-ready"), null, { timeout: 8000 })
+    .catch(() => {});
+  const before = await page.evaluate(() => document.getElementById("hudRow1")?.textContent ?? "");
+  const box = await page.locator(".exp-canvas").boundingBox();
+  if (box) {
+    const client = await ctx.newCDPSession(page);
+    const y = box.y + box.height / 2;
+    const x0 = box.x + box.width * 0.75;
+    await client.send("Input.dispatchTouchEvent", { type: "touchStart", touchPoints: [{ x: x0, y }] });
+    for (let i = 1; i <= 6; i++) {
+      await client.send("Input.dispatchTouchEvent", { type: "touchMove", touchPoints: [{ x: x0 - i * 20, y }] });
+    }
+    await client.send("Input.dispatchTouchEvent", { type: "touchEnd", touchPoints: [] });
+  }
+  await page.waitForTimeout(300);
+  const after = await page.evaluate(() => document.getElementById("hudRow1")?.textContent ?? "");
+  check(!!box, "the canvas has a bounding box to drag");
+  check(before !== after, `a sideways drag changes the Turn readout ("${before}" -> "${after}")`);
+
+  const scrollBefore = await page.evaluate(() => window.scrollY);
+  await page.mouse.wheel(0, 600);
+  await page.waitForTimeout(200);
+  const scrollAfter = await page.evaluate(() => window.scrollY);
+  check(scrollAfter > scrollBefore, `vertical scroll still scrolls (${scrollBefore} -> ${scrollAfter})`);
+  await ctx.close();
+  return out;
+}
+
+// P3b step 5: data-step is 1/2/3 at scroll fractions .2/.5/.85 of the stage
+// runway; at step 3 the sr-only lists expose every fix (the verifiable text
+// stand-in for the canvas-drawn cards).
+async function checkStageScrollStep(browser) {
+  const out = [];
+  const check = (ok, msg) => out.push({ ok: !!ok, msg });
+  const ctx = await browser.newContext({ viewport: { width: 1440, height: 900 } });
+  const page = await ctx.newPage();
+  await page.goto(BASE_URL + "/", { waitUntil: "load" });
+  await page
+    .waitForFunction(() => document.getElementById("exp")?.classList.contains("gl-ready"), null, { timeout: 8000 })
+    .catch(() => {});
+
+  for (const [frac, want] of [[0.2, "1"], [0.5, "2"], [0.85, "3"]]) {
+    await page.evaluate((f) => {
+      const exp = document.getElementById("exp");
+      const pin = exp.querySelector(".exp-pin");
+      const topH = document.querySelector(".top").getBoundingClientRect().height;
+      const run = exp.offsetHeight - pin.offsetHeight;
+      const rectTop = exp.getBoundingClientRect().top;
+      const docTop = rectTop + window.scrollY;
+      window.scrollTo(0, docTop - topH + run * f);
+    }, frac);
+    await page.waitForTimeout(500);
+    const step = await page.evaluate(() => document.getElementById("exp")?.dataset.step);
+    check(step === want, `scroll fraction ${frac}: data-step = ${want} (got ${step})`);
+  }
+
+  const fixesText = await page.evaluate(() => document.querySelector('.cap[data-step="3"] .sr-only')?.textContent ?? "");
+  const fixes = [
+    "Orders tracked end to end",
+    "Live stock, one source",
+    "A site your team edits",
+    "One login, the right access",
+    "Reports that build themselves",
+    "Data entered once",
+  ];
+  const missing = fixes.filter((f) => !fixesText.includes(f));
+  check(missing.length === 0, `step 3 exposes every fix${missing.length ? "; missing: " + missing.join(" | ") : ""}`);
+  await ctx.close();
+  return out;
+}
+
+// P3b step 5: at 390px no step/section label overflows its box.
+async function checkHomeOverflow390(browser) {
+  const out = [];
+  const check = (ok, msg) => out.push({ ok: !!ok, msg });
+  const ctx = await browser.newContext({ viewport: { width: 390, height: 844 }, deviceScaleFactor: 3, isMobile: true, hasTouch: true });
+  const page = await ctx.newPage();
+  await page.goto(BASE_URL + "/", { waitUntil: "load" });
+  const overflowing = await page.evaluate(() => {
+    const sels = ".cap-t,.lead,.node-t,.blk-h,.way-t,.end-t";
+    return [...document.querySelectorAll(sels)]
+      .filter((el) => el.scrollWidth > el.clientWidth + 1)
+      .map((el) => el.className + ": " + (el.textContent || "").slice(0, 30));
+  });
+  check(overflowing.length === 0, `no label overflows at 390px${overflowing.length ? "; " + overflowing.join(" | ") : ""}`);
+  await ctx.close();
+  return out;
+}
+
+// P3b step 6: home JS before interaction <=120KB excluding the three chunk;
+// LCP is the NameMark SVG; frame p95 while scrubbing at 4x CPU <= 25ms.
+async function checkHomePerf(browser) {
+  const out = [];
+  const check = (ok, msg) => out.push({ ok: !!ok, msg });
+  const ctx = await browser.newContext({ viewport: { width: 390, height: 844 }, deviceScaleFactor: 3, isMobile: true, hasTouch: true });
+  const page = await ctx.newPage();
+  const client = await ctx.newCDPSession(page);
+  await client.send("Emulation.setCPUThrottlingRate", { rate: 4 });
+
+  await page.goto(BASE_URL + "/", { waitUntil: "load" });
+
+  const jsBytes = await page.evaluate(async () => {
+    const entries = performance.getEntriesByType("resource").filter((e) => e.name.endsWith(".js"));
+    let total = 0;
+    for (const e of entries) {
+      let isThree = false;
+      try {
+        isThree = (await (await fetch(e.name)).text()).includes("WebGLRenderer");
+      } catch {
+        isThree = false;
+      }
+      if (!isThree) total += e.transferSize || 0;
+    }
+    return total;
+  });
+  check(jsBytes <= 120 * 1024, `home JS before interaction <= 120KB, excluding the three chunk (got ${(jsBytes / 1024).toFixed(1)}KB)`);
+
+  const lcp = await page.evaluate(
+    () =>
+      new Promise((resolve) => {
+        try {
+          new PerformanceObserver((list) => {
+            const last = list.getEntries().at(-1);
+            const el = last && last.element;
+            resolve({ inNameMark: !!(el && el.closest && el.closest(".fallback-name")) });
+          }).observe({ type: "largest-contentful-paint", buffered: true });
+        } catch {
+          resolve({ inNameMark: false });
+        }
+        setTimeout(() => resolve({ inNameMark: false }), 3000);
+      })
+  );
+  check(lcp.inNameMark, "the LCP element is the NameMark SVG");
+
+  await page
+    .waitForFunction(() => document.getElementById("exp")?.classList.contains("gl-ready"), null, { timeout: 8000 })
+    .catch(() => {});
+  const deltas = await page.evaluate(
+    () =>
+      new Promise((resolve) => {
+        const ds = [];
+        let last = performance.now();
+        let n = 0;
+        function step() {
+          const now = performance.now();
+          if (n > 0) ds.push(now - last);
+          last = now;
+          window.scrollBy(0, 8);
+          n++;
+          if (n < 180) requestAnimationFrame(step);
+          else resolve(ds);
+        }
+        requestAnimationFrame(step);
+      })
+  );
+  const sorted = deltas.slice().sort((a, b) => a - b);
+  const p95 = sorted.length ? sorted[Math.floor(sorted.length * 0.95)] : 0;
+  check(p95 <= 25, `frame p95 while scrubbing at 4x CPU <= 25ms (got ${p95.toFixed(1)}ms, n=${sorted.length})`);
+
+  await client.send("Emulation.setCPUThrottlingRate", { rate: 1 });
+  await ctx.close();
+  return out;
+}
+
+// Contact: fill -> armed; a 2xx shows the receipt and focuses it.
+// ALWAYS intercepts /api/contact.
+async function checkContactArmedAndSent(browser) {
+  const out = [];
+  const check = (ok, msg) => out.push({ ok: !!ok, msg });
+  const ctx = await browser.newContext({ viewport: { width: 1440, height: 900 } });
+  const page = await ctx.newPage();
+  await page.route("**/api/contact", (route) =>
+    route.fulfill({ status: 200, contentType: "application/json", body: JSON.stringify({ success: true, message: "ok" }) })
+  );
+  await page.goto(BASE_URL + "/#contact", { waitUntil: "load" });
+  await fillBrief(page, CHIP_FIXTURE);
+  await page.waitForTimeout(150);
+  const armed = await page.evaluate(() => document.getElementById("cform")?.classList.contains("armed"));
+  check(armed, "filling all four parts arms the brief");
+
+  await page.click(".brief-send");
+  // The success path waits out the in-flight beat, inks Rajat's row, shatters
+  // the form, then assembles the receipt -- several seconds of animation
+  // (skipped only under reduced motion), so both waits below are generous.
+  const shown = await page
+    .waitForFunction(
+      () => {
+        const el = document.getElementById("sent");
+        return !!el && el.getClientRects().length > 0 && getComputedStyle(el).visibility !== "hidden";
+      },
+      null,
+      { timeout: 8000 }
+    )
+    .then(() => true, () => false);
+  check(shown, "a 2xx response shows the receipt");
+  const focused = await page
+    .waitForFunction(() => document.activeElement?.id === "sent", null, { timeout: 2000 })
+    .then(() => true, () => false);
+  check(focused, "focus moves to the receipt once it has assembled");
+  await ctx.close();
+  return out;
+}
+
+// Contact: a 400 with details shows a per-row field error + aria-invalid,
+// and the status line explains it. ALWAYS intercepts /api/contact.
+async function checkContactFieldError(browser) {
+  const out = [];
+  const check = (ok, msg) => out.push({ ok: !!ok, msg });
+  const ctx = await browser.newContext({ viewport: { width: 1440, height: 900 } });
+  const page = await ctx.newPage();
+  await page.route("**/api/contact", (route) =>
+    route.fulfill({
+      status: 400,
+      contentType: "application/json",
+      body: JSON.stringify({ error: "Validation failed", details: { email: ["Please enter a valid email address"] } }),
+    })
+  );
+  await page.goto(BASE_URL + "/#contact", { waitUntil: "load" });
+  await fillBrief(page, CHIP_FIXTURE);
+  await page.click(".brief-send");
+  await page.waitForTimeout(500);
+
+  const email = page.locator("#cform input[name=email]");
+  check((await email.getAttribute("aria-invalid")) === "true", "a 400 with details marks the field aria-invalid");
+  const errText = await page
+    .locator('#cform .brief-row[data-f="email"] .err')
+    .textContent()
+    .catch(() => null);
+  check(errText === "Please enter a valid email address", `the row shows the server's field error (got "${errText}")`);
+  const status = await page.locator("[data-contact-status]").textContent();
+  check(/^Not sent:/.test(status || ""), `the status line explains the failure (got "${status}")`);
+  await ctx.close();
+  return out;
+}
+
+// Contact: an empty submit never reaches the server (native required/type
+// validation blocks it client-side). ALWAYS intercepts /api/contact.
+async function checkContactEmptySubmitBlocked(browser) {
+  const out = [];
+  const check = (ok, msg) => out.push({ ok: !!ok, msg });
+  const ctx = await browser.newContext({ viewport: { width: 1440, height: 900 } });
+  const page = await ctx.newPage();
+  let posted = false;
+  await page.route("**/api/contact", (route) => {
+    posted = true;
+    route.fulfill({ status: 200, contentType: "application/json", body: "{}" });
+  });
+  await page.goto(BASE_URL + "/#contact", { waitUntil: "load" });
+  await page.click(".brief-send");
+  await page.waitForTimeout(300);
+  check(!posted, "an empty submit never reaches the server (blocked by native validation)");
+  await ctx.close();
+  return out;
+}
+
+// Contact, no-JS: a native POST, 303-redirected by the (intercepted) route
+// to `/#sent`, shows the receipt via CSS :target alone. ALWAYS intercepts
+// /api/contact.
+async function checkContactNoJs(browser) {
+  const out = [];
+  const check = (ok, msg) => out.push({ ok: !!ok, msg });
+  const ctx = await browser.newContext({ viewport: { width: 1440, height: 900 }, javaScriptEnabled: false });
+  const page = await ctx.newPage();
+  await page.route("**/api/contact", (route) => route.fulfill({ status: 303, headers: { location: BASE_URL + "/#sent" } }));
+  await page.goto(BASE_URL + "/#contact", { waitUntil: "load" });
+  await fillBrief(page, CHIP_FIXTURE);
+  await page.click(".brief-send");
+  await page.waitForLoadState("load");
+  check(page.url().endsWith("#sent"), `the 303 lands on #sent (url: ${page.url()})`);
+  const visible = await page.evaluate(() => {
+    const el = document.getElementById("sent");
+    return !!el && el.getClientRects().length > 0;
+  });
+  check(visible, "the receipt is visible via :target, with no JS");
+  await ctx.close();
+  return out;
+}
+
 async function main() {
   const browser = await chromium.launch({
     executablePath: CHROME_PATH,
@@ -581,6 +1011,30 @@ async function main() {
     for (const r of await checkSheetNavigation(browser)) {
       console.log(`${r.ok ? "PASS" : "FAIL"} [navigation] ${r.msg}`);
       if (!r.ok) allOk = false;
+    }
+  }
+
+  // P3b home block: the stage (lazy-load, lock, touch, scroll story,
+  // overflow, perf) and the routed contact brief. Each check opens its own
+  // context, so these run once, independent of the CONTEXTS loop above.
+  if (routes.includes("/")) {
+    const homeChecks = [
+      ["stage lazy-load", checkStageLazyLoad],
+      ["stage lock", checkStageLock],
+      ["stage touch", checkStageTouch],
+      ["stage scroll story", checkStageScrollStep],
+      ["home overflow 390", checkHomeOverflow390],
+      ["home perf", checkHomePerf],
+      ["contact armed+sent", checkContactArmedAndSent],
+      ["contact field error", checkContactFieldError],
+      ["contact empty submit", checkContactEmptySubmitBlocked],
+      ["contact no-JS", checkContactNoJs],
+    ];
+    for (const [label, fn] of homeChecks) {
+      for (const r of await fn(browser)) {
+        console.log(`${r.ok ? "PASS" : "FAIL"} [${label}] ${r.msg}`);
+        if (!r.ok) allOk = false;
+      }
     }
   }
 
