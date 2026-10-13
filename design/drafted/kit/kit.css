@@ -1,0 +1,168 @@
+/*
+ * KIT — shared design kit for "Drafted" and "Cut" prototypes.
+ * Paste this whole file inline in a <style> tag (or link it) before any
+ * study-specific CSS. See README.md for the Google Fonts <link> to pair
+ * with this file and for a token/helper reference.
+ */
+
+:root {
+  color-scheme: light;
+
+  /* --- color tokens --- */
+  --lab: #E7E9EC;       /* ground */
+  --panel: #F6F7F8;
+  --ink: #0D0F12;
+  --graphite: #4F5560;  /* secondary text, >=4.5:1 on --lab */
+  --hairline: #C3C7CE;
+  --orange: #FF4D12;    /* fills and large marks only, never small text */
+  --deep-orange: #C93400; /* thin marks */
+  --blue: #2448FF;      /* links, focus, construction lines */
+
+  /* --- easing --- */
+  --ease-attack: cubic-bezier(.2, 0, 0, 1);
+  --ease-weight: cubic-bezier(.7, 0, .2, 1);
+
+  /* --- fluid type scale --- */
+  --fs-display: clamp(2.5rem, 1.8rem + 3vw, 5rem);
+  --fs-h1: clamp(2rem, 1.5rem + 2vw, 3.5rem);
+  --fs-h2: clamp(1.5rem, 1.2rem + 1vw, 2.25rem);
+  --fs-body: clamp(1rem, 0.95rem + 0.2vw, 1.125rem);
+  --fs-mono: clamp(0.8rem, 0.78rem + 0.1vw, 0.95rem);
+}
+
+html, body {
+  background: var(--lab);
+  color: var(--ink);
+}
+
+body {
+  font-family: 'Instrument Sans', sans-serif;
+  font-size: var(--fs-body);
+}
+
+/* --- type --- */
+.t-display, .t-h1, .t-h2 {
+  font-family: 'Instrument Sans', sans-serif;
+  font-variation-settings: 'wdth' 85, 'wght' 700;
+  line-height: 1.05;
+  margin: 0;
+}
+.t-display { font-size: var(--fs-display); }
+.t-h1 { font-size: var(--fs-h1); }
+.t-h2 { font-size: var(--fs-h2); font-variation-settings: 'wdth' 90, 'wght' 600; }
+
+.t-body {
+  font-family: 'Instrument Sans', sans-serif;
+  font-variation-settings: 'wdth' 100, 'wght' 400;
+  font-size: var(--fs-body);
+  color: var(--graphite);
+}
+
+.t-mono {
+  font-family: 'Martian Mono', monospace;
+  font-variation-settings: 'wdth' 100, 'wght' 400;
+  font-size: var(--fs-mono);
+  letter-spacing: 0.01em;
+}
+
+/* --- 12-column grid utility --- */
+.container {
+  max-width: 1280px;
+  margin: 0 auto;
+  padding: 0 24px;
+}
+.grid {
+  display: grid;
+  grid-template-columns: repeat(12, 1fr);
+  gap: var(--grid-gap, 16px);
+}
+
+/* --- registration marks: small "+" at grid intersections --- */
+.kit-registration {
+  background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='48' height='48'><path d='M24 20v8M20 24h8' stroke='%23C3C7CE' stroke-width='1'/></svg>");
+  background-repeat: repeat;
+  background-size: 48px 48px;
+}
+
+/* --- grain overlay (static, 4% opacity) --- */
+.kit-grain {
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  opacity: 0.04;
+  z-index: 9999;
+  mix-blend-mode: multiply;
+  background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='200' height='200'><filter id='n'><feTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='2' stitchTiles='stitch'/></filter><rect width='100%25' height='100%25' filter='url(%23n)'/></svg>");
+}
+
+/* --- drafting cursor (fine pointers only) --- */
+@media (pointer: fine) {
+  html.kit-cursor-on, html.kit-cursor-on * { cursor: none; }
+  html.kit-cursor-on a,
+  html.kit-cursor-on input,
+  html.kit-cursor-on textarea,
+  html.kit-cursor-on select,
+  html.kit-cursor-on button,
+  html.kit-cursor-on [contenteditable] {
+    cursor: auto;
+  }
+}
+.kit-cursor {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 0;
+  height: 0;
+  pointer-events: none;
+  z-index: 10000;
+  will-change: transform;
+}
+.kit-cursor-mark {
+  position: absolute;
+  width: 21px;
+  height: 21px;
+  margin: -10.5px 0 0 -10.5px;
+  background:
+    linear-gradient(var(--ink), var(--ink)) no-repeat center / 1px 21px,
+    linear-gradient(var(--ink), var(--ink)) no-repeat center / 21px 1px;
+}
+.kit-cursor-coords {
+  position: absolute;
+  left: 14px;
+  top: 14px;
+  white-space: nowrap;
+  font-family: 'Martian Mono', monospace;
+  font-size: 11px;
+  color: var(--ink);
+}
+
+/* --- reveal helper: visible at rest, animates from a visible state --- */
+.kit-reveal {
+  transform: translateY(12px);
+  transition: transform 500ms var(--ease-weight);
+}
+.kit-reveal.is-in {
+  transform: translateY(0);
+}
+
+/* --- accessibility --- */
+:focus-visible {
+  outline: 2px solid var(--blue);
+  outline-offset: 2px;
+}
+.tap-target {
+  min-width: 44px;
+  min-height: 44px;
+}
+[hidden] {
+  display: none !important;
+}
+
+/* --- reduced motion: instant, no transitions/animations --- */
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    transition-duration: 0s !important;
+    animation-duration: 0s !important;
+    animation-iteration-count: 1 !important;
+  }
+}

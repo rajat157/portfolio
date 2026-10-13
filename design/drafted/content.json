@@ -1,0 +1,249 @@
+{
+  "person": {
+    "name": { "text": "Rajat Kumar R", "verbatim": true, "cite": "snapshot-about.json:2" },
+    "role": { "text": "Software Architect & Developer", "verbatim": true, "cite": "snapshot-about.json:3" },
+    "base": { "text": "Bangalore, India", "verbatim": true, "cite": "snapshot-about.json:7" },
+    "years": { "text": "8+ years", "verbatim": true, "cite": "snapshot-about.json:5" },
+    "email": { "text": "rajat.kumar.r@outlook.com", "verbatim": true, "cite": "snapshot-about.json:8" },
+    "github": null,
+    "linkedin": null
+  },
+  "process": {
+    "text": "I take things apart until I understand them. Then I put them back together until they feel right.",
+    "source": "owner-approved"
+  },
+  "projects": [
+    {
+      "id": "offpriced",
+      "name": "Offpriced",
+      "kind": { "text": "B2B Wholesale Platform", "verbatim": true, "cite": "case-study-wholesale.md:2" },
+      "for": { "text": "Offpriced, a Montréal stocklot house selling clothing by the lot to retailers and wholesalers buying surplus, cancelled orders and factory over-runs in bulk.", "verbatim": false, "cite": "case-study-wholesale.md:23" },
+      "oneLine": { "text": "One app for buyers, staff and editors — with a site the owner updates by talking to an AI.", "verbatim": true, "cite": "case-study-wholesale.md:5" },
+      "slug": "b2b-wholesale-platform",
+      "caseStudyUrl": "https://www.rajatkumarr.com/projects/b2b-wholesale-platform",
+      "stack": {
+        "items": ["Next.js", "React", "TypeScript", "Payload CMS", "PostgreSQL", "Cloudflare R2", "Resend", "Vercel", "Progressive Web Apps", "Web Push", "Model Context Protocol"],
+        "verbatim": true,
+        "cite": "case-study-wholesale.md:7-17"
+      },
+      "facts": [
+        { "text": "direct from fifty-seven factories, trade only", "verbatim": true, "cite": "case-study-wholesale.md:37" },
+        { "text": "a single application serving four audiences: the public, signed-in buyers, the team working those deals, and whoever edits the site", "verbatim": true, "cite": "case-study-wholesale.md:23" }
+      ],
+      "problem": { "text": "Deals were negotiated by email with no single record of what was promised, and because every lot is a one-off with no restock, a public site nobody in the business could edit quickly became stale and a liability.", "verbatim": false, "cite": "case-study-wholesale.md:27-29" },
+      "built": [
+        { "text": "The public site — a shop window centred on 'The Floor', the catalogue of lots currently available.", "verbatim": false, "cite": "case-study-wholesale.md:35-37" },
+        { "text": "The buyer portal — line sheets, enquiries, quotes and orders tracked end to end instead of scattered across inboxes.", "verbatim": false, "cite": "case-study-wholesale.md:39-41" },
+        { "text": "The internal operations app — a mobile-first CRM for staff to keep The Floor current and manage quotes and fulfilment.", "verbatim": false, "cite": "case-study-wholesale.md:43-45" },
+        { "text": "The admin CMS, plus an MCP-based AI publishing flow so the owner can draft and publish articles by talking to Claude.", "verbatim": false, "cite": "case-study-wholesale.md:49-57" }
+      ],
+      "decisions": [
+        { "text": "Embedded Payload CMS in the same Next.js codebase rather than running it as a second service, so there is one deployment and one login model instead of two systems to keep in sync.", "verbatim": false, "cite": "case-study-wholesale.md:61" },
+        { "text": "Built the MCP server as a deliberately small, fixed set of actions behind a secret token, because the point was giving the AI assistant specific controls, not open access.", "verbatim": false, "cite": "case-study-wholesale.md:57" },
+        { "text": "Modelled the sales lifecycle end to end with an automatic email and a permanent record at each transition, so a buyer dispute over a missed quote is a lookup, not an argument.", "verbatim": false, "cite": "case-study-wholesale.md:63" },
+        { "text": "Segregated push notifications by audience, so an internal alert about a deal or a late shipment never reaches a customer's phone.", "verbatim": false, "cite": "case-study-wholesale.md:47" },
+        { "text": "Fixed the design system — colour, type and spacing — before building any screens, so a new screen is assembly, not invention.", "verbatim": false, "cite": "case-study-wholesale.md:71" }
+      ],
+      "outcome": { "text": "One system where there were several disconnected ones. Buyers self-serve instead of waiting on a reply, staff work deals from a phone, and the site is edited by the people who know what it should say. Every enquiry, quote and order has a trail. And the owner publishes by talking.", "verbatim": true, "cite": "case-study-wholesale.md:83" },
+      "architecture": {
+        "nodes": [
+          { "id": "public", "label": "The public" },
+          { "id": "buyers", "label": "Signed-in buyers" },
+          { "id": "staff", "label": "The team working those deals" },
+          { "id": "editors", "label": "Whoever edits the site" },
+          { "id": "app", "label": "One application" },
+          { "id": "db", "label": "One database" }
+        ],
+        "edges": [
+          { "from": "public", "to": "app" },
+          { "from": "buyers", "to": "app" },
+          { "from": "staff", "to": "app" },
+          { "from": "editors", "to": "app" },
+          { "from": "app", "to": "db", "label": "one codebase, one database" }
+        ],
+        "cite": "case-study-wholesale.md:23"
+      }
+    },
+    {
+      "id": "staffing",
+      "name": "Staffing operations platform",
+      "kind": { "text": "a small ERP, built from scratch", "verbatim": true, "cite": "case-study-staffing.md:21" },
+      "for": { "text": "a staffing company", "verbatim": false, "cite": "case-study-staffing.md:21 (client name withheld per naming rules)" },
+      "oneLine": { "text": "Five portals, one login, and every company's data walled off inside the database itself.", "verbatim": true, "cite": "case-study-staffing.md:4" },
+      "slug": "staffing-operations-platform",
+      "caseStudyUrl": "https://www.rajatkumarr.com/projects/staffing-operations-platform",
+      "stack": {
+        "items": ["Next.js", "React", "TypeScript", "Turborepo", "Drizzle ORM", "PostgreSQL", "Better Auth", "CASL", "Row-Level Security", "State Machines"],
+        "verbatim": true,
+        "cite": "case-study-staffing.md:6-15"
+      },
+      "facts": [
+        { "text": "five relationships at once — its own team, the client companies, the people it places, the recruiters who source them, and the prospects it chases", "verbatim": true, "cite": "case-study-staffing.md:21" },
+        { "text": "927 automated tests run against all of it.", "verbatim": true, "cite": "case-study-staffing.md:69" }
+      ],
+      "problem": { "text": "On spreadsheets, that produces the two failure modes that hurt: money that quietly leaks, and information reaching the wrong company. The requirement: one system, five doors into it, and doors that do not connect.", "verbatim": true, "cite": "case-study-staffing.md:25" },
+      "built": [
+        { "text": "Five portals — Admin, Client, Worker, Partner, and an Onboarding flow that converts a prospect into a client once money changes hands.", "verbatim": false, "cite": "case-study-staffing.md:29-47" },
+        { "text": "Permissions through CASL, precise enough to say a person may approve a specific record, not just that they hold a role.", "verbatim": false, "cite": "case-study-staffing.md:61" },
+        { "text": "A workflow engine of state machines for approvals, so a request can't skip a step and changing a process happens in one place.", "verbatim": false, "cite": "case-study-staffing.md:63" },
+        { "text": "An invoicing engine on integer minor-currency units with one written rounding rule, and an append-only audit log.", "verbatim": false, "cite": "case-study-staffing.md:65-67" }
+      ],
+      "decisions": [
+        { "text": "Enforced tenant isolation as row-level security inside the database itself rather than in application code, because an application filter can be forgotten in one query and leak another company's payroll.", "verbatim": false, "cite": "case-study-staffing.md:53-55" },
+        { "text": "Ran ordinary traffic through a deliberately powerless database account that cannot switch the row-level security checks off; a separate privileged account exists only for maintenance.", "verbatim": false, "cite": "case-study-staffing.md:55" },
+        { "text": "Stored money as whole numbers of the smallest currency unit rather than binary floating point, because floating point cannot represent most money amounts exactly and the error accumulates.", "verbatim": false, "cite": "case-study-staffing.md:65" },
+        { "text": "Made the audit log append-only, so rewriting history takes deliberate action through the maintenance account rather than a quiet edit from inside the app.", "verbatim": false, "cite": "case-study-staffing.md:67" },
+        { "text": "Deliberately left out the codebase knowledge graph used on another project, because five portals over one shared core is a structure that fits in one person's head.", "verbatim": false, "cite": "case-study-staffing.md:73" }
+      ],
+      "outcome": { "text": "Five groups, one platform, each seeing only its own slice. Work approved once and billed from the same record, commissions calculated rather than reconstructed, a history that cannot be quietly rewritten.", "verbatim": true, "cite": "case-study-staffing.md:79" },
+      "architecture": {
+        "walls": { "text": "Each of the five portals connects into one shared core and one database; row-level security independently checks every read and write so one client company's rows cannot leak to another's.", "verbatim": false, "cite": "case-study-staffing.md:51-57" },
+        "nodes": [
+          { "id": "admin", "label": "Admin" },
+          { "id": "client", "label": "Client" },
+          { "id": "worker", "label": "Worker" },
+          { "id": "partner", "label": "Partner" },
+          { "id": "onboarding", "label": "Onboarding" },
+          { "id": "core", "label": "Shared core" },
+          { "id": "db", "label": "Database — row-level security" }
+        ],
+        "edges": [
+          { "from": "admin", "to": "core" },
+          { "from": "client", "to": "core" },
+          { "from": "worker", "to": "core" },
+          { "from": "partner", "to": "core" },
+          { "from": "onboarding", "to": "core" },
+          { "from": "core", "to": "db" }
+        ],
+        "cite": "case-study-staffing.md:29-57"
+      }
+    },
+    {
+      "id": "lucif3r",
+      "name": "lucif3r",
+      "kind": { "text": "a website with one job — turn a tournament organiser or a brand's event manager into a booking enquiry", "verbatim": true, "cite": "case-study-esports-talent.md:25" },
+      "for": { "text": "lucif3r, an esports caster, stage host and broadcast voice working across esports finals, brand launches and live conventions", "verbatim": false, "cite": "case-study-esports-talent.md:25 (source reads '[lucif3r](url) is an esports caster, stage host...'; name de-linked here)" },
+      "oneLine": { "text": "A booking site that feels like a live broadcast — kept current by the talent, not a developer.", "verbatim": true, "cite": "case-study-esports-talent.md:5" },
+      "slug": "esports-talent-portfolio",
+      "caseStudyUrl": "https://www.rajatkumarr.com/projects/esports-talent-portfolio",
+      "stack": {
+        "items": ["Next.js", "React", "TypeScript", "Payload CMS", "PostgreSQL", "Tailwind CSS", "Lenis", "Vercel Blob", "Resend", "Cloudflare Turnstile", "Vitest", "Playwright", "Vercel"],
+        "verbatim": true,
+        "cite": "case-study-esports-talent.md:7-19"
+      },
+      "facts": [
+        { "text": "The audience was written down before anything was designed: tournament organisers and esports organisations first, then brand and event managers, then sponsors.", "verbatim": true, "cite": "case-study-esports-talent.md:33" },
+        { "text": "Success is measured in qualified enquiries, not pageviews.", "verbatim": true, "cite": "case-study-esports-talent.md:33" },
+        { "text": "a near-black ground, warm off-white type, one magenta accent, and gold kept for numbers and highlights", "verbatim": true, "cite": "case-study-esports-talent.md:41" }
+      ],
+      "problem": { "text": "Generic talent sites and link-in-bio pages don't sell a broadcaster, and the site needed to turn organisers, brand managers and sponsors into booking enquiries, with content the talent could keep current without a developer for each new event.", "verbatim": false, "cite": "case-study-esports-talent.md:29-35" },
+      "built": [
+        { "text": "A broadcast-style design system — near-black ground, one magenta accent, gold for highlights, square corners by rule, and a film-grain texture layer.", "verbatim": false, "cite": "case-study-esports-talent.md:41" },
+        { "text": "Motion with a reduced-motion off switch: a glitching wordmark, a gold shimmer, a ticker, and smoothed scrolling.", "verbatim": false, "cite": "case-study-esports-talent.md:45-52" },
+        { "text": "A home page built around one path to the booking form, with a bento grid of past events and a gallery from the stage.", "verbatim": false, "cite": "case-study-esports-talent.md:54-58" },
+        { "text": "A custom Control Room on top of embedded Payload CMS, with live preview, draft/publish, and even the brand colours editable.", "verbatim": false, "cite": "case-study-esports-talent.md:66-77" }
+      ],
+      "decisions": [
+        { "text": "Kept all effects to plain CSS plus one small scrolling library, so nothing heavy has to download before the page comes alive.", "verbatim": false, "cite": "case-study-esports-talent.md:52" },
+        { "text": "Gave mobile its own layout rather than a squeezed desktop one, because a booking often starts with a link opened on a phone.", "verbatim": false, "cite": "case-study-esports-talent.md:63" },
+        { "text": "Settled the look through two HTML prototypes rather than debating directions, and removed a layered custom cursor once the grain layer supplied the same depth.", "verbatim": false, "cite": "case-study-esports-talent.md:91" },
+        { "text": "Validated the booking form in the browser and again on the server against the same rules, and used Cloudflare Turnstile to keep bots out.", "verbatim": false, "cite": "case-study-esports-talent.md:60" },
+        { "text": "Kept analytics and Speed Insights on the public site only, never inside the Control Room.", "verbatim": false, "cite": "case-study-esports-talent.md:83" }
+      ],
+      "outcome": { "text": "A site that looks like the job: broadcast energy from the first frame, proof of the stages already worked, and a booking form at the end of every path. It stays current because the talent keeps it current — new events, new photos, even new colours — without waiting on anyone.", "verbatim": true, "cite": "case-study-esports-talent.md:103" },
+      "architecture": {
+        "nodes": [
+          { "id": "cms", "label": "Control Room (Payload CMS)" },
+          { "id": "db", "label": "PostgreSQL" },
+          { "id": "live", "label": "Live pages" }
+        ],
+        "edges": [
+          { "from": "cms", "to": "db", "label": "stores content" },
+          { "from": "cms", "to": "live", "label": "publish" },
+          { "from": "db", "to": "live", "label": "serves" }
+        ],
+        "cite": "case-study-esports-talent.md:68-77"
+      }
+    },
+    {
+      "id": "tredye",
+      "name": "Tredye",
+      "kind": { "text": "Real-Time NSE Market Monitoring on an Event-Driven Stack", "verbatim": true, "cite": "case-study-tredye.md:2" },
+      "for": { "text": "Voltvave Innovations", "verbatim": true, "cite": "case-study-tredye.md:27" },
+      "oneLine": { "text": "Roughly 800 live RSI streams, divergence alerts and MACD setups — computed as the market moves and streamed to the browser.", "verbatim": true, "cite": "case-study-tredye.md:5" },
+      "slug": "tredye-trading-platform",
+      "caseStudyUrl": "https://www.rajatkumarr.com/projects/tredye-trading-platform",
+      "stack": {
+        "items": ["Python", "FastAPI", "Apache Kafka", "Redis", "PostgreSQL", "TA-Lib", "Kite Connect", "Next.js", "React", "TypeScript", "Tailwind CSS", "WebSockets", "Docker", "Nginx", "Razorpay"],
+        "verbatim": true,
+        "cite": "case-study-tredye.md:7-21"
+      },
+      "facts": [
+        { "text": "around 200 NSE stocks on four intraday timeframes at once", "verbatim": true, "cite": "case-study-tredye.md:27" },
+        { "text": "roughly 800 charts. Nobody watches 800 charts.", "verbatim": true, "cite": "case-study-tredye.md:33" },
+        { "text": "Kafka 4.1 runs in KRaft mode — no ZooKeeper to operate", "verbatim": true, "cite": "case-study-tredye.md:107" },
+        { "text": "Every two seconds it reads the live board from Redis and pushes it to every connected client", "verbatim": true, "cite": "case-study-tredye.md:101" }
+      ],
+      "problem": { "text": "A divergence between price and RSI can form and dissolve within a quarter of an hour, and across roughly 200 stocks on four timeframes that is about 800 charts — more than anyone can watch by eye — so the watching had to move off the screen and into a system.", "verbatim": false, "cite": "case-study-tredye.md:33-35" },
+      "built": [
+        { "text": "A live monitoring board showing RSI across four timeframes per stock, with divergence highlighting and search.", "verbatim": false, "cite": "case-study-tredye.md:41-43" },
+        { "text": "A divergence history view, filterable by stock, timeframe, type and confidence.", "verbatim": false, "cite": "case-study-tredye.md:47" },
+        { "text": "A MACD strategy view showing daily market bias and the setups and triggers that follow on shorter timeframes.", "verbatim": false, "cite": "case-study-tredye.md:48" },
+        { "text": "Accounts and subscriptions with phone-verified sign-up, Razorpay payments, and an admin console for users, payments and feedback.", "verbatim": false, "cite": "case-study-tredye.md:51" }
+      ],
+      "decisions": [
+        { "text": "Aligned candles to the 9:15 IST market open rather than the Unix clock, so a 15-minute candle on Tredye matches the one on a charting terminal.", "verbatim": false, "cite": "case-study-tredye.md:95" },
+        { "text": "Backfilled months of history on start-up before computing indicators, and gated the detectors behind a warm-up announcement on Kafka for up to half an hour.", "verbatim": false, "cite": "case-study-tredye.md:97" },
+        { "text": "Consolidated candle history onto PostgreSQL instead of the dedicated time-series database the original blueprint specified, to run one fewer datastore.", "verbatim": false, "cite": "case-study-tredye.md:115" },
+        { "text": "Put a single FastAPI gateway in front holding one WebSocket per browser, pushing the live board from Redis every two seconds rather than on every tick.", "verbatim": false, "cite": "case-study-tredye.md:101" },
+        { "text": "Compiled TA-Lib once in a shared Docker build stage, with each service built as a thin target on top of it.", "verbatim": false, "cite": "case-study-tredye.md:111" }
+      ],
+      "outcome": { "text": "Tredye keeps roughly 800 live RSI streams current through an event-driven pipeline and surfaces the patterns worth a second look while they still matter — on a phone or at a desk, from the opening bell to the close. Each stage runs in its own container, and subscriptions, payments and an admin console are built in.", "verbatim": true, "cite": "case-study-tredye.md:125" },
+      "architecture": {
+        "note": "Simplified from the case study's own flow block (9 nodes, at the ≤9 limit); the flow block's legend line is excluded because it uses a term barred by the naming rules for this project.",
+        "nodes": [
+          { "id": "kite", "label": "Kite Connect" },
+          { "id": "ingestion", "label": "Data ingestion" },
+          { "id": "candles", "label": "Candle builder" },
+          { "id": "rsi", "label": "RSI calculator" },
+          { "id": "divergence", "label": "Divergence detector" },
+          { "id": "macd", "label": "MACD calculator" },
+          { "id": "macdstrategy", "label": "MACD strategy detector" },
+          { "id": "gateway", "label": "API gateway" },
+          { "id": "dashboard", "label": "Next.js dashboard" }
+        ],
+        "edges": [
+          { "from": "kite", "to": "ingestion", "label": "WebSocket" },
+          { "from": "ingestion", "to": "candles", "label": "Kafka · ticks" },
+          { "from": "candles", "to": "rsi", "label": "Kafka · candles" },
+          { "from": "candles", "to": "macd", "label": "Kafka · candles" },
+          { "from": "rsi", "to": "divergence", "label": "Kafka · RSI" },
+          { "from": "macd", "to": "macdstrategy", "label": "Kafka · MACD" },
+          { "from": "divergence", "to": "gateway", "label": "Kafka · alerts and setups" },
+          { "from": "macdstrategy", "to": "gateway", "label": "Kafka · alerts and setups" },
+          { "from": "gateway", "to": "dashboard", "label": "WebSocket" }
+        ],
+        "cite": "case-study-tredye.md:65-91"
+      }
+    }
+  ],
+  "timeline": [
+    { "org": "Independent", "role": "Freelance Software Architect & Developer", "dates": "Feb 2026 - Present", "line": { "text": "Building full-stack web platforms for clients end to end — B2B commerce and CRM, multi-portal operations software and motion-led brand sites — with Next.js, Payload CMS and PostgreSQL.", "verbatim": true, "cite": "experience-timeline.tsx:22" } },
+    { "org": "Voltvave Innovations", "role": "Freelance Software Architect & Developer", "dates": "Nov 2025 - Jan 2026", "line": { "text": "Built \"Tredye\", a real-time market-monitoring platform for NSE stocks: Python services on Kafka, Redis and PostgreSQL, with a Next.js dashboard. Built the event-driven data pipeline, alerts and backtesting.", "verbatim": true, "cite": "experience-timeline.tsx:31" } },
+    { "org": "Red Education", "role": "Team Lead, Senior Python Support Engineer", "dates": "Feb 2024 - Aug 2025", "line": { "text": "Engineered Labbuild 2.0 achieving 90% faster performance", "verbatim": true, "cite": "experience-timeline.tsx:40" } },
+    { "org": "Freelancer", "role": "Technical Consultant", "dates": "Nov 2023 - Jan 2024", "line": { "text": "Developed Django/PostgreSQL/Svelte dashboard solutions", "verbatim": true, "cite": "experience-timeline.tsx:51" } },
+    { "org": "Offpriced Canada Inc.", "role": "Senior Developer", "dates": "Jul 2022 - Oct 2023", "line": { "text": "Led team of 6 developers", "verbatim": true, "cite": "experience-timeline.tsx:61" } },
+    { "org": "HCL Technologies", "role": "Lead Engineer SQA", "dates": "Oct 2021 - Jun 2022", "line": { "text": "Worked with Palo Alto Networks", "verbatim": true, "cite": "experience-timeline.tsx:72" } },
+    { "org": "SERC, IISc", "role": "System Engineer", "dates": "Jul 2019 - Sep 2021", "line": { "text": "Managed SahasraT supercomputer (33,000 cores) - India's fastest supercomputer", "verbatim": true, "cite": "experience-timeline.tsx:83" } },
+    { "org": "TEKsystems/HPE", "role": "Network Support Engineer", "dates": "Jun 2017 - Jun 2019", "line": { "text": "Provided AT&T L1 support", "verbatim": true, "cite": "experience-timeline.tsx:93" } }
+  ],
+  "gaps": [
+    "person.github and person.linkedin: not present in any allowed source (snapshot-about.json, the four case studies, or experience-timeline.tsx). The task brief supplied https://github.com/rajat157 and https://www.linkedin.com/in/rajat-kumar-r directly, but per the 'nothing invented' rule these are set to null here rather than asserted as sourced facts — confirm with the owner before use in either design study.",
+    "Tredye backtesting feature (case-study-tredye.md:49, mentions win rate, profit factor, Sharpe ratio, maximum drawdown) exists in the source but is omitted from facts/built/outcome because the task's hard rules forbid writing 'win rate' or 'Sharpe ratio' for this project.",
+    "Tredye's flow-block legend (case-study-tredye.md:89) uses the word 'signals', which the hard rules forbid for this project; the legend was dropped from the architecture extraction rather than edited, since editing a verbatim source line would itself be a kind of invention.",
+    "None of the four case studies has an explicit 'Decisions' heading; all five decisions per project were paraphrased from narrative prose per the task's own instruction, so every decisions[] entry is verbatim: false by construction, each with a cite to the specific sentence it was drawn from.",
+    "experience-timeline.tsx and snapshot-about.json hold identical experience data; experience-timeline.tsx (listed first in the allowed sources) was used as the cite source for the timeline, with snapshot-about.json's matching content serving as a cross-check, not a separate citation.",
+    "No source states a quantified business outcome (revenue, conversion rate, time saved) for any of the four projects beyond the qualitative '## The result' paragraphs quoted verbatim in outcome fields.",
+    "Education, skills, interests and resume_url from snapshot-about.json were not requested fields for 'person' and were left out — not a gap, just out of scope."
+  ]
+}
