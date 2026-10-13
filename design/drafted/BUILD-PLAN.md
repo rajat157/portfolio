@@ -54,7 +54,7 @@ The prototype's name-style switcher was there to compare options only. Build Sha
      - "Understand the work first"
      - "Build the whole thing"
      - "Leave it runnable"
-   - A row of Doto counters: 8+ years · 4 platforms shipped since 2025 · largest team led 6 · 24–48 h to a first reply.
+   - A row of Doto counters: 10+ years (he graduated in 2016; corrected from 8+ on 2026-10-14) · 4 platforms shipped since 2025 · largest team led 6 · 24–48 h to a first reply.
 4. **What I build:** six offerings as ruled blocks, then "Tell me about your business" and "See the projects". Note: "not sure which one you need? ask me".
 5. **Where to next:** a site map. "You are here · Home" leads to Projects, Blog, About and Contact; hover inks the connector. Note: "start anywhere".
 6. **Close:** "Tell me what's slowing your business down.", a note and "I usually reply within 24–48 hours", next to the
@@ -737,7 +737,7 @@ Structures (prototype primitives only):
   Reading progress = `.progress` 2 px ink bar under the header, `animation: grow linear both; animation-timeline: scroll(root)`
   inside `@supports (animation-timeline: scroll())` (no JS; absent where unsupported).
 - **About:** `.sheet-grid`: `.sh-head` (lab "About · <location>", h1 `.sheet-title` name, `.sheet-one` headline); `.tb` (Role,
-  Based, Experience "8+ years", `tb-link` "Résumé ↗" → `resume_url`, new tab, sr-only "(opens in a new tab)").
+  Based, Experience "10+ years", `tb-link` "Résumé ↗" → `resume_url`, new tab, sr-only "(opens in a new tab)").
   Bio = `.blk` "Bio" with `p.ln[data-fact]`. Experience = `.sec-head` + `.idx` Years (`.sh` mono "2026–now") | Role (+ `p.row-sub[data-fact]`
   description) | Organisation (`.k`, link if `company_url`) | Where (`.st`). Skills = `.blocks`: per group `.blk-h` + one `p[data-fact]` joined
   " · " (group names from the old `skills-grid.tsx:61` map). Education = `.idx`. Beyond code = `.sec-head` + `p[data-fact]` joined " · ", no icons.

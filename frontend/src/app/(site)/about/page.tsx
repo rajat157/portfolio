@@ -8,7 +8,7 @@ export const revalidate = 3600;
 export const metadata: Metadata = {
   title: "About",
   description:
-    "Learn more about Rajat - Software Architect with 8+ years of experience building high-performance systems.",
+    "Learn more about Rajat - Software Architect with 10+ years of experience building high-performance systems.",
 };
 
 // Default fallback data when the CMS returns empty (CLAUDE.md: "Pages keep
@@ -17,7 +17,7 @@ export const metadata: Metadata = {
 const defaultAboutData = {
   headline: "Software Architect & Developer",
   bio_short:
-    "Experienced Software Architect with 8+ years building high-performance systems. From managing India's fastest supercomputer (SahasraT at IISc) to architecting real-time trading platforms, I bring deep expertise in Python, cloud infrastructure, and modern web technologies. Passionate about leveraging AI tools like Claude and Gemini to accelerate development.",
+    "Experienced Software Architect with 10+ years building high-performance systems. From managing India's fastest supercomputer (SahasraT at IISc) to architecting real-time trading platforms, I bring deep expertise in Python, cloud infrastructure, and modern web technologies. Passionate about leveraging AI tools like Claude and Gemini to accelerate development.",
   location: "Bangalore, India",
   education: [
     {
@@ -222,7 +222,7 @@ export default async function AboutPage() {
             </div>
             <div className="tb-row">
               <dt className="lab">Experience</dt>
-              <dd data-fact>8+ years</dd>
+              <dd data-fact>10+ years</dd>
             </div>
           </dl>
           <a className="tb-link" href={resumeUrl} target="_blank" rel="noopener noreferrer">

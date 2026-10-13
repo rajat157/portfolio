@@ -19,7 +19,7 @@ export interface SiteSettingsSeed {
 export const siteSettings: SiteSettingsSeed = {
   site_title: "Rajat Kumar R - Software Architect & Developer",
   site_description:
-    "Portfolio of Rajat Kumar R, a Software Architect with 8+ years of experience building high-performance systems, from supercomputers to trading platforms.",
+    "Portfolio of Rajat Kumar R, a Software Architect with 10+ years of experience building high-performance systems, from supercomputers to trading platforms.",
   social_links: [
     {
       platform: "github",
