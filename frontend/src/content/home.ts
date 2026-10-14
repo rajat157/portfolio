@@ -98,8 +98,11 @@ export const HOME = {
     ticked: "already ticked in your brief",
     more: { chip: "Something else", lab: "Not on the list?", title: "Something else.", offers: ["AI where it helps", "A second look"], cta: "Start a brief" },
   },
+  // "Who I am" (round 2, canvas board Sections A): one stop per way of working, then one in numbers.
   who: {
     intro: "I’m Rajat, an independent software architect and developer. This is how I work.",
+    wayLab: "How I work",
+    numbers: "In numbers",
     ways: [
       {
         title: "Understand the work first",

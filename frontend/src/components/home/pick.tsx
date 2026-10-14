@@ -1,7 +1,7 @@
 // "What's slowing you down?" (round 2, the canvas board "Sections B"): the stage's six problems as an index, each
 // opening a stop with its fix, what I'd build, where I did it and a brief with that need ticked; a seventh stop holds
 // the offerings no problem leads to. Server-rendered as the index over seven stacked stops, which is the whole
-// section with no JS or under reduced motion; PickScroll pins it and steps through the stops as you scroll.
+// section with no JS or under reduced motion; Steps pins it and steps through the stops as you scroll.
 import Link from "next/link";
 import { HOME } from "@/content/home";
 import { Steps } from "@/components/home/steps";
