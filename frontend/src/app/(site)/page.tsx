@@ -37,7 +37,7 @@ async function getCounts(): Promise<{ featured: number; earlier: number }> {
   return { featured, earlier: projects.length - featured };
 }
 
-// PROTOTYPE (round 2 review): the lines the hero cycles through in its breathers (real copy from HOME).
+// The lines the hero callout cycles through in its breathers (real copy from HOME), and each step caption's key phrase.
 const LEADS = [HOME.lead, HOME.who.ways[0].body, HOME.who.ways[1].body];
 const KEYS = ["don’t talk", "understand them", "feel right"];
 
@@ -151,12 +151,6 @@ export default async function HomePage() {
             </div>
           </div>
           <p className="sr-only" id="hookLive" aria-live="polite" />
-          {/* PROTOTYPE (round 2 review): switch between the two hero options; remove with the unpicked one */}
-          <nav className="proto-switch" aria-label="Prototype: hero option">
-            <span className="lab">Hero option</span>
-            <a href="?hero=a" data-v="a">A · Breathers</a>
-            <a href="?hero=b" data-v="b">B · Callout</a>
-          </nav>
         </div>
       </div>
       <Stage problems={HOME.problems} leads={LEADS} />

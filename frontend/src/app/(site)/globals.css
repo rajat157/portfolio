@@ -425,23 +425,18 @@ html { scroll-padding-top: calc(var(--top-h) + 15px); }
 .exp[data-locked] .meter i { background: var(--ink); }
 .d3-note { font: 400 10px/1.2 var(--font-mono), ui-monospace, monospace; letter-spacing: .06em; text-transform: uppercase; color: var(--ink); white-space: nowrap; }
 
-/* ===== PROTOTYPE (round 2 review): hero options. Remove the unpicked option and the switch. ===== */
-.proto-switch { position: absolute; top: 12px; left: 50%; transform: translateX(-50%); z-index: 5; display: none; align-items: center; gap: 4px; padding: 0 4px 0 12px; background: var(--lab); border: 1px solid var(--hairline); pointer-events: auto; }
-.exp.gl-ready .proto-switch { display: flex; }
-.proto-switch a { display: inline-flex; align-items: center; min-height: 44px; padding: 0 10px; font: 500 11px/1 var(--font-mono), ui-monospace, monospace; letter-spacing: .06em; text-transform: uppercase; color: var(--graphite); text-decoration: none; }
-.exp[data-variant="a"] .proto-switch [data-v="a"], .exp[data-variant="b"] .proto-switch [data-v="b"] { color: var(--lab); background: var(--ink); }
 /* step captions arrive word by word; the key phrase is underlined as it lands */
 .cap .cw { display: inline-block; opacity: 0; transform: translateY(.25em); transition: opacity 260ms var(--ease-attack), transform 420ms var(--ease-attack), background-size 600ms var(--ease-weight); transition-delay: calc(var(--i) * 55ms); }
 .cap .cw-key { background: linear-gradient(var(--orange), var(--orange)) 0 94% / 0 .08em no-repeat; }
 .exp[data-step="1"] .cap[data-step="1"] .cw, .exp[data-step="2"] .cap[data-step="2"] .cw, .exp[data-step="3"] .cap[data-step="3"] .cw { opacity: 1; transform: none; }
 .exp[data-step="1"] .cap[data-step="1"] .cw-key, .exp[data-step="2"] .cap[data-step="2"] .cw-key, .exp[data-step="3"] .cap[data-step="3"] .cw-key { background-size: 100% .08em; transition-delay: calc(var(--i) * 55ms), calc(var(--i) * 55ms), calc(var(--i) * 55ms + 380ms); }
-/* the hero line: swapped in each breather, underlined while the name pauses (option A, under the name) */
+/* the hero line hangs from the name's orange dot as a drafting callout (the page's .lead stays for screen readers);
+   it is swapped in each breather and underlined while the name pauses */
+.exp.gl-ready .hook-copy .lead { position: absolute; width: 1px; height: 1px; overflow: hidden; clip-path: inset(50%); white-space: nowrap; }
 @keyframes leadIn { from { opacity: 0; transform: translateY(.35em); } to { opacity: 1; transform: none; } }
 .swap > span { display: inline; animation: leadIn 650ms var(--ease-attack) both; }
-.exp[data-variant="a"] .hook-copy .lead > span, .d3-callout p > span { background: linear-gradient(var(--blue), var(--blue)) 0 100% / 0 2px no-repeat; -webkit-box-decoration-break: clone; box-decoration-break: clone; transition: background-size 700ms var(--ease-weight); }
-.exp[data-variant="a"][data-breath] .hook-copy .lead > span, .exp[data-breath] .d3-callout p > span { background-size: 100% 2px; }
-/* option B: the line hangs from the name's orange dot as a drafting callout; the original stays for screen readers */
-.exp[data-variant="b"].gl-ready .hook-copy .lead { position: absolute; width: 1px; height: 1px; overflow: hidden; clip-path: inset(50%); white-space: nowrap; }
+.d3-callout p > span { background: linear-gradient(var(--blue), var(--blue)) 0 100% / 0 2px no-repeat; -webkit-box-decoration-break: clone; box-decoration-break: clone; transition: background-size 700ms var(--ease-weight); }
+.exp[data-breath] .d3-callout p > span { background-size: 100% 2px; }
 .d3-callout { position: relative; width: 0; height: 0; }
 /* --half/--drop (px, set by the stage): the dot's half size and its centre down to the j's descender */
 .d3-callout .ldr { position: absolute; left: -1px; top: calc(var(--half, 12px) + 3px); width: 1px; height: calc(var(--drop, 66px) - var(--half, 12px) + 12px); background: var(--blue); }
@@ -453,13 +448,9 @@ html { scroll-padding-top: calc(var(--top-h) + 15px); }
 @media (max-width: 639px) {
   /* --sx: the dot's x on screen (set by the stage); the note spans the screen inside the 16px gutters */
   .d3-callout .box { right: auto; left: calc(16px - var(--sx, 0px)); width: calc(100vw - 52px); max-width: none; text-align: left; }
-  .proto-switch { top: 64px; left: 16px; transform: none; padding: 0 4px; }
-  .proto-switch .lab { display: none; }
-  .proto-switch a { white-space: nowrap; }
 }
 /* a hovered or tapped block's peek at its other side */
 .d3-peek { padding: 6px 9px; font: 500 11px/1.3 var(--font-mono), ui-monospace, monospace; letter-spacing: .03em; color: var(--lab); background: var(--ink); white-space: nowrap; }
-/* ===== end PROTOTYPE ===== */
 .proc-static { display: none; }
 .exp.static .proc-static, .exp:not(.gl-ready) .proc-static { display: block; margin-top: 14px; max-width: 46ch; }
 .exp.static .caps, .exp.static .cue, .exp:not(.gl-ready) .caps, .exp:not(.gl-ready) .hint { display: none; }

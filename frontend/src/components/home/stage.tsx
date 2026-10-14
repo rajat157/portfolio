@@ -9,6 +9,10 @@
  * they lock and ink. Scrolling then tells how I help a business: scattered
  * parts, the view where they make sense, one system.
  *
+ * The hero line hangs from the name's full stop as a drafting callout and
+ * changes in each breather (the drift eases toward the view every 7.6 s).
+ * The six blocks carry drafting icons and answer hover and tap.
+ *
  * All of it is enhancement: without WebGL or under reduced motion the page
  * keeps the server-rendered NameMark and process copy (page.tsx). `three`
  * loads by dynamic import() in an effect at hydration (not part of the
@@ -50,8 +54,8 @@ const PAIRS: [number, number][] = [
   [4, 5],
 ];
 
-// PROTOTYPE (round 2 review): icons drawn onto the six blocks, per problem (front) and per fix (back), in the
-// order of HOME.problems; 24-unit boxes like the rest of the drafting icon set.
+// Icons drawn onto the six blocks, per problem (front) and per fix (back), in the order of HOME.problems; 24-unit
+// boxes like the rest of the drafting icon set.
 const PROB_ICONS = [
   "M3 6h18v12H3z M3 6l9 7 9-7", // orders arrive by email
   "M3 5h18v14H3z M3 10h18 M3 15h18 M9 5v14", // stock in a spreadsheet
@@ -126,10 +130,6 @@ export function Stage({ problems, leads }: { problems: readonly { problem: strin
       const alignBtn = alignBtnMaybe;
       const lockx = lockxMaybe;
       const header = headerMaybe;
-      // PROTOTYPE (round 2 review): how the hero copy gets noticed, ?hero=a (breathers, default) or ?hero=b (callout)
-      const variant = new URLSearchParams(location.search).get("hero") === "b" ? "b" : "a";
-      exp.dataset.variant = variant;
-      const leadEl = exp.querySelector<HTMLElement>(".hook-copy .lead");
 
       // in parallel: one round trip, not two
       const [THREE, { CSS2DRenderer, CSS2DObject }] = await Promise.all([import("three"), import("three/addons/renderers/CSS2DRenderer.js")]);
@@ -222,7 +222,7 @@ export function Stage({ problems, leads }: { problems: readonly { problem: strin
       const WORLD_NAME_W = 340; // world units the whole name (incl. the dot) spans
       let parts: Piece[] = [];
       let nameH = 100;
-      let dotHalf = 0; // world units: half the orange square, and its centre down to the j's descender (option B)
+      let dotHalf = 0; // world units: half the orange square, and its centre down to the j's descender (the callout)
       let dotDrop = 0;
       let projPos = new Float32Array(0);
       const projGeo = new THREE.BufferGeometry();
@@ -541,31 +541,26 @@ export function Stage({ problems, leads }: { problems: readonly { problem: strin
       });
       scene.add(sys);
 
-      // PROTOTYPE option B: the hero line as a drafting callout hung from the name's orange dot, following its drift
-      let calloutEl: HTMLElement | null = null;
-      let callout: InstanceType<typeof CSS2DObject> | null = null;
-      if (variant === "b") {
-        calloutEl = document.createElement("div");
-        calloutEl.className = "d3-callout";
-        calloutEl.innerHTML = '<i class="ldr"></i><div class="box"><span class="no"></span><p></p></div>';
-        callout = new CSS2DObject(calloutEl);
-        callout.center.set(0, 0);
-        scene.add(callout);
-      }
-      // the hero line changes in each breather (both options); option A swaps it in place under the name
+      // the hero line as a drafting callout hung from the name's orange dot, following its drift (the page's own
+      // .lead stays for screen readers); it changes in each breather
+      const calloutEl = document.createElement("div");
+      calloutEl.className = "d3-callout";
+      calloutEl.innerHTML = '<i class="ldr"></i><div class="box"><span class="no"></span><p></p></div>';
+      const calloutNo = calloutEl.querySelector(".no")!;
+      const calloutP = calloutEl.querySelector("p")!;
+      const callout = new CSS2DObject(calloutEl);
+      callout.center.set(0, 0);
+      scene.add(callout);
       let leadIdx = -1;
       const showLead = (i: number) => {
         leadIdx = i;
-        const host = variant === "b" ? calloutEl?.querySelector("p") : leadEl;
-        if (!host) return;
         const span = document.createElement("span");
         span.textContent = leads[i] ?? "";
-        host.replaceChildren(span);
-        host.classList.remove("swap");
-        void host.offsetWidth;
-        host.classList.add("swap");
-        const no = calloutEl?.querySelector(".no");
-        if (no) no.textContent = `0${i + 1} / 0${leads.length}`;
+        calloutP.replaceChildren(span);
+        calloutP.classList.remove("swap");
+        void calloutP.offsetWidth;
+        calloutP.classList.add("swap");
+        calloutNo.textContent = `0${i + 1} / 0${leads.length}`;
       };
 
       /* state */
@@ -624,12 +619,10 @@ export function Stage({ problems, leads }: { problems: readonly { problem: strin
         const nameWorldW = (WORLD_NAME_W * NameOutline.NAME_VIEW_W) / (NameOutline.NAME_VIEW_W + 2 * Math.round(NameOutline.NAME_UNITS_PER_EM * 0.03));
         introZoom = svgPx / ((nameWorldW * W) / (2 * tan * camera.aspect * Dn));
         introDy = 0.05 * W;
-        if (calloutEl) {
-          // the callout's leader leaves the dot's edge and its note clears the j's descender, at any size
-          const pxU = H / (2 * tan * Dn);
-          calloutEl.style.setProperty("--half", (dotHalf * pxU).toFixed(1) + "px");
-          calloutEl.style.setProperty("--drop", (dotDrop * pxU).toFixed(1) + "px");
-        }
+        // the callout's leader leaves the dot's edge and its note clears the j's descender, at any size
+        const pxU = H / (2 * tan * Dn);
+        calloutEl.style.setProperty("--half", (dotHalf * pxU).toFixed(1) + "px");
+        calloutEl.style.setProperty("--drop", (dotDrop * pxU).toFixed(1) + "px");
         const cols = narrow ? 2 : 3;
         const rows = problems.length / cols;
         const gw = cols * TWd + (cols - 1) * GAP;
@@ -712,7 +705,7 @@ export function Stage({ problems, leads }: { problems: readonly { problem: strin
       };
       const onAlignClick = () => lineUp(false);
 
-      // PROTOTYPE: hover a block (fine pointers) or tap/click it to pin it: picked by a ray through the pointer
+      // hover a block (fine pointers), or tap/click it to pin it: picked by a ray through the pointer
       const ray = new THREE.Raycaster();
       const ndc = new THREE.Vector2();
       let pointerIn = false;
@@ -793,7 +786,7 @@ export function Stage({ problems, leads }: { problems: readonly { problem: strin
         intro = 1 - weight(seg(now - introAt, 150, 1150));
         if (intro > 0) dirty = true;
 
-        // PROTOTYPE breathers: every 7.6 s the drift eases nearly into the view for ~2 s, and the hero line changes
+        // breathers: every 7.6 s the drift eases nearly into the view for ~2 s, and the hero line changes
         // as that pause begins, so the eye that follows the motion lands on the words
         let breath = 0;
         if (step === 0 && leads.length && now - introAt > 1400) {
@@ -860,7 +853,7 @@ export function Stage({ problems, leads }: { problems: readonly { problem: strin
         parP += ((lookS ? -(py - 0.5) * 4 : 0) - parP) * k2;
         if (Math.abs(parT - a2) + Math.abs(parP - b2) > 1e-4) dirty = true;
 
-        // PROTOTYPE: the block under the pointer (or the tapped one), eased per block
+        // the block under the pointer (or the tapped one), eased per block
         let target = -1;
         if (step > 0) {
           if (tapCard >= 0) target = tapCard;
@@ -913,7 +906,7 @@ export function Stage({ problems, leads }: { problems: readonly { problem: strin
           const k = kL + (kX - kL) * g;
           const inked = Math.max(lam, intro) * (1 - g);
           P.set(p.c.x * k, p.c.y * k, Dn * (1 - k));
-          if (!p.edge) dot.copy(P); // the orange square: option B's callout hangs from it
+          if (!p.edge) dot.copy(P); // the orange square: the callout hangs from it
           if (!p.mesh) return;
           p.mesh.position.copy(P);
           p.mesh.quaternion.copy(QI);
@@ -933,17 +926,15 @@ export function Stage({ problems, leads }: { problems: readonly { problem: strin
         const po = (cons ? 0.5 : 0.18) * (1 - goU) * (1 - intro);
         (projectors.material as InstanceType<typeof THREE.LineBasicMaterial>).opacity = po;
         projectors.visible = po > 0;
-        if (callout && calloutEl) {
-          callout.position.copy(dot);
-          const co = (1 - intro) * (1 - seg(sS, 0.01, 0.08));
-          calloutEl.style.opacity = co.toFixed(3);
-          calloutEl.style.visibility = co > 0.001 ? "visible" : "hidden";
-          if (W < 640) {
-            // no room beside the drifting dot on a phone: the note spans the screen under it (CSS), placed from the
-            // dot's screen x this frame
-            camera.updateMatrixWorld();
-            calloutEl.style.setProperty("--sx", (((P.copy(dot).project(camera).x + 1) * W) / 2).toFixed(1) + "px");
-          }
+        callout.position.copy(dot);
+        const co = (1 - intro) * (1 - seg(sS, 0.01, 0.08));
+        calloutEl.style.opacity = co.toFixed(3);
+        calloutEl.style.visibility = co > 0.001 ? "visible" : "hidden";
+        if (W < 640) {
+          // no room beside the drifting dot on a phone: the note spans the screen under it (CSS), placed from the
+          // dot's screen x this frame
+          camera.updateMatrixWorld();
+          calloutEl.style.setProperty("--sx", (((P.copy(dot).project(camera).x + 1) * W) / 2).toFixed(1) + "px");
         }
 
         const appear = seg(sS, 0.08, 0.26);
