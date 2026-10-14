@@ -594,7 +594,6 @@ export function Stage({ problems, leads }: { problems: readonly { problem: strin
       let th = 0;
       let ph = 0;
       let introAt: number | null = null;
-      let skipIntro = false; // set at gl-ready when the loading sheet covered the page (see there)
       let intro = 1; // 1 → 0 over the hand-off
       const driftTh = (now: number) => 16 + 6 * Math.sin(now / 2600);
       const driftPh = (now: number) => -7 + 3 * Math.sin(now / 3700);
@@ -796,8 +795,8 @@ export function Stage({ problems, leads }: { problems: readonly { problem: strin
       function update(now: number, dt: number) {
         const sT = scrollTarget();
         if (sT > 0.012 && mode !== "locked" && !tween) lineUp(true);
-        // the hand-off starts once nothing covers the page; after the loading sheet there is none (skipIntro)
-        if (introAt === null && !root.hasAttribute("data-boot")) introAt = skipIntro ? now - 2000 : now;
+        // the hand-off from the static name starts once nothing covers it (after the loading sheet there is none)
+        if (introAt === null && !root.hasAttribute("data-boot")) introAt = now;
         intro = introAt === null ? 1 : 1 - weight(seg(now - introAt, 150, 1150));
         if (intro > 0) dirty = true;
 
@@ -1145,9 +1144,15 @@ export function Stage({ problems, leads }: { problems: readonly { problem: strin
         unboot();
         if (location.hash) document.getElementById(location.hash.slice(1))?.scrollIntoView();
       };
-      // Under the loading sheet the static name was never seen, so there is nothing to hand off from: start with the
-      // pieces already scattered, and what they spell stays for the visitor to line up.
-      skipIntro = root.hasAttribute("data-boot");
+      // Under the loading sheet the static name was never seen, so there is nothing to hand off from: the first frame
+      // already has the pieces scattered on their drift (not easing out of the lined-up pose as the sheet lifts), and
+      // what they spell stays for the visitor to line up.
+      if (root.hasAttribute("data-boot")) {
+        const t = performance.now();
+        introAt = t - 2000;
+        th = thT = driftTh(t);
+        ph = phT = driftPh(t);
+      }
       if (root.dataset.boot === "splash") {
         // a first visit holds the sheet a beat (from its first paint), so it reads as a splash rather than a flash
         const shown = performance.getEntriesByName("first-contentful-paint")[0]?.startTime ?? 0;

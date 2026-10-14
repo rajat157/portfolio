@@ -803,10 +803,9 @@ async function checkSplash(browser) {
   check(first.boot === "splash" && first.splash === "visible", `a first visit opens on the loading sheet (boot "${first.boot}", sheet ${first.splash})`);
   check(await lifted(), "the sheet lifts once the stage is up");
   check(await page.evaluate(() => localStorage.getItem("seen") === "1"), "the visit is remembered");
-  // the stage starts scattered: no lined-up name gives away what the pieces spell
-  await page.waitForTimeout(200);
+  // the stage starts scattered: no lined-up name gives away what the pieces spell, even as the sheet fades
   const off = await page.evaluate(() => parseFloat((document.getElementById("hudRow2")?.textContent ?? "").replace(/[^0-9.]/g, "")) || 0);
-  check(off > 5, `after the sheet the pieces start scattered (Off ${off}°)`);
+  check(off > 8, `as the sheet lifts the pieces are already scattered (Off ${off}°)`);
   await page.reload({ waitUntil: "commit" });
   await page.waitForSelector(".splash", { state: "attached" });
   const again = await sheet();
