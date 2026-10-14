@@ -39,6 +39,14 @@ async function getCounts(): Promise<{ featured: number; earlier: number }> {
   return { featured, earlier: projects.length - featured };
 }
 
+// The Icons board's "Nav" drawings, one per "Where to next" node, redrawn as you point at it.
+const NAV_ICONS: Record<string, string[]> = {
+  Projects: ["M6 3h9l4 4v14H6z", "M15 3v4h4", "M9 12h7M9 16h5"],
+  Blog: ["M4 20h6", "M14 4l6 6-9 9H5v-6z"],
+  About: ["M12 4a4 4 0 1 0 0 8a4 4 0 1 0 0-8", "M5 20c1-4 4-6 7-6s6 2 7 6"],
+  Contact: ["M4 5h5v5H4z", "M15 14h5v5h-5z", "M9 7.5h4v9h2"],
+};
+
 // The lines the hero callout cycles through in its breathers (real copy from HOME), and each step caption's key phrase.
 const LEADS = [HOME.lead, HOME.who.ways[0].body, HOME.who.ways[1].body];
 const KEYS = ["don’t talk", "understand them", "feel right"];
@@ -181,8 +189,15 @@ export default async function HomePage() {
               return (
                 <li key={node.heading}>
                   <Link className="node" href={node.href} data-cons="box">
-                    <span className="lab">
-                      <span className="num">{node.num}</span> · {node.heading}
+                    <span className="node-top">
+                      <span className="lab">
+                        <span className="num">{node.num}</span> · {node.heading}
+                      </span>
+                      <svg className="node-ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="square" aria-hidden="true">
+                        {NAV_ICONS[node.heading].map((d) => (
+                          <path key={d} pathLength={1} d={d} />
+                        ))}
+                      </svg>
                     </span>
                     <span className="node-t">{node.title}</span>
                     <span className="node-d">{desc}</span>

@@ -26,6 +26,9 @@
   --ease-attack: cubic-bezier(.2, 0, 0, 1);
   --ease-weight: cubic-bezier(.7, 0, .2, 1);
 
+  /* --- page width: 1280 up to a 1520px window, then it widens with the window (120px margins) up to 1920 --- */
+  --page-w: clamp(1280px, 100vw - 240px, 1920px);
+
   /* --- fluid type scale --- */
   --fs-display: clamp(2.5rem, 1.8rem + 3vw, 5rem);
   --fs-h1: clamp(2rem, 1.5rem + 2vw, 3.5rem);
@@ -71,7 +74,7 @@ body {
 
 /* --- 12-column grid utility --- */
 .container {
-  max-width: 1280px;
+  max-width: var(--page-w);
   margin: 0 auto;
   padding: 0 24px;
 }
@@ -282,7 +285,7 @@ html:not(.js) .tbl-wrap { grid-column: 1 / -1; }
 
 /* ---------- inspect sheet ---------- */
 .inspect { position: fixed; inset: 0; z-index: 50; background: var(--lab); overflow-y: auto; overscroll-behavior: contain; }
-.sheet { max-width: 1280px; margin: 0 auto; padding: 0 24px 72px; }
+.sheet { max-width: var(--page-w); margin: 0 auto; padding: 0 24px 72px; }
 @media (max-width: 640px) { .sheet { padding: 0 16px 56px; } }
 .sheet-top { position: sticky; top: var(--top-h); z-index: 2; display: flex; align-items: center; justify-content: space-between; gap: 12px; min-height: 60px; background: var(--lab); border-bottom: 1px solid var(--ink-c); }
 .sheet-grid { display: grid; grid-template-columns: repeat(12, 1fr); gap: 24px var(--gap); margin-top: 28px; align-items: start; }
@@ -505,6 +508,17 @@ a.btn { display: inline-flex; align-items: center; text-decoration: none; }
 .node { flex: 1; display: flex; flex-direction: column; gap: 8px; padding: 16px; border: 1px solid var(--hairline); text-decoration: none; color: var(--ink-c); transition: border-color var(--t16) var(--ease-attack), background var(--t16) var(--ease-attack); }
 .node:hover, .node:focus-visible { border-color: var(--ink-c); background: var(--panel); color: var(--ink-c); }
 .node-t { font-family: var(--f-display); font-size: clamp(1.6rem, 1.25rem + 1vw, 2.2rem); line-height: 1; }
+/* pointed at, a node is marked out like a part on a drawing: registration corners close in and its drawing redraws
+   itself (canvas board "Icons") */
+.node { position: relative; }
+.node::before { content: ''; position: absolute; inset: -7px; pointer-events: none; opacity: 0; transform: scale(.98); transition: opacity var(--t16) var(--ease-attack), transform var(--t8) var(--ease-attack); background: linear-gradient(var(--blue) 0 0) left top / 10px 1px, linear-gradient(var(--blue) 0 0) left top / 1px 10px, linear-gradient(var(--blue) 0 0) right top / 10px 1px, linear-gradient(var(--blue) 0 0) right top / 1px 10px, linear-gradient(var(--blue) 0 0) left bottom / 10px 1px, linear-gradient(var(--blue) 0 0) left bottom / 1px 10px, linear-gradient(var(--blue) 0 0) right bottom / 10px 1px, linear-gradient(var(--blue) 0 0) right bottom / 1px 10px; background-repeat: no-repeat; }
+.node:hover::before, .node:focus-visible::before { opacity: 1; transform: none; }
+.node-top { display: flex; align-items: flex-start; justify-content: space-between; gap: 12px; }
+.node-ico { flex: none; width: 28px; height: 28px; margin: -4px -4px 0 0; color: var(--sub-c); transition: color var(--t16) var(--ease-attack); }
+.node:hover .node-ico, .node:focus-visible .node-ico { color: var(--blue); }
+.node:hover .node-ico path, .node:focus-visible .node-ico path { animation: sp-draw 700ms var(--ease-attack) both; }
+.node-ico path:nth-child(2) { animation-delay: 90ms; }
+.node-ico path:nth-child(3) { animation-delay: 180ms; }
 .node-d { font-size: 15px; line-height: 1.45; color: var(--sub-c); }
 .node-go { margin-top: auto; padding-top: 8px; color: var(--blue); }
 @media (max-width: 959px) {
