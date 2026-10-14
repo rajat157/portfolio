@@ -3,7 +3,9 @@ import type { CollectionConfig } from "payload";
 export const BlogPosts: CollectionConfig = {
   slug: "blog-posts",
   access: {
-    read: () => true,
+    // signed-in admins see drafts; the public REST/GraphQL API sees published docs only (the site's own
+    // queries use the local API, which skips access control and filters _status itself)
+    read: ({ req }) => (req.user ? true : { _status: { equals: "published" } }),
   },
   admin: {
     useAsTitle: "title",
