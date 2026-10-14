@@ -180,11 +180,8 @@ html:not(.js) .needs-js { display: none; }
 .mark b { font: 650 22px/1 var(--font-sans), 'Arial Narrow', sans-serif; font-stretch: 75%; letter-spacing: .01em; }
 .toggle { display: inline-flex; align-items: center; gap: 10px; min-height: 44px; min-width: 44px; padding: 0 14px; font: 500 14px/1 var(--font-sans), sans-serif; color: var(--ink-c); background: transparent; border: 1px solid var(--hairline); border-radius: 0; cursor: pointer; transition: border-color var(--t32) var(--ease-attack), color var(--t32) var(--ease-attack); }
 .toggle:hover { border-color: var(--ink-c); }
-.tg-mark { width: 11px; height: 11px; flex: none; background: linear-gradient(var(--blue), var(--blue)) no-repeat center / 1px 11px, linear-gradient(var(--blue), var(--blue)) no-repeat center / 11px 1px; }
-[data-construction="on"] .toggle { border-color: var(--blue); color: var(--blue); }
 @media (pointer: coarse) { .hint .fine { display: none; } }
 @media (pointer: fine) { .hint .coarse { display: none; } }
-@media (max-width: 560px) { .mark .lab { display: none; } }
 
 /* ---------- hero ---------- */
 .hero { padding-block: 28px 36px; border-bottom: 1px solid var(--hairline); }
@@ -233,8 +230,6 @@ html.intro-run .cons, html:not([data-construction="on"]) .drafting .cons, html:n
 /* the Motion toggle exists only for visitors whose system asks for reduced motion */
 .motion-toggle { display: none; }
 @media (prefers-reduced-motion: reduce) { .js .motion-toggle { display: inline-flex; } }
-.mot-mark { border-radius: 50%; } /* a circle, so Motion and Sound differ when their labels collapse on phones */
-#motionBtn[aria-pressed="true"] .snd-mark { background: var(--blue); border-color: var(--blue); }
 #guides { position: absolute; left: 0; top: 0; pointer-events: none; z-index: 30; }
 
 /* ---------- works index ---------- */
@@ -354,18 +349,33 @@ html { scroll-padding-top: calc(var(--top-h) + 15px); }
 .nav-a:hover { color: var(--blue); }
 .nav-a[aria-current="page"] { color: var(--ink-c); }
 .tools { display: flex; align-items: center; gap: 8px; }
-.snd-mark { width: 11px; height: 11px; flex: none; box-sizing: border-box; border: 1px solid currentColor; transition: background var(--t32) var(--ease-attack), border-color var(--t32) var(--ease-attack); }
-#soundBtn[aria-pressed="true"] .snd-mark { background: var(--orange); border-color: var(--orange); }
+/* the tools are drawn icons, named by a tooltip (round 2, canvas board "Header"); the name stays in the button for
+   screen readers. The last tooltip hangs from its button's right edge, so it never runs past the page. */
+.tools .toggle { position: relative; width: 44px; padding: 0; justify-content: center; }
+.tg-ico { display: block; width: 24px; height: 24px; overflow: visible; }
+.tg-label { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
+.tip { position: absolute; top: calc(100% + 8px); left: 50%; z-index: 1; padding: 5px 8px; font: 400 10px/1 var(--font-mono), ui-monospace, monospace; letter-spacing: .08em; text-transform: uppercase; white-space: nowrap; color: var(--lab); background: var(--ink); opacity: 0; visibility: hidden; transform: translate(-50%, -4px); pointer-events: none; transition: opacity var(--t16) var(--ease-attack), transform var(--t16) var(--ease-attack), visibility 0s linear var(--t16); }
+.tools .toggle:last-child .tip { left: auto; right: -1px; transform: translateY(-4px); }
+.toggle:focus-visible .tip { opacity: 1; visibility: visible; transform: translate(-50%, 0); transition-delay: 0s; }
+@media (hover: hover) { .toggle:hover .tip { opacity: 1; visibility: visible; transform: translate(-50%, 0); transition-delay: 0s; } }
+.tools .toggle:last-child:focus-visible .tip { transform: none; }
+@media (hover: hover) { .tools .toggle:last-child:hover .tip { transform: none; } }
+.toggle[aria-pressed="true"], [data-construction="on"] #consBtn { border-color: var(--blue); color: var(--blue); }
+.tg-ico .w { stroke-dasharray: 1; stroke-dashoffset: 1; transition: stroke-dashoffset 400ms var(--ease-attack); }
+.toggle[aria-pressed="true"] .w { stroke-dashoffset: 0; }
+.toggle[aria-pressed="true"] .w2 { transition-delay: 120ms; }
+.tg-ico .ext { opacity: 0; transition: opacity var(--t8) var(--ease-attack); }
+[data-construction="on"] #consBtn .ext { opacity: 1; }
+@keyframes glide { 0%, 100% { transform: translateX(-5px); } 50% { transform: translateX(5px); } }
+#motionBtn[aria-pressed="true"] .sq { animation: glide 1.6s var(--ease-weight) infinite; }
 @media (max-width: 719px) {
   .nav { order: 3; flex: 1 0 100%; margin-left: 0; justify-content: space-between; border-top: 1px solid var(--hairline); }
   .nav-a:first-child { padding-left: 0; }
   .nav-a:last-child { padding-right: 0; }
   .tools { margin-left: auto; }
   html { scroll-padding-top: 120px; } /* the wrapped nav makes the header a 2nd row taller (§4.3) */
-}
-@media (max-width: 480px) {
-  .tools .tg-label, .tools .snd-label { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
-  .tools .toggle { padding: 0; justify-content: center; }
+  /* its real height before Header measures it, so the stage's name and the first-load splash don't move then */
+  :root { --top-h: 102px; }
 }
 
 /* ======================= type system (home-prototype.html:477-491, D26) =======================
@@ -378,7 +388,6 @@ html { scroll-padding-top: calc(var(--top-h) + 15px); }
 .lead { font-family: var(--f-body); font-weight: 500; font-stretch: 100%; font-size: clamp(1.2rem, 1rem + .8vw, 1.7rem); line-height: 1.3; max-width: 26ch; text-wrap: balance; }
 .cap-t { font-weight: 700; font-stretch: 75%; line-height: .98; }
 .blk-h { font-stretch: 87.5%; }
-.offer .ln { font-weight: 400; }
 .node-t, .end-t { font-weight: 700; font-stretch: 75%; }
 .num { font-family: var(--f-count); font-weight: 800; font-stretch: 100%; letter-spacing: .02em; font-variant-numeric: tabular-nums; }
 .lab .num, .blk-h .num { font-size: 1.3em; letter-spacing: 0; }
@@ -457,13 +466,24 @@ html { scroll-padding-top: calc(var(--top-h) + 15px); }
 .exp.static .hook-copy, .exp:not(.gl-ready) .hook-copy { opacity: 1 !important; transform: none !important; }
 @media (max-width: 640px) { .exp-ui > .container { padding-block: 14px 16px; } .meter { width: 96px; } .hud { gap: 2px; } }
 
+/* ======================= the home's first load: the name alone on the sheet until the stage takes over =======================
+   The boot script (layout.tsx) sets html[data-boot] on "/" when motion is on and no #fragment is asked for; the stage
+   clears it once it has the name (or as soon as it knows it can't run), the boot script after 8 s regardless. Until
+   then only the name and a loading line show, so the plain fallback layout never flashes before the stage. */
+html[data-boot] { overflow: hidden; scrollbar-gutter: stable; }
+html[data-boot] .exp-ui, html[data-boot] main > :not(.exp), html[data-boot] body > .foot { opacity: 0; visibility: hidden; }
+:where(.exp-ui, main > *, body > .foot) { transition: opacity 600ms var(--ease-attack), visibility 0s; }
+.boot-ro { display: none; }
+html[data-boot] .boot-ro { display: block; position: absolute; left: 0; right: 0; bottom: 22px; pointer-events: none; }
+.boot-bar { position: relative; display: block; width: 132px; height: 2px; margin-top: 8px; overflow: hidden; background: var(--hairline); }
+.boot-bar i { position: absolute; top: 0; bottom: 0; left: 0; width: 34%; background: var(--blue); animation: boot-bar 1.1s var(--ease-weight) infinite; }
+@keyframes boot-bar { from { transform: translateX(-100%); } to { transform: translateX(300%); } }
+
 /* ======================= P3b home: who / what / where / close (home-prototype.html:414-466, 493-517) =======================
    .who-grid/.who-t/.facts (an unused "who" layout variant), .who-main/.who-tb/
    .whoer/.who-display (ditto), .who-note and .map-note (the dropped prototype
    note) are not ported -- nothing in this build renders them. */
 .sect { padding-block: 72px 24px; }
-.offer { margin-top: 36px; }
-.cta-row { display: flex; flex-wrap: wrap; gap: 12px; margin-top: 48px; }
 a.btn { display: inline-flex; align-items: center; text-decoration: none; }
 .btn-ink { background: var(--ink-c); color: var(--lab); }
 .btn-ink:hover { background: var(--blue); border-color: var(--blue); color: var(--lab); }
@@ -495,7 +515,6 @@ a.btn { display: inline-flex; align-items: center; text-decoration: none; }
 .hook-note { margin-bottom: 4px; opacity: 0; transition: opacity var(--t16) var(--ease-attack); }
 .exp[data-locked] .hook-note { opacity: 1; }
 .cap-note { display: block; margin-top: 12px; }
-.cta-row .hand { align-self: center; margin-left: 10px; }
 .map-root .hand { margin-left: auto; }
 .end-note { margin-top: 14px; }
 
@@ -516,6 +535,84 @@ a.btn { display: inline-flex; align-items: center; text-decoration: none; }
   .ways li { grid-template-columns: 3.4rem minmax(0, 1fr); }
   .ways .hand { grid-column: 2; }
   .counts-row { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+}
+
+/* ======================= what's slowing you down? (components/home/pick.tsx; round 2, canvas board "Sections B") =======================
+   With no JS or under reduced motion: an index over seven stacked stops. .pinned (PickScroll): the section pins for
+   --n stops of --per scroll each and shows one stop at a time, drawing it in as it opens. */
+.pick-grid { display: grid; grid-template-columns: minmax(0, 5fr) minmax(0, 7fr); gap: 32px 72px; align-items: start; }
+.pick-side { display: flex; flex-direction: column; gap: 14px; }
+.pick-side .t-h2 { margin-bottom: 10px; }
+.pick-list { list-style: none; margin: 0; padding: 0; display: grid; gap: 10px; }
+.pick-chip { display: flex; align-items: center; gap: 14px; min-height: 48px; box-sizing: border-box; padding: 6px 18px; border: 1px solid var(--hairline); font: 400 clamp(1rem, .92rem + .3vw, 1.2rem)/1.25 var(--f-body); color: var(--ink-c); text-decoration: none; transition: border-color var(--t32) var(--ease-attack), background var(--t16) var(--ease-attack), padding var(--t8) var(--ease-attack); }
+.pick-chip:hover { border-color: var(--ink-c); padding-left: 26px; color: var(--ink-c); }
+.pick-chip .num { font-size: 13px; color: var(--sub-c); }
+.pick-chip[aria-current] { border-color: var(--blue); background: rgba(36, 72, 255, .06); padding-left: 26px; }
+.pick-chip[aria-current] .num { color: var(--blue); }
+.pick-note { margin-top: 8px; color: var(--blue); }
+.pick-count { display: none; }
+.pick-panels { display: grid; gap: 64px; }
+.pick-p { display: flex; flex-direction: column; gap: 24px; scroll-margin-top: calc(var(--top-h) + 24px); }
+.pick-prob { margin-top: 6px; }
+.pick-prob s { position: relative; text-decoration: none; font-size: clamp(1.1rem, 1rem + .4vw, 1.5rem); color: var(--sub-c); }
+.pick-prob s::after { content: ''; position: absolute; left: 0; right: 0; top: 55%; height: 2px; background: var(--orange); transform-origin: left; }
+.pick-fix { margin: 8px 0 0; font-family: var(--f-display); font-weight: 700; font-stretch: 75%; font-size: clamp(2.2rem, 1.5rem + 2.6vw, 3.75rem); line-height: 1; letter-spacing: -.01em; text-wrap: balance; outline-offset: 4px; }
+.pick-build { display: grid; grid-template-columns: 48px minmax(0, 1fr); gap: 18px; align-items: start; margin-top: 8px; }
+.pick-ico { width: 48px; height: 48px; color: var(--blue); }
+.pick-offer { font: 600 clamp(1.2rem, 1rem + .6vw, 1.75rem)/1.2 var(--f-body); }
+.pick-line, .pick-proof { margin-top: 4px; font-size: clamp(1rem, .95rem + .3vw, 1.15rem); line-height: 1.45; color: var(--sub-c); max-width: 52ch; }
+.pick-more { display: grid; gap: 22px; }
+.pick-work { display: flex; flex-direction: column; gap: 6px; padding: 18px 22px; border: 1px solid var(--hairline); }
+.pick-proof { color: var(--ink-c); }
+.pick-sheet { align-self: flex-start; display: inline-flex; align-items: center; min-height: 44px; margin-bottom: -10px; color: var(--blue); text-decoration: none; }
+.pick-sheet:hover { color: var(--ink-c); }
+.pick-cta { display: flex; flex-wrap: wrap; align-items: center; gap: 12px 18px; }
+.pick-need { display: inline-flex; align-items: center; gap: 10px; min-height: 36px; padding: 0 12px; border: 1px solid var(--blue); color: var(--blue); font-size: 15px; }
+.pick-need i { width: 10px; height: 10px; background: var(--orange); }
+@media (max-width: 959px) { .pick-grid { grid-template-columns: minmax(0, 1fr); gap: 40px; } }
+/* stacked beside a wide window: the index stays in view while the stops scroll past */
+@media (min-width: 960px) { .pick:not(.pinned) .pick-side { position: sticky; top: calc(var(--top-h) + 32px); } }
+
+.pick.pinned { --per: 50vh; box-sizing: border-box; height: calc(100svh - var(--top-h) + var(--n) * var(--per)); padding-block: 0; }
+.pick.pinned .pick-pin { position: sticky; top: var(--top-h); height: calc(100svh - var(--top-h)); display: flex; align-items: center; }
+.pick.pinned .pick-grid { width: 100%; box-sizing: border-box; align-items: center; }
+.pick.pinned .pick-count { display: block; }
+.pick.pinned .pick-p { grid-area: 1 / 1; }
+.pick.pinned .pick-p:not([data-on]) { visibility: hidden; }
+/* a stop draws in as it opens: the problem struck out and the fix, what I'd build (its icon drawn on), the proof, the brief */
+.pick.pinned .pick-p > * { opacity: 0; transform: translateY(14px); }
+.pick.pinned .pick-p[data-on] > * { opacity: 1; transform: none; transition: opacity 400ms var(--ease-attack) var(--dl, 0ms), transform 500ms var(--ease-attack) var(--dl, 0ms); }
+.pick.pinned .pick-p > :nth-child(2) { --dl: 160ms; }
+.pick.pinned .pick-p > :nth-child(3) { --dl: 320ms; }
+.pick.pinned .pick-p > :nth-child(4) { --dl: 480ms; }
+.pick.pinned .pick-prob s::after { transform: scaleX(0); }
+.pick.pinned .pick-p[data-on] .pick-prob s::after { transform: none; transition: transform 450ms var(--ease-attack) 200ms; }
+.pick.pinned .pick-ico path { stroke-dasharray: 1; stroke-dashoffset: 1; }
+.pick.pinned .pick-p[data-on] .pick-ico path { stroke-dashoffset: 0; transition: stroke-dashoffset 800ms var(--ease-attack) 360ms; }
+/* narrow: the index becomes a row of numbered squares (each stop strikes out its own problem at the top) */
+@media (max-width: 959px) {
+  .pick.pinned .pick-grid { gap: 18px; }
+  .pick.pinned .pick-side { gap: 10px; }
+  .pick.pinned .pick-side .t-h2 { margin-bottom: 0; font-size: clamp(1.9rem, 1.3rem + 2.4vw, 2.6rem); }
+  .pick.pinned .pick-list { display: flex; gap: 4px; }
+  .pick.pinned .pick-list li { flex: 1 1 0; max-width: 44px; }
+  .pick.pinned .pick-chip { min-height: 44px; padding: 0; justify-content: center; }
+  .pick.pinned .pick-build { grid-template-columns: 36px minmax(0, 1fr); gap: 12px; }
+  .pick.pinned .pick-ico { width: 36px; height: 36px; }
+  .pick.pinned .pick-chip:hover, .pick.pinned .pick-chip[aria-current] { padding-left: 0; }
+  .pick.pinned .pick-chip-t { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
+  .pick.pinned .pick-note, .pick.pinned .pick-count, .pick.pinned .pick-p:not(.pick-p-more) .pick-line { display: none; }
+  .pick.pinned .pick-p { gap: 14px; }
+  .pick.pinned .pick-fix { font-size: clamp(1.8rem, 1.2rem + 2.6vw, 2.6rem); }
+}
+@media (max-width: 959px) and (max-height: 820px) {
+  .pick.pinned .pick-proof { display: none; }
+  .pick.pinned .pick-work { padding: 8px 14px; }
+}
+@media (max-width: 959px) and (max-height: 700px) {
+  .pick.pinned .pick-grid { gap: 12px; }
+  .pick.pinned .pick-p { gap: 10px; }
+  .pick.pinned .pick-cta .lab { display: none; }
 }
 
 /* ======================= P3b contact: a form, never an address (home-prototype.html:519-608) ======================= */

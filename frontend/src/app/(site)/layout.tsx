@@ -35,9 +35,12 @@ const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || "http://localhost:3000";
 
 // Pre-paint state, before React hydrates (D13): the root layout never
 // re-renders, so this is the only place `html.js` is ever set.
-// adds .js, and re-applies the visitor's Motion choice (lib/motion.ts) before paint
+// adds .js, re-applies the visitor's Motion choice (lib/motion.ts) before paint, and on the home, when its stage
+// will run (motion on, no #fragment asked for), shows the name alone until the stage takes over (html[data-boot]:
+// globals.css; the stage clears it, or this after 8 s)
 const BOOT =
-  "(function(){var d=document.documentElement;d.classList.add('js');try{if(localStorage.getItem('motion')==='on')d.dataset.motion='on'}catch(e){}})()";
+  "(function(){var d=document.documentElement;d.classList.add('js');try{if(localStorage.getItem('motion')==='on')d.dataset.motion='on'}catch(e){}" +
+  "if(location.pathname==='/'&&!location.hash&&(d.dataset.motion==='on'||!matchMedia('(prefers-reduced-motion: reduce)').matches)){d.dataset.boot='';setTimeout(function(){delete d.dataset.boot},8000)}})()";
 
 export const metadata: Metadata = {
   title: {

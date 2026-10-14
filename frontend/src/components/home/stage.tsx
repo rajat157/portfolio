@@ -28,7 +28,7 @@
  * renders the full static `.exp` markup so the page is readable with no JS.
  * ------------------------------------------------------------------ */
 
-import { useEffect } from "react";
+import { useLayoutEffect } from "react";
 import * as NameOutline from "@/lib/name-outline";
 import { tick, thunk } from "@/lib/sound";
 import { reducedMotion } from "@/lib/motion";
@@ -74,9 +74,20 @@ const FIX_ICONS = [
 ];
 
 export function Stage({ problems, leads }: { problems: readonly { problem: string; fix: string }[]; leads: readonly string[] }) {
-  useEffect(() => {
-    if (reducedMotion()) return;
-    if (!hasWebGL()) return;
+  // a layout effect: arriving by client navigation, it can still hide the plain layout before that first paint
+  useLayoutEffect(() => {
+    // html[data-boot] shows the name alone until the stage takes over (globals.css). The boot script sets it on a
+    // first load; set here for a client navigation; cleared once the stage is up, or as soon as it can't be.
+    const root = document.documentElement;
+    const unboot = () => {
+      delete root.dataset.boot;
+    };
+    if (reducedMotion() || !hasWebGL()) {
+      unboot();
+      return;
+    }
+    if (!location.hash) root.dataset.boot = "";
+    const cap = window.setTimeout(unboot, 8000); // a slow start shows the plain page rather than an endless splash
 
     let disposed = false;
     let teardown: (() => void) | undefined;
@@ -84,10 +95,12 @@ export function Stage({ problems, leads }: { problems: readonly { problem: strin
     function start() {
       boot()
         .then((c) => {
+          if (!c) unboot();
           if (disposed) c?.();
           else teardown = c;
         })
         .catch((err: unknown) => {
+          unboot();
           console.log("[home] stage failed, the page stays still: " + (err instanceof Error ? err.message : String(err)));
         });
     }
@@ -1097,6 +1110,11 @@ export function Stage({ problems, leads }: { problems: readonly { problem: strin
       await Promise.race([renderer.compileAsync(scene, camera), new Promise((r) => setTimeout(r, 3000))]);
       faceTex.forEach((t) => renderer.initTexture(t));
       exp.classList.add("gl-ready");
+      // the stage has the name now: the rest of the page fades in. A #fragment asked for was pushed down by the
+      // stage's scroll runway just now, so go back to it.
+      clearTimeout(cap);
+      unboot();
+      if (location.hash) document.getElementById(location.hash.slice(1))?.scrollIntoView();
       alignBtn.hidden = false;
       hud.hidden = false;
       // "Move across the pieces to find the view" (CSS picks the fine/coarse line and hides it once aligned)
@@ -1136,6 +1154,8 @@ export function Stage({ problems, leads }: { problems: readonly { problem: strin
 
     return () => {
       disposed = true;
+      clearTimeout(cap);
+      unboot();
       teardown?.();
     };
   }, [problems, leads]);

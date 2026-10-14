@@ -777,6 +777,100 @@ async function checkHomeOverflow390(browser) {
   return out;
 }
 
+// The first load of the home shows the name alone (html[data-boot]) until the stage is up, then everything; never
+// under reduced motion, nor when a #fragment is asked for (the page goes straight there).
+async function checkSplash(browser) {
+  const out = [];
+  const check = (ok, msg) => out.push({ ok: !!ok, msg });
+  const ctx = await browser.newContext({ viewport: { width: 1440, height: 900 } });
+  const page = await ctx.newPage();
+  await page.goto(BASE_URL + "/", { waitUntil: "commit" });
+  await page.waitForSelector(".fallback-name img", { state: "attached" });
+  const early = await page.evaluate(() => ({
+    boot: document.documentElement.hasAttribute("data-boot"),
+    ui: getComputedStyle(document.querySelector(".exp-ui")).visibility,
+    ready: !!document.getElementById("exp")?.classList.contains("gl-ready"),
+  }));
+  check(early.ready || (early.boot && early.ui === "hidden"), `until the stage is up only the name shows (boot ${early.boot}, ui ${early.ui})`);
+  const ready = await page
+    .waitForFunction(() => document.getElementById("exp")?.classList.contains("gl-ready"), null, { timeout: 10000 })
+    .then(() => true, () => false);
+  const after = await page.evaluate(() => document.documentElement.hasAttribute("data-boot"));
+  check(ready && !after, "once the stage is up, the splash is gone");
+  await ctx.close();
+  for (const [label, opts, path] of [
+    ["reduced motion", { reducedMotion: "reduce" }, "/"],
+    ["a #fragment", {}, "/#contact"],
+  ]) {
+    const c = await browser.newContext({ viewport: { width: 1440, height: 900 }, ...opts });
+    const p = await c.newPage();
+    await p.route("**/api/contact**", (r) => r.abort());
+    await p.goto(BASE_URL + path, { waitUntil: "commit" });
+    await p.waitForSelector(".fallback-name img", { state: "attached" });
+    check(!(await p.evaluate(() => document.documentElement.hasAttribute("data-boot"))), `no splash with ${label}`);
+    await c.close();
+  }
+  return out;
+}
+
+// "What's slowing you down?": pinned, scrolling opens each stop in turn and the index follows; clicking the index
+// jumps to a stop; its brief button ticks that need in the brief (/api/contact intercepted, never submitted).
+// Under reduced motion every stop is simply stacked.
+async function checkPick(browser) {
+  const out = [];
+  const check = (ok, msg) => out.push({ ok: !!ok, msg });
+  const ctx = await browser.newContext({ viewport: { width: 1440, height: 900 } });
+  const page = await ctx.newPage();
+  await page.route("**/api/contact**", (r) => r.abort());
+  await page.goto(BASE_URL + "/", { waitUntil: "load" });
+  await page.waitForFunction(() => document.getElementById("exp")?.classList.contains("gl-ready"), null, { timeout: 10000 }).catch(() => {});
+  check(await page.evaluate(() => document.getElementById("build")?.classList.contains("pinned")), "the picker pins");
+  const toStop = (i) =>
+    page.evaluate((i) => {
+      const sec = document.getElementById("build");
+      const pin = sec.querySelector(".pick-pin");
+      const topH = document.getElementById("top").getBoundingClientRect().height;
+      const n = sec.querySelectorAll(".pick-p").length;
+      window.scrollTo(0, sec.getBoundingClientRect().top + window.scrollY - topH + ((i + 0.5) / n) * (sec.offsetHeight - pin.offsetHeight));
+    }, i);
+  const opened = () =>
+    page.evaluate(() => ({
+      on: [...document.querySelectorAll("#build .pick-p")].findIndex((p) => p.hasAttribute("data-on")),
+      cur: [...document.querySelectorAll("#build .pick-chip")].findIndex((c) => c.hasAttribute("aria-current")),
+    }));
+  const n = await page.locator("#build .pick-p").count();
+  const seen = [];
+  for (let i = 0; i < n; i++) {
+    await toStop(i);
+    await page.waitForTimeout(250);
+    const o = await opened();
+    if (o.on === i && o.cur === i) seen.push(i);
+  }
+  check(seen.length === n, `scrolling opens each of the ${n} stops in turn, the index following (${seen.length}/${n})`);
+  await toStop(0);
+  await page.waitForTimeout(250);
+  await page.locator("#build .pick-chip").nth(4).click();
+  await page.waitForTimeout(250);
+  check((await opened()).on === 4, "clicking index 05 jumps to stop 5");
+  const need = await page.locator("#build .pick-p").nth(4).locator("[data-need]").getAttribute("data-need");
+  await page.locator("#build .pick-p").nth(4).locator("[data-need]").click();
+  await page.waitForTimeout(300);
+  const ticked = await page.evaluate(() => document.querySelector('#cform input[name="subject"]:checked')?.value ?? null);
+  check(ticked === need, `its brief button ticks "${need}" in the brief (got ${ticked})`);
+  await ctx.close();
+
+  const rctx = await browser.newContext({ viewport: { width: 1440, height: 900 }, reducedMotion: "reduce" });
+  const rpage = await rctx.newPage();
+  await rpage.goto(BASE_URL + "/", { waitUntil: "load" });
+  const stacked = await rpage.evaluate(() => {
+    const sec = document.getElementById("build");
+    return !sec.classList.contains("pinned") && [...sec.querySelectorAll(".pick-p")].every((p) => getComputedStyle(p).visibility === "visible");
+  });
+  check(stacked, "under reduced motion every stop is stacked and visible");
+  await rctx.close();
+  return out;
+}
+
 // The page's initial JS as transferred (gzip): the scripts named in the server HTML. The stage's dynamic import of
 // three is not among them (sniffing for "WebGLRenderer" also matched the home's own route chunk).
 async function jsBytesAtLoad(page) {
@@ -1143,6 +1237,8 @@ async function main() {
       ["stage touch", checkStageTouch],
       ["stage scroll story", checkStageScrollStep],
       ["home overflow 390", checkHomeOverflow390],
+      ["home splash", checkSplash],
+      ["home picker", checkPick],
       ["contact armed+sent", checkContactArmedAndSent],
       ["contact field error", checkContactFieldError],
       ["contact empty submit", checkContactEmptySubmitBlocked],

@@ -30,8 +30,16 @@ export function SoundToggle() {
       aria-pressed={on}
       onClick={() => setOn(setSoundOn(!on))}
     >
-      <span className="snd-mark" aria-hidden="true" />
-      <span className="snd-label">Sound</span>
+      {/* its waves draw on when it is on */}
+      <svg className="tg-ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" aria-hidden="true">
+        <path d="M4 9.5h3l4.5-4v13l-4.5-4H4z" />
+        <path className="w" pathLength={1} d="M15 9.5a3.5 3.5 0 0 1 0 5" />
+        <path className="w w2" pathLength={1} d="M17.5 7a7 7 0 0 1 0 10" />
+      </svg>
+      <span className="tg-label">Sound</span>
+      <span className="tip" aria-hidden="true">
+        {on ? "Sound on" : "Sound off"}
+      </span>
     </button>
   );
 }

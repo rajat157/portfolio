@@ -30,8 +30,16 @@ export function ConstructionToggle() {
       type="button"
       onClick={() => setOn((v) => !v)}
     >
-      <span className="tg-mark" aria-hidden="true" />
+      {/* a set square; its extension lines show while construction is on */}
+      <svg className="tg-ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" aria-hidden="true">
+        <path d="M5 19V5l14 14z" />
+        <path d="M8.5 15.5v-3.5l3.5 3.5z" />
+        <path className="ext" d="M5 2v2M2 19h2M19 22v-2M22 19h-2" strokeDasharray="1.5 1.5" />
+      </svg>
       <span className="tg-label">{on ? "Hide construction" : "Show construction"}</span>
+      <span className="tip" aria-hidden="true">
+        {on ? "Hide construction" : "Show construction"}
+      </span>
     </button>
   );
 }

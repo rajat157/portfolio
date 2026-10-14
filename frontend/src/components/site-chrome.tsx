@@ -35,7 +35,6 @@ export function Header() {
       <div className="container top-in">
         <Link className="mark" href="/">
           <b>Rajat</b>
-          <span className="lab">Scale 1:1 · px</span>
         </Link>
         <nav className="nav" aria-label="Site">
           {NAV.map((item) => {
