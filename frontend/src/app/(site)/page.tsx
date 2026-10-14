@@ -37,6 +37,32 @@ async function getCounts(): Promise<{ featured: number; earlier: number }> {
   return { featured, earlier: projects.length - featured };
 }
 
+// PROTOTYPE (round 2 review): the lines the hero cycles through in its breathers (real copy from HOME).
+const LEADS = [HOME.lead, HOME.who.ways[0].body, HOME.who.ways[1].body];
+const KEYS = ["don’t talk", "understand them", "feel right"];
+
+// A step caption as words, so it can arrive word by word, with its key phrase marked to be underlined.
+function CapTitle({ text, mark }: { text: string; mark: string }) {
+  const from = text.indexOf(mark);
+  const to = from + mark.length;
+  const words = text.split(" ");
+  const starts = words.map((_, i) => (i ? words.slice(0, i).join(" ").length + 1 : 0));
+  return (
+    <span className="cap-t">
+      {words.map((w, i) => {
+        const key = from >= 0 && starts[i] >= from && starts[i] < to;
+        return (
+          <span key={i}>
+            <span className={key ? "cw key" : "cw"} style={{ "--i": i } as React.CSSProperties}>
+              {w}
+            </span>{" "}
+          </span>
+        );
+      })}
+    </span>
+  );
+}
+
 export default async function HomePage() {
   const counts = await getCounts();
   const whoCounts = HOME.who.counts.map((c) => (c.value === null ? { ...c, value: String(counts.featured) } : c));
@@ -90,21 +116,21 @@ export default async function HomePage() {
                       <span className="lab">
                         <span className="num">{HOME.steps[0].num}</span> · {HOME.steps[0].lab}
                       </span>
-                      <span className="cap-t">{HOME.steps[0].title}</span>
+                      <CapTitle text={HOME.steps[0].title} mark={KEYS[0]} />
                       <span className="sr-only">{HOME.problems.map((p) => p.problem).join(". ")}.</span>
                     </li>
                     <li className="cap" data-step="2">
                       <span className="lab">
                         <span className="num">{HOME.steps[1].num}</span> · {HOME.steps[1].lab}
                       </span>
-                      <span className="cap-t">{HOME.steps[1].title}</span>
+                      <CapTitle text={HOME.steps[1].title} mark={KEYS[1]} />
                       <span className="hand cap-note">{HOME.stepNote}</span>
                     </li>
                     <li className="cap" data-step="3">
                       <span className="lab">
                         <span className="num">{HOME.steps[2].num}</span> · {HOME.steps[2].lab}
                       </span>
-                      <span className="cap-t">{HOME.steps[2].title}</span>
+                      <CapTitle text={HOME.steps[2].title} mark={KEYS[2]} />
                       <span className="cap-s">{HOME.subLine}</span>
                       <span className="sr-only">{HOME.problems.map((p) => p.fix).join(". ")}.</span>
                     </li>
@@ -125,9 +151,15 @@ export default async function HomePage() {
             </div>
           </div>
           <p className="sr-only" id="hookLive" aria-live="polite" />
+          {/* PROTOTYPE (round 2 review): switch between the two hero options; remove with the unpicked one */}
+          <nav className="proto-switch" aria-label="Prototype: hero option">
+            <span className="lab">Hero option</span>
+            <a href="?hero=a" data-v="a">A · Breathers</a>
+            <a href="?hero=b" data-v="b">B · Callout</a>
+          </nav>
         </div>
       </div>
-      <Stage problems={HOME.problems} />
+      <Stage problems={HOME.problems} leads={LEADS} />
 
       <section className="sect" id="who" aria-labelledby="who-h">
         <div className="container gv">
