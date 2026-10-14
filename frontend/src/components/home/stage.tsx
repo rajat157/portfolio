@@ -628,7 +628,7 @@ export function Stage({ problems, leads }: { problems: readonly { problem: strin
         const narrow = W < 640;
         Dn = Math.max(WORLD_NAME_W / (narrow ? 0.88 : 0.64) / (2 * tan * camera.aspect), nameH / 0.42 / (2 * tan));
         // the static name: `.fallback-name img` is min(92%, 46rem) wide and centred above a 10%-of-width padding
-        const svgPx = Math.min(W * 0.92, 46 * 16);
+        const svgPx = Math.min(W * 0.92, 46 * (parseFloat(getComputedStyle(document.documentElement).fontSize) || 16));
         const nameWorldW = (WORLD_NAME_W * NameOutline.NAME_VIEW_W) / (NameOutline.NAME_VIEW_W + 2 * Math.round(NameOutline.NAME_UNITS_PER_EM * 0.03));
         introZoom = svgPx / ((nameWorldW * W) / (2 * tan * camera.aspect * Dn));
         introDy = 0.05 * W;

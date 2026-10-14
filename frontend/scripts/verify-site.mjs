@@ -51,6 +51,7 @@ const WHITELIST = /row-level/gi;
 const CONTEXTS = [
   ["desktop-1440x900", { viewport: { width: 1440, height: 900 } }],
   ["desktop-1920x905", { viewport: { width: 1920, height: 905 } }],
+  ["wide-2560x1080", { viewport: { width: 2560, height: 1080 } }],
   ["desktop-1024x768", { viewport: { width: 1024, height: 768 } }],
   ["phone-390x844", { viewport: { width: 390, height: 844 }, deviceScaleFactor: 3, isMobile: true, hasTouch: true }],
   ["reduced-motion", { viewport: { width: 1440, height: 900 }, reducedMotion: "reduce" }],
@@ -887,6 +888,7 @@ async function checkStepsFit(browser) {
   const out = [];
   const check = (ok, msg) => out.push({ ok: !!ok, msg });
   for (const [w, h, mustPin] of [
+    [2560, 1080, true],
     [1440, 900, true],
     [1366, 657, true],
     [1280, 600, false],
@@ -910,6 +912,35 @@ async function checkStepsFit(browser) {
       check(!s.pinned || s.grid <= s.pin, `${w}x${h} #${s.id}: pinned only when it fits (pinned ${s.pinned}, ${s.grid} in ${s.pin}px)`);
       if (mustPin) check(s.pinned, `${w}x${h} #${s.id} pins`);
     }
+    await ctx.close();
+  }
+  return out;
+}
+
+// A wide window gets a wider page (120px margins, up to 1920) and type that grows with it (16px root up to a 1680px
+// window, 20px at 2560); a 1440 window keeps the 1280 page at 16px.
+async function checkWide(browser) {
+  const out = [];
+  const check = (ok, msg) => out.push({ ok: !!ok, msg });
+  for (const [w, h, page_w, root] of [
+    [1440, 900, 1280, 16],
+    [1920, 1080, 1680, 17.08],
+    [2560, 1080, 1920, 20],
+  ]) {
+    const ctx = await browser.newContext({ viewport: { width: w, height: h } });
+    const page = await ctx.newPage();
+    await page.goto(BASE_URL + "/projects", { waitUntil: "load" });
+    const m = await page.evaluate(() => {
+      const c = document.querySelector("main .container") || document.querySelector(".container");
+      const cs = getComputedStyle(c);
+      return {
+        page: c.clientWidth - parseFloat(cs.paddingLeft) - parseFloat(cs.paddingRight),
+        root: parseFloat(getComputedStyle(document.documentElement).fontSize),
+      };
+    });
+    // 100vw counts the scrollbar, so the page may come out a scrollbar's width under its target
+    check(m.page <= page_w + 1 && m.page >= Math.min(page_w, w - 240 - 20), `${w}x${h}: the page is ${Math.round(m.page)}px wide (about ${page_w})`);
+    check(Math.abs(m.root - root) < 0.25, `${w}x${h}: type at a ${m.root.toFixed(2)}px root (about ${root})`);
     await ctx.close();
   }
   return out;
@@ -1330,6 +1361,7 @@ async function main() {
       ["home overflow 390", checkHomeOverflow390],
       ["home splash", checkSplash],
       ["home steps fit", checkStepsFit],
+      ["wide", checkWide],
       ["home who", checkWho],
       ["home picker", checkPick],
       ["contact armed+sent", checkContactArmedAndSent],
