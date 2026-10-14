@@ -445,8 +445,15 @@ export function Stage({ problems }: { problems: readonly { problem: string; fix:
       let moved = false;
       let px = 0.5;
       let py = 0.5;
-      let th = 16;
-      let ph = -7;
+      // The hand-off (BUILD-PLAN §0 item 1: "takes over aligned, then breaks"): the first frame matches the static
+      // name exactly — aligned, ink, and at its size and place via camera zoom + view offset (the station point
+      // can't move without breaking the alignment) — then over ~1s it eases to the design size, drifts apart and
+      // turns blue.
+      let th = 0;
+      let ph = 0;
+      let introAt: number | null = null;
+      let introZoom = 1;
+      let introDy = 0;
       let thT = th;
       let phT = ph;
       let parT = 0;
@@ -475,6 +482,11 @@ export function Stage({ problems }: { problems: readonly { problem: string; fix:
         const tan = Math.tan((camera.fov * Math.PI) / 360);
         const narrow = W < 640;
         Dn = Math.max(WORLD_NAME_W / (narrow ? 0.88 : 0.64) / (2 * tan * camera.aspect), nameH / 0.42 / (2 * tan));
+        // the static name: `.fallback-name img` is min(92%, 46rem) wide and centred above a 10%-of-width padding
+        const svgPx = Math.min(W * 0.92, 46 * 16);
+        const nameWorldW = (WORLD_NAME_W * NameOutline.NAME_VIEW_W) / (NameOutline.NAME_VIEW_W + 2 * Math.round(NameOutline.NAME_UNITS_PER_EM * 0.03));
+        introZoom = svgPx / ((nameWorldW * W) / (2 * tan * camera.aspect * Dn));
+        introDy = 0.05 * W;
         const cols = narrow ? 2 : 3;
         const rows = problems.length / cols;
         const gw = cols * TWd + (cols - 1) * GAP;
@@ -601,6 +613,9 @@ export function Stage({ problems }: { problems: readonly { problem: string; fix:
       function update(now: number, dt: number) {
         const sT = scrollTarget();
         if (sT > 0.012 && mode !== "locked" && !tween) lineUp(true);
+        if (introAt === null) introAt = now;
+        const intro = 1 - weight(seg(now - introAt, 150, 1150));
+        if (intro > 0) dirty = true;
         const s0 = sS;
         sS += (sT - sS) * (1 - Math.exp(-dt * 10));
         if (Math.abs(sT - sS) < 1e-4) sS = sT;
@@ -620,8 +635,8 @@ export function Stage({ problems }: { problems: readonly { problem: string; fix:
           if (u >= 1) lock(now);
         } else if (mode !== "locked") {
           if (input === "drift") {
-            thT = 16 + 6 * Math.sin(now / 2600);
-            phT = -7 + 3 * Math.sin(now / 3700);
+            thT = (16 + 6 * Math.sin(now / 2600)) * (1 - intro);
+            phT = (-7 + 3 * Math.sin(now / 3700)) * (1 - intro);
           } else if (input === "mouse") {
             thT = clamp((px - 0.36) * 80, -55, 55);
             phT = clamp(-(py - 0.58) * 46, -30, 30);
@@ -672,6 +687,12 @@ export function Stage({ problems }: { problems: readonly { problem: string; fix:
         const rp = (cp * Math.PI) / 180;
         camera.position.set(cr * Math.sin(rt) * Math.cos(rp), cr * Math.sin(rp), cr * Math.cos(rt) * Math.cos(rp));
         camera.lookAt(0, 0, 0);
+        if (intro > 0 || camera.zoom !== 1) {
+          camera.zoom = 1 + (introZoom - 1) * intro;
+          if (intro > 0) camera.setViewOffset(W, H, 0, introDy * intro, W, H);
+          else camera.clearViewOffset();
+          camera.updateProjectionMatrix();
+        }
 
         const goU = seg(sS, 0.03, 0.2);
         const fade = 1 - seg(sS, 0.13, 0.26);
@@ -682,7 +703,7 @@ export function Stage({ problems }: { problems: readonly { problem: string; fix:
           const kL = p.k + (1 - p.k) * lam;
           const kX = 1 + (p.k - 1) * 1.9;
           const k = kL + (kX - kL) * g;
-          const inked = lam * (1 - g);
+          const inked = Math.max(lam, intro) * (1 - g);
           P.set(p.c.x * k, p.c.y * k, Dn * (1 - k));
           if (!p.mesh) return;
           p.mesh.position.copy(P);
@@ -700,7 +721,7 @@ export function Stage({ problems }: { problems: readonly { problem: string; fix:
           projPos.set([P.x, P.y, P.z, p.c.x, p.c.y, 0], i * 6);
         });
         projGeo.attributes.position.needsUpdate = true;
-        const po = (cons ? 0.5 : 0.18) * (1 - goU);
+        const po = (cons ? 0.5 : 0.18) * (1 - goU) * (1 - intro);
         (projectors.material as InstanceType<typeof THREE.LineBasicMaterial>).opacity = po;
         projectors.visible = po > 0;
 
@@ -828,6 +849,9 @@ export function Stage({ problems }: { problems: readonly { problem: string; fix:
       exp.classList.add("gl-ready");
       alignBtn.hidden = false;
       hud.hidden = false;
+      // "Move across the pieces to find the view" (CSS picks the fine/coarse line and hides it once aligned)
+      const hintEl = exp.querySelector<HTMLElement>(".hook-copy .hint");
+      if (hintEl) hintEl.hidden = false;
       layout();
       raf = requestAnimationFrame(frameLoop);
 
