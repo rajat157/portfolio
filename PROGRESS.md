@@ -2,8 +2,15 @@
 
 ## Resume
 
-- Phase: ALL DONE (2026-10-14). Nothing in progress, nothing open. master = 3051ed1 (PRs #1–#9 live). This Resume
-  is a local commit on master, not pushed (a docs-only push would rebuild production); it rides along with the next PR.
+- IN PROGRESS (2026-10-15): Rajat picked board **Sections A** for both "Who I am" and "What I build", with relevant
+  icons. Branch `feat/chapters` @ 9b5edd6 (pushed when the PR opens):
+  - `components/home/chapters.tsx` (one pinned section, 6 stops, a rail of chapter ticks) replaces who.tsx and the
+    picker (pick.tsx; recoverable from 3051ed1). New drawings for the ways and the offerings.
+  - Scroll snapping was tried and DROPPED: WebKit never let the scroll leave the last stop, and Chrome passed stops.
+  - Status line made cwd-proof; handoff at 90% (CLAUDE.md, context-guard).
+  - Next: full matrix (running in D:\Projects\portfolio-verify, port 3005) → PR (body in the session scratchpad,
+    pr10.md) → merge after the Vercel preview passes → live check → remove the verify worktree (junction first).
+- Before this (2026-10-14): all done, master = 3051ed1 (PRs #1–#9 live).
 - Shipped this session:
   - #7: "Who I am" as scroll-stepped stops (Sections A) on the shared `components/home/steps.tsx` engine. A stepped
     section pins only when its index and tallest stop fit the pinned box (it measures the pinned layout).
