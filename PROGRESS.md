@@ -1,5 +1,32 @@
 # Portfolio Website - Progress Tracker
 
+## Resume
+
+- Phase: round 3, "Who I am" as scroll-stepped chapters (canvas board Sections A). Then: widescreen, Icons-board touches.
+- Branch `feat/home-who-steps` @ the WIP commit "shared Steps engine" (pushed, no PR). master = 4d76f17; PRs #4–#6 are live.
+- Live now: hero option B (callout from the dot), scroll-stepped "What's slowing you down?" picker, icon header tools
+  (no Scale label), loading sheet ("Loading the drawing", no name) after which the pieces start scattered.
+- Done on the branch: `components/home/steps.tsx` (shared pinned-stepping engine + `[data-count]` count-up; replaces
+  pick-scroll.tsx); `pick.tsx` markup renamed to shared `steps-*` classes. The picker is BROKEN on this commit until step 1.
+- Next:
+  1. globals.css: turn the `.pick.pinned` / `.pick-*` mechanics into shared `.steps*` rules (pin, grid, side, list, i,
+     i-t, note, count, no, stops, stop, ico; the narrow "numbered squares" rules); keep only stop content as `.pick-*`;
+     `.pick-p-more` → `.pick-more-stop`.
+  2. `components/home/who.tsx`: side = h2 "Who I am" + HOME.who.intro + index (01–03 = HOME.who.ways titles,
+     04 = "In numbers") + count; stops = icon drawing on (Icons board "Way" paths), "How I work · 0N", big title,
+     body, Caveat note (wrap in a div: the stop's draw-in transform kills `.hand`'s tilt); stop 04 = HOME.who.counts
+     with `data-count` on each value. `<Steps id="who" />`. Replace the old #who section in page.tsx; drop .ways/.counts
+     CSS only if /about doesn't use it.
+  3. Harness: checkPick selectors → `.steps-i` / `.steps-stop` / `.steps-pin`; add checkWho (pins, steps, counts end
+     at their values, reduced motion stacked).
+  4. Verify in D:\Projects\portfolio-verify (credential-free, `next start -p 3005`; check `git -C` it's on the branch);
+     full matrix; PR → merge (Rajat: "merge and keep going till finished"); live check.
+- Then (round 2 leftovers): widescreen (boards Wide A rail / Wide B split, none picked; default: widen the layout on
+  ≥1800px screens), Icons board (nav icons on "Where to next" nodes, block corner marks on hover).
+- Reprompt: `Continue the portfolio work from PROGRESS.md "Resume" (branch feat/home-who-steps). Keep going till finished; merge each PR once verified.`
+
+---
+
 **Last Updated:** 2026-01-20 (Phases 5-8 Completed)
 
 **Owner:** Rajat Kumar R - Software Architect & Developer

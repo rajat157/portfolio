@@ -769,7 +769,7 @@ async function checkHomeOverflow390(browser) {
     .waitForFunction(() => document.getElementById("exp")?.classList.contains("gl-ready") && !document.documentElement.hasAttribute("data-boot"), null, { timeout: 10000 })
     .catch(() => {});
   const overflowing = await page.evaluate(() => {
-    const sels = ".cap-t,.lead,.d3-callout p,.node-t,.blk-h,.way-t,.end-t";
+    const sels = ".cap-t,.lead,.d3-callout p,.node-t,.blk-h,.who-t,.who-counts dd,.pick-fix,.end-t";
     return [...document.querySelectorAll(sels)]
       .filter((el) => el.clientWidth > 1 && el.scrollWidth > el.clientWidth + 1)
       .map((el) => el.className + ": " + (el.textContent || "").slice(0, 30));
@@ -827,32 +827,36 @@ async function checkSplash(browser) {
   return out;
 }
 
-// "What's slowing you down?": pinned, scrolling opens each stop in turn and the index follows; clicking the index
-// jumps to a stop; its brief button ticks that need in the brief (/api/contact intercepted, never submitted).
-// Under reduced motion every stop is simply stacked.
-async function checkPick(browser) {
-  const out = [];
-  const check = (ok, msg) => out.push({ ok: !!ok, msg });
+// A stepped home section (components/home/steps.tsx: #who, #build): it pins, and scrolling opens each stop in turn
+// with the index following. Returns the open page for the section's own checks (/api/contact intercepted).
+async function steppedSection(browser, id, check) {
   const ctx = await browser.newContext({ viewport: { width: 1440, height: 900 } });
   const page = await ctx.newPage();
   await page.route("**/api/contact**", (r) => r.abort());
   await page.goto(BASE_URL + "/", { waitUntil: "load" });
   await page.waitForFunction(() => document.getElementById("exp")?.classList.contains("gl-ready") && !document.documentElement.hasAttribute("data-boot"), null, { timeout: 10000 }).catch(() => {});
-  check(await page.evaluate(() => document.getElementById("build")?.classList.contains("pinned")), "the picker pins");
+  check(await page.evaluate((id) => document.getElementById(id)?.classList.contains("pinned"), id), `#${id} pins`);
+  // scrolls to the middle of stop i's slice of the section's run (as Steps' own jump does)
   const toStop = (i) =>
-    page.evaluate((i) => {
-      const sec = document.getElementById("build");
-      const pin = sec.querySelector(".pick-pin");
-      const topH = document.getElementById("top").getBoundingClientRect().height;
-      const n = sec.querySelectorAll(".pick-p").length;
-      window.scrollTo(0, sec.getBoundingClientRect().top + window.scrollY - topH + ((i + 0.5) / n) * (sec.offsetHeight - pin.offsetHeight));
-    }, i);
+    page.evaluate(
+      ([id, i]) => {
+        const sec = document.getElementById(id);
+        const pin = sec.querySelector(".steps-pin");
+        const topH = document.getElementById("top").getBoundingClientRect().height;
+        const n = sec.querySelectorAll(".steps-stop").length;
+        window.scrollTo(0, sec.getBoundingClientRect().top + window.scrollY - topH + ((i + 0.5) / n) * (sec.offsetHeight - pin.offsetHeight));
+      },
+      [id, i],
+    );
   const opened = () =>
-    page.evaluate(() => ({
-      on: [...document.querySelectorAll("#build .pick-p")].findIndex((p) => p.hasAttribute("data-on")),
-      cur: [...document.querySelectorAll("#build .pick-chip")].findIndex((c) => c.hasAttribute("aria-current")),
-    }));
-  const n = await page.locator("#build .pick-p").count();
+    page.evaluate((id) => {
+      const sec = document.getElementById(id);
+      return {
+        on: [...sec.querySelectorAll(".steps-stop")].findIndex((p) => p.hasAttribute("data-on")),
+        cur: [...sec.querySelectorAll(".steps-i")].findIndex((c) => c.hasAttribute("aria-current")),
+      };
+    }, id);
+  const n = await page.locator(`#${id} .steps-stop`).count();
   const seen = [];
   for (let i = 0; i < n; i++) {
     await toStop(i);
@@ -861,27 +865,100 @@ async function checkPick(browser) {
     if (o.on === i && o.cur === i) seen.push(i);
   }
   check(seen.length === n, `scrolling opens each of the ${n} stops in turn, the index following (${seen.length}/${n})`);
+  return { ctx, page, n, toStop, opened };
+}
+
+// ...and under reduced motion it does not pin: every stop is stacked and visible.
+async function stackedSection(browser, id, check) {
+  const ctx = await browser.newContext({ viewport: { width: 1440, height: 900 }, reducedMotion: "reduce" });
+  const page = await ctx.newPage();
+  await page.goto(BASE_URL + "/", { waitUntil: "load" });
+  const stacked = await page.evaluate((id) => {
+    const sec = document.getElementById(id);
+    return !sec.classList.contains("pinned") && [...sec.querySelectorAll(".steps-stop")].every((p) => getComputedStyle(p).visibility === "visible");
+  }, id);
+  check(stacked, "under reduced motion every stop is stacked and visible");
+  return { ctx, page };
+}
+
+// A stepped section pins only when its index and tallest stop fit the pinned box; common windows (a laptop, a tall
+// phone with its browser bars shown) keep the stepped version, and a tiny phone may fall back to stacked.
+async function checkStepsFit(browser) {
+  const out = [];
+  const check = (ok, msg) => out.push({ ok: !!ok, msg });
+  for (const [w, h, mustPin] of [
+    [1440, 900, true],
+    [1366, 657, true],
+    [1280, 600, false],
+    [390, 664, true],
+    [375, 667, true],
+    [320, 568, false],
+  ]) {
+    const mobile = w < 700;
+    const ctx = await browser.newContext({ viewport: { width: w, height: h }, deviceScaleFactor: mobile ? 2 : 1, isMobile: mobile, hasTouch: mobile });
+    const page = await ctx.newPage();
+    await page.goto(BASE_URL + "/", { waitUntil: "load" });
+    await page.evaluate(() => document.fonts.ready);
+    await page.waitForTimeout(300);
+    const secs = await page.evaluate(() =>
+      ["who", "build"].map((id) => {
+        const sec = document.getElementById(id);
+        return { id, pinned: sec.classList.contains("pinned"), grid: sec.querySelector(".steps-grid").offsetHeight, pin: sec.querySelector(".steps-pin").clientHeight };
+      }),
+    );
+    for (const s of secs) {
+      check(!s.pinned || s.grid <= s.pin, `${w}x${h} #${s.id}: pinned only when it fits (pinned ${s.pinned}, ${s.grid} in ${s.pin}px)`);
+      if (mustPin) check(s.pinned, `${w}x${h} #${s.id} pins`);
+    }
+    await ctx.close();
+  }
+  return out;
+}
+
+// "What's slowing you down?": stepped (above); clicking the index jumps to a stop; its brief button ticks that need in
+// the brief (never submitted).
+async function checkPick(browser) {
+  const out = [];
+  const check = (ok, msg) => out.push({ ok: !!ok, msg });
+  const { ctx, page, toStop, opened } = await steppedSection(browser, "build", check);
   await toStop(0);
   await page.waitForTimeout(250);
-  await page.locator("#build .pick-chip").nth(4).click();
+  await page.locator("#build .steps-i").nth(4).click();
   await page.waitForTimeout(250);
   check((await opened()).on === 4, "clicking index 05 jumps to stop 5");
-  const need = await page.locator("#build .pick-p").nth(4).locator("[data-need]").getAttribute("data-need");
-  await page.locator("#build .pick-p").nth(4).locator("[data-need]").click();
+  const cta = page.locator("#build .steps-stop").nth(4).locator("[data-need]");
+  const need = await cta.getAttribute("data-need");
+  await cta.click();
   await page.waitForTimeout(300);
   const ticked = await page.evaluate(() => document.querySelector('#cform input[name="subject"]:checked')?.value ?? null);
   check(ticked === need, `its brief button ticks "${need}" in the brief (got ${ticked})`);
   await ctx.close();
+  await (await stackedSection(browser, "build", check)).ctx.close();
+  return out;
+}
 
-  const rctx = await browser.newContext({ viewport: { width: 1440, height: 900 }, reducedMotion: "reduce" });
-  const rpage = await rctx.newPage();
-  await rpage.goto(BASE_URL + "/", { waitUntil: "load" });
-  const stacked = await rpage.evaluate(() => {
-    const sec = document.getElementById("build");
-    return !sec.classList.contains("pinned") && [...sec.querySelectorAll(".pick-p")].every((p) => getComputedStyle(p).visibility === "visible");
-  });
-  check(stacked, "under reduced motion every stop is stacked and visible");
-  await rctx.close();
+// "Who I am": stepped (above), three ways of working and a stop in numbers, which count up from 0 as it opens and
+// end at their values; under reduced motion they just show them.
+async function checkWho(browser) {
+  const out = [];
+  const check = (ok, msg) => out.push({ ok: !!ok, msg });
+  const counts = (page) => page.evaluate(() => [...document.querySelectorAll("#who [data-count]")].map((d) => ({ shown: d.textContent, final: d.dataset.count })));
+  const { ctx, page, n, toStop } = await steppedSection(browser, "who", check);
+  await toStop(0);
+  await page.waitForTimeout(250);
+  await toStop(n - 1);
+  // a few frames in, the numbers are on their way up (900 ms, easing out)
+  await page.evaluate(() => new Promise((r) => requestAnimationFrame(() => requestAnimationFrame(() => requestAnimationFrame(r)))));
+  const early = await counts(page);
+  check(early.some((c) => c.shown !== c.final), `opening the numbers counts them up (a few frames in: ${early.map((c) => c.shown).join(", ")})`);
+  await page.waitForTimeout(1200);
+  const late = await counts(page);
+  check(late.length === 4 && late.every((c) => c.final && c.shown === c.final), `and they end at their values (${late.map((c) => c.shown).join(", ")})`);
+  await ctx.close();
+  const r = await stackedSection(browser, "who", check);
+  const still = await r.page.evaluate(() => [...document.querySelectorAll("#who [data-count]")].map((d) => d.textContent));
+  check(still.length === 4 && still.every((t) => /\d/.test(t ?? "")), `under reduced motion the numbers show their values (${still.join(", ")})`);
+  await r.ctx.close();
   return out;
 }
 
@@ -1252,6 +1329,8 @@ async function main() {
       ["stage scroll story", checkStageScrollStep],
       ["home overflow 390", checkHomeOverflow390],
       ["home splash", checkSplash],
+      ["home steps fit", checkStepsFit],
+      ["home who", checkWho],
       ["home picker", checkPick],
       ["contact armed+sent", checkContactArmedAndSent],
       ["contact field error", checkContactFieldError],

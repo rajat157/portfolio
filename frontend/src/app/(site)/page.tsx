@@ -1,7 +1,7 @@
 // The home experience (BUILD-PLAN.md §0, "P3b — Home experience"): the
-// shard-cut name stage, the scroll story, "Who I am" / "What's slowing you
-// down?" (Pick) / "Where to next" and the close contact brief. Server-rendered
-// (this file) plus client islands: Stage (three.js, lazy), PickScroll and
+// shard-cut name stage, the scroll story, "Who I am" (Who) / "What's slowing
+// you down?" (Pick) / "Where to next" and the close contact brief. Server-rendered
+// (this file) plus client islands: Stage (three.js, lazy), Steps and
 // ContactForm (progressive enhancement; posts natively without JS).
 // Everything here is readable with no JS, no WebGL and reduced motion.
 import type { Metadata } from "next";
@@ -11,6 +11,7 @@ import { NameMark } from "@/components/home/name-mark";
 import { Pick } from "@/components/home/pick";
 import { Splash } from "@/components/home/splash";
 import { Stage } from "@/components/home/stage";
+import { Who } from "@/components/home/who";
 import { HOME, mapProjectsDesc } from "@/content/home";
 import { cmsProjects } from "@/lib/cms";
 import { FALLBACK_EARLIER, FALLBACK_SHEETS } from "@/lib/cms/fallback";
@@ -157,38 +158,7 @@ export default async function HomePage() {
       </div>
       <Stage problems={HOME.problems.map(({ problem, fix }) => ({ problem, fix }))} leads={LEADS} />
 
-      <section className="sect" id="who" aria-labelledby="who-h">
-        <div className="container gv">
-          <div className="sec-head">
-            <h2 id="who-h" className="t-h2" data-cons="text">
-              Who I am
-            </h2>
-          </div>
-          <div className="who-v">
-            <p className="who-body who-intro">{HOME.who.intro}</p>
-            <ol className="ways">
-              {HOME.who.ways.map((w, i) => (
-                <li key={w.title} data-cons="box">
-                  <span className="num">{String(i + 1).padStart(2, "0")}</span>
-                  <div>
-                    <h3 className="way-t">{w.title}</h3>
-                    <p className="who-body">{w.body}</p>
-                  </div>
-                  <p className="hand">{w.note}</p>
-                </li>
-              ))}
-            </ol>
-            <dl className="counts counts-row">
-              {whoCounts.map((c) => (
-                <div key={c.label}>
-                  <dt className="lab">{c.label}</dt>
-                  <dd className="num">{c.value}</dd>
-                </div>
-              ))}
-            </dl>
-          </div>
-        </div>
-      </section>
+      <Who counts={whoCounts} />
 
       <Pick />
 
