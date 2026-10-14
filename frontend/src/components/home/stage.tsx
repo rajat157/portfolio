@@ -9,6 +9,10 @@
  * they lock and ink. Scrolling then tells how I help a business: scattered
  * parts, the view where they make sense, one system.
  *
+ * The hero line hangs from the name's full stop as a drafting callout and
+ * changes in each breather (the drift eases toward the view every 7.6 s).
+ * The six blocks carry drafting icons and answer hover and tap.
+ *
  * All of it is enhancement: without WebGL or under reduced motion the page
  * keeps the server-rendered NameMark and process copy (page.tsx). `three`
  * loads by dynamic import() in an effect at hydration (not part of the
@@ -50,7 +54,26 @@ const PAIRS: [number, number][] = [
   [4, 5],
 ];
 
-export function Stage({ problems }: { problems: readonly { problem: string; fix: string }[] }) {
+// Icons drawn onto the six blocks, per problem (front) and per fix (back), in the order of HOME.problems; 24-unit
+// boxes like the rest of the drafting icon set.
+const PROB_ICONS = [
+  "M3 6h18v12H3z M3 6l9 7 9-7", // orders arrive by email
+  "M3 5h18v14H3z M3 10h18 M3 15h18 M9 5v14", // stock in a spreadsheet
+  "M8 7l-5 5 5 5 M16 7l5 5-5 5 M14 4l-4 16", // only a developer can update the site
+  "M3 11h7v8H3z M4.5 11V8a2 2 0 0 1 4 0v3 M14 11h7v8h-7z M15.5 11V8a2 2 0 0 1 4 0v3", // a login for every tool
+  "M5 3h10l4 4v14H5z M15 3v4h4 M8 12h8 M8 16h5", // reports built by hand
+  "M3 3h7v7H3z M14 3h7v7h-7z M3 14h7v7H3z M14 14h7v7h-7z", // the same data in four places
+];
+const FIX_ICONS = [
+  "M3 5h5v5H3z M16 14h5v5h-5z M8 7.5h4v9h4", // orders tracked end to end
+  "M5 6c0-1.7 3.1-3 7-3s7 1.3 7 3-3.1 3-7 3-7-1.3-7-3z M5 6v12c0 1.7 3.1 3 7 3s7-1.3 7-3V6 M5 12c0 1.7 3.1 3 7 3s7-1.3 7-3", // one source
+  "M3 5h18v14H3z M3 9h18 M9 17l6-6 2 2-6 6H9z", // a site your team edits
+  "M7 11h10v9H7z M9 11V8a3 3 0 0 1 6 0v3 M12 14.5v2", // one login
+  "M3 19h18 M3 15l4-5 4 3 3-6 3 4h4", // reports that build themselves
+  "M4 4h16v16H4z M8 12l3 3 5-6", // data entered once
+];
+
+export function Stage({ problems, leads }: { problems: readonly { problem: string; fix: string }[]; leads: readonly string[] }) {
   useEffect(() => {
     if (reducedMotion()) return;
     if (!hasWebGL()) return;
@@ -199,6 +222,8 @@ export function Stage({ problems }: { problems: readonly { problem: string; fix:
       const WORLD_NAME_W = 340; // world units the whole name (incl. the dot) spans
       let parts: Piece[] = [];
       let nameH = 100;
+      let dotHalf = 0; // world units: half the orange square, and its centre down to the j's descender (the callout)
+      let dotDrop = 0;
       let projPos = new Float32Array(0);
       const projGeo = new THREE.BufferGeometry();
       const projectors = new THREE.LineSegments(projGeo, lineMat(0));
@@ -238,6 +263,8 @@ export function Stage({ problems }: { problems: readonly { problem: string; fix:
 
         const U = WORLD_NAME_W / TOTAL_W;
         nameH = NameOutline.NAME_VIEW_H * U;
+        dotHalf = (NameOutline.NAME_DOT / 2) * U;
+        dotDrop = (NameOutline.NAME_VIEW_H - NameOutline.NAME_CAP + NameOutline.NAME_DOT / 2) * U;
         const cxu = NameOutline.NAME_VIEW_W / 2;
         const cyu = NameOutline.NAME_VIEW_H / 2;
         const wpt = (xu: number, yu: number) => V((xu - cxu) * U, -(yu - cyu) * U, 0);
@@ -317,13 +344,19 @@ export function Stage({ problems }: { problems: readonly { problem: string; fix:
 
       /* 2. a business's parts: each card is drawn to a canvas (problem on
          its front, fix on its back) and cut into shards like the name. */
-      const TWd = 168;
-      const THd = 64;
+      const TWd = 196;
+      const THd = 68;
       const GAP = 24;
       const CPX = 3;
-      const sansFamily = getComputedStyle(document.documentElement).getPropertyValue("--font-sans").trim() || "sans-serif";
-      const cardFont = `500 ${15 * CPX}px ${sansFamily}`;
-      await Promise.race([document.fonts.load(cardFont).catch(() => {}), new Promise((r) => setTimeout(r, 2500))]);
+      const rootStyle = getComputedStyle(document.documentElement);
+      const sansFamily = rootStyle.getPropertyValue("--font-sans").trim() || "sans-serif";
+      const monoFamily = rootStyle.getPropertyValue("--font-mono").trim() || "monospace";
+      const cardFont = `500 ${14 * CPX}px ${sansFamily}`;
+      const monoFont = `500 ${8 * CPX}px ${monoFamily}`;
+      await Promise.race([
+        Promise.all([document.fonts.load(cardFont), document.fonts.load(monoFont)]).catch(() => {}),
+        new Promise((r) => setTimeout(r, 2500)),
+      ]);
       if (disposed) {
         renderer.dispose();
         canvas.remove();
@@ -343,29 +376,77 @@ export function Stage({ problems }: { problems: readonly { problem: string; fix:
         return lines;
       };
       const faceTex: InstanceType<typeof THREE.CanvasTexture>[] = [];
-      const face = (text: string, ink: boolean) => {
-        const c = document.createElement("canvas");
-        c.width = TWd * CPX;
-        c.height = THd * CPX;
-        const x = c.getContext("2d")!;
-        const col = ink ? "#0D0F12" : "#2448FF";
+      // A block's face: a drafting icon (drawn on as `p` goes 0 → 1), its text beside it, and in the corner the
+      // part number (problem side) or an orange done-mark (fix side).
+      type Face = { c: HTMLCanvasElement; x: CanvasRenderingContext2D; t: InstanceType<typeof THREE.CanvasTexture>; text: string; ink: boolean; icon: Path2D; num: string; p: number };
+      const strokeIcon = (x: CanvasRenderingContext2D, f: Face, ox: number, oy: number) => {
+        if (f.p <= 0) return;
+        x.save();
+        x.translate(ox * CPX, oy * CPX);
+        x.scale(CPX, CPX);
+        x.strokeStyle = f.ink ? "#0D0F12" : "#2448FF";
+        x.lineWidth = 1.5;
+        x.lineCap = "square";
+        x.setLineDash([160, 160]);
+        x.lineDashOffset = 160 * (1 - f.p);
+        x.stroke(f.icon);
+        x.restore();
+      };
+      const paint = (f: Face) => {
+        const { c, x } = f;
+        const col = f.ink ? "#0D0F12" : "#2448FF";
         x.fillStyle = "#F6F7F8";
         x.fillRect(0, 0, c.width, c.height);
         x.strokeStyle = col;
         x.lineWidth = CPX;
         x.strokeRect(CPX / 2, CPX / 2, c.width - CPX, c.height - CPX);
+        if (f.ink) {
+          x.fillStyle = "#FF4D12";
+          x.fillRect(c.width - 13 * CPX, 7 * CPX, 6 * CPX, 6 * CPX);
+        } else {
+          x.fillStyle = "#4F5560";
+          x.font = monoFont;
+          x.textAlign = "right";
+          x.textBaseline = "top";
+          x.fillText(f.num, c.width - 7 * CPX, 6 * CPX);
+        }
+        strokeIcon(x, f, 12, THd / 2 - 12);
         x.fillStyle = col;
         x.font = cardFont;
-        x.textAlign = "center";
+        x.textAlign = "left";
         x.textBaseline = "middle";
-        const lines = wrapText(x, text, c.width - 24 * CPX);
-        const lh = 18 * CPX;
-        lines.forEach((l, k) => x.fillText(l, c.width / 2, c.height / 2 + (k - (lines.length - 1) / 2) * lh));
+        const lines = wrapText(x, f.text, c.width - 60 * CPX);
+        const lh = 16.5 * CPX;
+        lines.forEach((l, k) => x.fillText(l, 46 * CPX, c.height / 2 + (k - (lines.length - 1) / 2) * lh));
+        f.t.needsUpdate = true;
+      };
+      // A draw-on step repaints only the icon's box (units) on a small canvas and copies it into that region of the
+      // face's texture: re-uploading whole faces (with mipmaps) while scrolling cost frames.
+      const IB = { x: 11, y: THd / 2 - 13, s: 26 };
+      const ibCan = document.createElement("canvas");
+      ibCan.width = ibCan.height = IB.s * CPX;
+      const ibX = ibCan.getContext("2d")!;
+      const ibSrc = new THREE.Texture(ibCan); // never rendered: copyTextureToTexture uploads its canvas straight into a face
+      const ibAt = new THREE.Vector2(IB.x * CPX, (THd - IB.y - IB.s) * CPX); // texture rows run bottom-up (flipY)
+      const drawOn = (f: Face, p: number) => {
+        f.p = p;
+        ibX.fillStyle = "#F6F7F8";
+        ibX.fillRect(0, 0, ibCan.width, ibCan.height);
+        strokeIcon(ibX, f, 12 - IB.x, THd / 2 - 12 - IB.y);
+        f.x.drawImage(ibCan, IB.x * CPX, IB.y * CPX); // keep the face canvas whole: a restored context re-uploads it
+        renderer.copyTextureToTexture(ibSrc, f.t, null, ibAt);
+      };
+      const face = (text: string, ink: boolean, icon: string, num: string): Face => {
+        const c = document.createElement("canvas");
+        c.width = TWd * CPX;
+        c.height = THd * CPX;
         const t = new THREE.CanvasTexture(c);
         t.colorSpace = THREE.SRGBColorSpace;
         t.anisotropy = Math.min(8, renderer.capabilities.getMaxAnisotropy());
         faceTex.push(t);
-        return t;
+        const f: Face = { c, x: c.getContext("2d")!, t, text, ink, icon: new Path2D(icon), num, p: 0 };
+        paint(f);
+        return f;
       };
       type Shard = {
         pivot: InstanceType<typeof THREE.Object3D>;
@@ -378,10 +459,33 @@ export function Stage({ problems }: { problems: readonly { problem: string; fix:
         rank: number;
         G: InstanceType<typeof THREE.Vector3>;
         S: InstanceType<typeof THREE.Vector3>;
+        ci: number;
       };
-      const cards = problems.map(({ problem, fix }) => {
-        const front = face(problem, false);
-        const back = face(fix, true);
+      const meshCard = new Map<object, number>(); // a block's meshes → its index, for picking
+      // registration marks at a block's corners, shown while it is hovered or tapped
+      const cornerGeo = (() => {
+        const a = 9;
+        const ox = TWd / 2 + 7;
+        const oy = THd / 2 + 7;
+        const pts: InstanceType<typeof THREE.Vector3>[] = [];
+        for (const sx of [-1, 1])
+          for (const sy of [-1, 1]) pts.push(V(sx * ox, sy * oy, 0), V(sx * (ox - a), sy * oy, 0), V(sx * ox, sy * oy, 0), V(sx * ox, sy * (oy - a), 0));
+        return new THREE.BufferGeometry().setFromPoints(pts);
+      })();
+      const cards = problems.map(({ problem, fix }, ci) => {
+        const frontFace = face(problem, false, PROB_ICONS[ci] ?? "", `0${ci + 1}`);
+        const backFace = face(fix, true, FIX_ICONS[ci] ?? "", "");
+        const front = frontFace.t;
+        const back = backFace.t;
+        const marks = new THREE.LineSegments(cornerGeo, new THREE.LineBasicMaterial({ color: BLUE.clone(), transparent: true, opacity: 0, depthWrite: false }));
+        marks.visible = false;
+        scene.add(marks);
+        const peekEl = document.createElement("div");
+        peekEl.className = "d3-peek";
+        peekEl.style.opacity = "0";
+        const peek = new CSS2DObject(peekEl);
+        peek.center.set(0, 0);
+        scene.add(peek);
         const shards: Shard[] = [];
         const xs = [0, Math.round((TWd * (1 + (rand() - 0.5) * 0.5)) / 3), Math.round((TWd * (2 + (rand() - 0.5) * 0.5)) / 3), TWd];
         const ys = [0, Math.round(THd * (0.5 + (rand() - 0.5) * 0.4)), THd];
@@ -407,9 +511,11 @@ export function Stage({ problems }: { problems: readonly { problem: string; fix:
             const edge = new THREE.LineSegments(new THREE.EdgesGeometry(fm.geometry), new THREE.LineBasicMaterial({ color: BLUE.clone(), transparent: true, opacity: 0, depthWrite: false }));
             pivot.add(fm, bm, edge);
             scene.add(pivot);
-            shards.push({ pivot, fm, bm, edge, lx: (x0 + x1) / 2 - TWd / 2, ly: THd / 2 - (y0 + y1) / 2, k: 1, rank: 0, G: V(0, 0, 0), S: V(0, 0, 0) });
+            meshCard.set(fm, ci);
+            meshCard.set(bm, ci);
+            shards.push({ pivot, fm, bm, edge, lx: (x0 + x1) / 2 - TWd / 2, ly: THd / 2 - (y0 + y1) / 2, k: 1, rank: 0, G: V(0, 0, 0), S: V(0, 0, 0), ci });
           }
-        return { shards, G: V(0, 0, 0), solved: false };
+        return { shards, G: V(0, 0, 0), solved: false, problem, fix, frontFace, backFace, marks, peek, peekEl, peekText: "", hv: 0, last: 0 };
       });
       const allShards = cards.flatMap((c) => c.shards);
       const cks = depths(allShards.length);
@@ -417,6 +523,7 @@ export function Stage({ problems }: { problems: readonly { problem: string; fix:
         s.k = cks[i];
         s.rank = i;
       });
+      cards.forEach((cd) => (cd.last = cd.shards[cd.shards.length - 1].rank));
       const linkPos = new Float32Array(PAIRS.length * 6);
       const linkGeo = new THREE.BufferGeometry();
       linkGeo.setAttribute("position", new THREE.BufferAttribute(linkPos, 3));
@@ -433,6 +540,28 @@ export function Stage({ problems }: { problems: readonly { problem: string; fix:
         scene.add(o);
       });
       scene.add(sys);
+
+      // the hero line as a drafting callout hung from the name's orange dot, following its drift (the page's own
+      // .lead stays for screen readers); it changes in each breather
+      const calloutEl = document.createElement("div");
+      calloutEl.className = "d3-callout";
+      calloutEl.innerHTML = '<i class="ldr"></i><div class="box"><span class="no"></span><p></p></div>';
+      const calloutNo = calloutEl.querySelector(".no")!;
+      const calloutP = calloutEl.querySelector("p")!;
+      const callout = new CSS2DObject(calloutEl);
+      callout.center.set(0, 0);
+      scene.add(callout);
+      let leadIdx = -1;
+      const showLead = (i: number) => {
+        leadIdx = i;
+        const span = document.createElement("span");
+        span.textContent = leads[i] ?? "";
+        calloutP.replaceChildren(span);
+        calloutP.classList.remove("swap");
+        void calloutP.offsetWidth;
+        calloutP.classList.add("swap");
+        calloutNo.textContent = `0${i + 1} / 0${leads.length}`;
+      };
 
       /* state */
       let Dn = 1000;
@@ -490,6 +619,10 @@ export function Stage({ problems }: { problems: readonly { problem: string; fix:
         const nameWorldW = (WORLD_NAME_W * NameOutline.NAME_VIEW_W) / (NameOutline.NAME_VIEW_W + 2 * Math.round(NameOutline.NAME_UNITS_PER_EM * 0.03));
         introZoom = svgPx / ((nameWorldW * W) / (2 * tan * camera.aspect * Dn));
         introDy = 0.05 * W;
+        // the callout's leader leaves the dot's edge and its note clears the j's descender, at any size
+        const pxU = H / (2 * tan * Dn);
+        calloutEl.style.setProperty("--half", (dotHalf * pxU).toFixed(1) + "px");
+        calloutEl.style.setProperty("--drop", (dotDrop * pxU).toFixed(1) + "px");
         const cols = narrow ? 2 : 3;
         const rows = problems.length / cols;
         const gw = cols * TWd + (cols - 1) * GAP;
@@ -504,12 +637,15 @@ export function Stage({ problems }: { problems: readonly { problem: string; fix:
             s.G.set(cd.G.x + s.lx, cd.G.y + s.ly, 0);
             s.S.set(s.G.x * s.k, s.G.y * s.k, Dt * (1 - s.k));
           });
+          cd.peek.center.set(cd.G.x > 1 ? 1 : 0, 0); // right-hand blocks hang their peek leftwards, so it stays on screen
         });
         const fx = gw / 2 + 22;
         const f0 = -gh / 2 - 22 + yo;
         const f1 = gh / 2 + 22 + yo;
         frameGeo.setFromPoints([V(-fx, f0, 0), V(fx, f0, 0), V(fx, f0, 0), V(fx, f1, 0), V(fx, f1, 0), V(-fx, f1, 0), V(-fx, f1, 0), V(-fx, f0, 0)]);
-        sys.position.set(-fx, f1 + 8, 0);
+        // on a phone the frame runs to the screen's edges: centre its label so it isn't cut off
+        sys.center.set(narrow ? 0.5 : 0, 1);
+        sys.position.set(narrow ? 0 : -fx, f1 + 8, 0);
         dirty = true;
       }
 
@@ -534,6 +670,7 @@ export function Stage({ problems }: { problems: readonly { problem: string; fix:
         px = (e.clientX - r.left) / r.width;
         py = (e.clientY - r.top) / r.height;
         moved = true;
+        pointerIn = true;
         begin("mouse");
         dirty = true;
       };
@@ -567,6 +704,32 @@ export function Stage({ problems }: { problems: readonly { problem: string; fix:
         }
       };
       const onAlignClick = () => lineUp(false);
+
+      // hover a block (fine pointers), or tap/click it to pin it: picked by a ray through the pointer
+      const ray = new THREE.Raycaster();
+      const ndc = new THREE.Vector2();
+      let pointerIn = false;
+      let tapCard = -1;
+      const pickCard = (x: number, y: number) => {
+        ndc.set(x * 2 - 1, -(y * 2 - 1));
+        ray.setFromCamera(ndc, camera);
+        const list = allShards.filter((s) => s.pivot.visible).map((s) => (s.fm.visible ? s.fm : s.bm));
+        const hit = ray.intersectObjects(list, false)[0];
+        return hit ? (meshCard.get(hit.object) ?? -1) : -1;
+      };
+      const onPinPointerLeave = () => {
+        pointerIn = false;
+        dirty = true;
+      };
+      const onCanvasClick = (e: MouseEvent) => {
+        if (!step) return;
+        const r = canvas.getBoundingClientRect();
+        const hit = pickCard((e.clientX - r.left) / r.width, (e.clientY - r.top) / r.height);
+        tapCard = hit === tapCard ? -1 : hit;
+        dirty = true;
+      };
+      pin.addEventListener("pointerleave", onPinPointerLeave);
+      canvas.addEventListener("click", onCanvasClick);
 
       pin.addEventListener("pointermove", onPinPointerMove);
       canvas.addEventListener("pointerdown", onCanvasPointerDown);
@@ -603,6 +766,7 @@ export function Stage({ problems }: { problems: readonly { problem: string; fix:
 
       /* frame */
       const P = V(0, 0, 0);
+      const dot = V(0, 0, 0);
       const sgn = (v: number) => (v < 0 ? "−" : "+") + Math.abs(v).toFixed(1).padStart(4, "0") + "°";
       const hint = () => {
         const h: string[] = [];
@@ -621,6 +785,20 @@ export function Stage({ problems }: { problems: readonly { problem: string; fix:
         if (introAt === null) introAt = now;
         intro = 1 - weight(seg(now - introAt, 150, 1150));
         if (intro > 0) dirty = true;
+
+        // breathers: every 7.6 s the drift eases nearly into the view for ~2 s, and the hero line changes
+        // as that pause begins, so the eye that follows the motion lands on the words
+        let breath = 0;
+        if (step === 0 && leads.length && now - introAt > 1400) {
+          const since = now - introAt - 1400;
+          const u = (since % 7600) / 7600;
+          breath = u > 0.62 && u < 0.92 ? Math.sin((Math.PI * (u - 0.62)) / 0.3) ** 2 : 0;
+          const want = (Math.floor(since / 7600) + (u >= 0.62 ? 1 : 0)) % leads.length;
+          if (want !== leadIdx) showLead(want);
+          const inBreath = breath > 0.15;
+          if (inBreath !== exp.hasAttribute("data-breath")) exp.toggleAttribute("data-breath", inBreath);
+          if (breath > 0) dirty = true;
+        }
         const s0 = sS;
         sS += (sT - sS) * (1 - Math.exp(-dt * 10));
         if (Math.abs(sT - sS) < 1e-4) sS = sT;
@@ -640,8 +818,8 @@ export function Stage({ problems }: { problems: readonly { problem: string; fix:
           if (u >= 1) lock(now);
         } else if (mode !== "locked") {
           if (input === "drift") {
-            thT = driftTh(now) * (1 - intro);
-            phT = driftPh(now) * (1 - intro);
+            thT = driftTh(now) * (1 - intro) * (1 - 0.8 * breath);
+            phT = driftPh(now) * (1 - intro) * (1 - 0.8 * breath);
           } else if (input === "mouse") {
             thT = clamp((px - 0.36) * 80, -55, 55);
             phT = clamp(-(py - 0.58) * 46, -30, 30);
@@ -674,7 +852,24 @@ export function Stage({ problems }: { problems: readonly { problem: string; fix:
         parT += ((lookS ? (px - 0.5) * 6 : 0) - parT) * k2;
         parP += ((lookS ? -(py - 0.5) * 4 : 0) - parP) * k2;
         if (Math.abs(parT - a2) + Math.abs(parP - b2) > 1e-4) dirty = true;
+
+        // the block under the pointer (or the tapped one), eased per block
+        let target = -1;
+        if (step > 0) {
+          if (tapCard >= 0) target = tapCard;
+          else if (fine && pointerIn && moved) target = pickCard(px, py);
+        } else tapCard = -1;
+        const kh = 1 - Math.exp(-dt * 12);
+        cards.forEach((cd, ci) => {
+          const want = ci === target ? 1 : 0;
+          if (cd.hv === want) return;
+          cd.hv += (want - cd.hv) * kh;
+          if (Math.abs(cd.hv - want) < 1e-3) cd.hv = want;
+          dirty = true;
+        });
+        pin.style.cursor = target >= 0 ? "pointer" : "";
         if (!dirty) return;
+        let more = false; // something is still moving: render the next frame too
 
         const e1 = weight(seg(sS, 0.04, 0.26));
         const e2 = weight(seg(sS, 0.3, 0.46));
@@ -711,6 +906,7 @@ export function Stage({ problems }: { problems: readonly { problem: string; fix:
           const k = kL + (kX - kL) * g;
           const inked = Math.max(lam, intro) * (1 - g);
           P.set(p.c.x * k, p.c.y * k, Dn * (1 - k));
+          if (!p.edge) dot.copy(P); // the orange square: the callout hangs from it
           if (!p.mesh) return;
           p.mesh.position.copy(P);
           p.mesh.quaternion.copy(QI);
@@ -730,18 +926,31 @@ export function Stage({ problems }: { problems: readonly { problem: string; fix:
         const po = (cons ? 0.5 : 0.18) * (1 - goU) * (1 - intro);
         (projectors.material as InstanceType<typeof THREE.LineBasicMaterial>).opacity = po;
         projectors.visible = po > 0;
+        callout.position.copy(dot);
+        const co = (1 - intro) * (1 - seg(sS, 0.01, 0.08));
+        calloutEl.style.opacity = co.toFixed(3);
+        calloutEl.style.visibility = co > 0.001 ? "visible" : "hidden";
+        if (W < 640) {
+          // no room beside the drifting dot on a phone: the note spans the screen under it (CSS), placed from the
+          // dot's screen x this frame
+          camera.updateMatrixWorld();
+          calloutEl.style.setProperty("--sx", (((P.copy(dot).project(camera).x + 1) * W) / 2).toFixed(1) + "px");
+        }
 
         const appear = seg(sS, 0.08, 0.26);
         const settle = seg(sS, 0.44, 0.58);
         const flipU = seg(sS, 0.6, 0.8);
         const n = allShards.length;
         allShards.forEach((s) => {
-          const ls = local(settle, s.rank, n);
+          // a hovered block gathers its own pieces (readable while the rest stay scattered) and lifts
+          const hv = cards[s.ci].hv;
+          const ls = Math.max(local(settle, s.rank, n), hv);
           const lf = local(flipU, s.rank, n);
           const k = s.k + (1 - s.k) * ls;
           const op = local(appear, s.rank, n);
           const turn = Math.PI * lf;
           s.pivot.position.lerpVectors(s.S, s.G, ls);
+          s.pivot.position.z += 14 * hv;
           s.pivot.scale.setScalar(k);
           s.pivot.rotation.set(0, turn, 0);
           s.pivot.visible = op > 0.001;
@@ -752,16 +961,42 @@ export function Stage({ problems }: { problems: readonly { problem: string; fix:
           (s.fm.material as InstanceType<typeof THREE.MeshBasicMaterial>).opacity = op;
           (s.bm.material as InstanceType<typeof THREE.MeshBasicMaterial>).opacity = op;
           const edgeMat = s.edge.material as InstanceType<typeof THREE.LineBasicMaterial>;
-          edgeMat.opacity = op * (cons ? 0.7 : 0.45 * (1 - ls));
+          edgeMat.opacity = op * (cons ? 0.7 : 0.45 * (1 - ls)); // a gathered block is seamless; its corner marks say "this one"
           s.edge.visible = edgeMat.opacity > 0;
           edgeMat.color.lerpColors(BLUE, INK, seg(lf, 0.4, 0.6));
         });
+        let steps = 2; // icon draw-on steps this frame
         cards.forEach((cd) => {
-          const solved = local(flipU, cd.shards[cd.shards.length - 1].rank, n) > 0.5;
+          const solved = local(flipU, cd.last, n) > 0.5;
           if (solved !== cd.solved) {
             cd.solved = solved;
             if (solved) tick();
           }
+          // the icon draws on as the block appears, and the fix's icon as it flips (scrubbed with the scroll)
+          const pairs: [Face, number][] = [
+            [cd.frontFace, seg(local(appear, cd.last, n), 0.35, 1)],
+            [cd.backFace, seg(local(flipU, cd.last, n), 0.55, 1)],
+          ];
+          for (const [f, p] of pairs)
+            if (p !== f.p && (Math.abs(p - f.p) >= 0.04 || p === 0 || p === 1)) {
+              if (steps-- > 0) drawOn(f, p);
+              else more = true; // the rest wait a frame: each step re-mips a face texture
+            }
+          // hovered/tapped: corner marks and a peek at the other side of the block
+          const hv = cd.hv;
+          cd.marks.visible = hv > 0.001;
+          if (cd.marks.visible) {
+            cd.marks.position.set(cd.G.x, cd.G.y, 14 * hv);
+            (cd.marks.material as InstanceType<typeof THREE.LineBasicMaterial>).opacity = 0.9 * hv;
+          }
+          const pt = cd.solved ? `was · ${cd.problem}` : `→ ${cd.fix}`;
+          if (pt !== cd.peekText) {
+            cd.peekText = pt;
+            cd.peekEl.textContent = pt;
+          }
+          cd.peek.position.set(cd.G.x + (cd.G.x > 1 ? TWd / 2 : -TWd / 2), cd.G.y - THd / 2 - 8, 14 * hv);
+          cd.peekEl.style.opacity = hv.toFixed(3);
+          cd.peekEl.style.visibility = hv > 0.001 ? "visible" : "hidden";
         });
         const ctr = cards.map((cd) => cd.shards.reduce((v, s) => v.add(s.pivot.position), V(0, 0, 0)).multiplyScalar(1 / cd.shards.length));
         PAIRS.forEach(([a, b], j) => {
@@ -774,6 +1009,14 @@ export function Stage({ problems }: { problems: readonly { problem: string; fix:
         const lo = (cons ? 0.8 : 0.5) * seg(sS, 0.34, 0.46) * (1 - seg(sS, 0.64, 0.76));
         (links.material as InstanceType<typeof THREE.LineDashedMaterial>).opacity = lo;
         links.visible = lo > 0;
+        if (lo > 0) {
+          // once the parts are linked, the dashes flow along the links: the parts are talking
+          const ld = linkGeo.getAttribute("lineDistance");
+          const arr = ld.array as Float32Array;
+          for (let j = 0; j < arr.length; j++) arr[j] -= (now % 1e6) * 0.012;
+          ld.needsUpdate = true;
+          more = true;
+        }
         const fo = seg(sS, 0.76, 0.88);
         (frame.material as InstanceType<typeof THREE.LineBasicMaterial>).opacity = fo;
         frame.visible = fo > 0;
@@ -805,6 +1048,7 @@ export function Stage({ problems }: { problems: readonly { problem: string; fix:
           r2 = "One system · parts 6";
           bar = 1;
         }
+        if (step && target >= 0) r2 = `Part 0${target + 1} · ${cards[target].solved ? cards[target].fix : cards[target].problem}`;
         const key = r1 + "|" + r2 + "|" + bar.toFixed(3);
         if (key !== hudKey) {
           hudKey = key;
@@ -815,7 +1059,7 @@ export function Stage({ problems }: { problems: readonly { problem: string; fix:
 
         renderer.render(scene, camera);
         labelRenderer.render(scene, camera);
-        dirty = false;
+        dirty = more;
       }
 
       let last = performance.now();
@@ -858,6 +1102,7 @@ export function Stage({ problems }: { problems: readonly { problem: string; fix:
       // "Move across the pieces to find the view" (CSS picks the fine/coarse line and hides it once aligned)
       const hintEl = exp.querySelector<HTMLElement>(".hook-copy .hint");
       if (hintEl) hintEl.hidden = false;
+      if (leads.length) showLead(0);
       layout();
       raf = requestAnimationFrame(frameLoop);
 
@@ -871,6 +1116,8 @@ export function Stage({ problems }: { problems: readonly { problem: string; fix:
         pin.removeEventListener("pointermove", onPinPointerMove);
         pin.removeEventListener("keydown", onPinKeyDown);
         canvas.removeEventListener("pointerdown", onCanvasPointerDown);
+        canvas.removeEventListener("click", onCanvasClick);
+        pin.removeEventListener("pointerleave", onPinPointerLeave);
         alignBtn.removeEventListener("click", onAlignClick);
         document.removeEventListener("ui:tick", tick);
         document.removeEventListener("ui:thunk", thunk);
@@ -891,7 +1138,7 @@ export function Stage({ problems }: { problems: readonly { problem: string; fix:
       disposed = true;
       teardown?.();
     };
-  }, [problems]);
+  }, [problems, leads]);
 
   return null;
 }

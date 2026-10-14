@@ -761,10 +761,15 @@ async function checkHomeOverflow390(browser) {
   const ctx = await browser.newContext({ viewport: { width: 390, height: 844 }, deviceScaleFactor: 3, isMobile: true, hasTouch: true });
   const page = await ctx.newPage();
   await page.goto(BASE_URL + "/", { waitUntil: "load" });
+  // once the stage is up the hero line is its callout (.d3-callout p), and .lead is visually hidden (1px wide, kept
+  // for screen readers): checked as the callout, not as an overflowing 1px box
+  await page
+    .waitForFunction(() => document.getElementById("exp")?.classList.contains("gl-ready"), null, { timeout: 8000 })
+    .catch(() => {});
   const overflowing = await page.evaluate(() => {
-    const sels = ".cap-t,.lead,.node-t,.blk-h,.way-t,.end-t";
+    const sels = ".cap-t,.lead,.d3-callout p,.node-t,.blk-h,.way-t,.end-t";
     return [...document.querySelectorAll(sels)]
-      .filter((el) => el.scrollWidth > el.clientWidth + 1)
+      .filter((el) => el.clientWidth > 1 && el.scrollWidth > el.clientWidth + 1)
       .map((el) => el.className + ": " + (el.textContent || "").slice(0, 30));
   });
   check(overflowing.length === 0, `no label overflows at 390px${overflowing.length ? "; " + overflowing.join(" | ") : ""}`);
