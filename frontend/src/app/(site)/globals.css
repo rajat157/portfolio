@@ -352,9 +352,7 @@ html:not(.js) .tbl-wrap { grid-column: 1 / -1; }
 
 /* ======================= header v2: nav + tools (home-prototype.html:348-366) ======================= */
 :root { --top-h: 61px; }
-:root { --scroll-pad: calc(var(--top-h) + 15px); }
-/* the home chapters stops are snap points (.steps-snap); nothing else on the site snaps */
-html { scroll-padding-top: var(--scroll-pad); scroll-snap-type: y proximity; }
+html { scroll-padding-top: calc(var(--top-h) + 15px); }
 .top-in { flex-wrap: wrap; column-gap: 16px; }
 .nav { display: flex; align-items: center; margin-left: auto; }
 .nav-a { display: inline-flex; align-items: center; min-height: 44px; padding: 0 10px; font: 400 .6875rem/1 var(--font-mono), ui-monospace, monospace; letter-spacing: .06em; text-transform: uppercase; text-decoration: none; color: var(--sub-c); transition: color var(--t32) var(--ease-attack); }
@@ -385,7 +383,7 @@ html { scroll-padding-top: var(--scroll-pad); scroll-snap-type: y proximity; }
   .nav-a:first-child { padding-left: 0; }
   .nav-a:last-child { padding-right: 0; }
   .tools { margin-left: auto; }
-  :root { --scroll-pad: 120px; } /* the wrapped nav makes the header a 2nd row taller (§4.3) */
+  html { scroll-padding-top: 120px; } /* the wrapped nav makes the header a 2nd row taller (§4.3) */
   /* its real height before Header measures it, so the stage's name and the first-load splash don't move then */
   :root { --top-h: 102px; }
 }
@@ -551,8 +549,7 @@ a.btn { display: inline-flex; align-items: center; text-decoration: none; }
 /* ======================= who I am / what I build (components/home/chapters.tsx; round 2, canvas board "Sections A") =======================
    Two chapters, one idea per stop: how I work (three ways), in numbers, what I build (six offerings, three to a stop).
    With no JS or under reduced motion: the rail is an index and the stops are stacked. .pinned (Steps): the section pins
-   for --n stops of --per scroll each, a scroll comes to rest on each stop (.steps-snap) and can't pass over one, and
-   the rail marks the stops with ticks (done ink, current blue). */
+   for --n stops of --per scroll each and shows one stop at a time, drawing it in; the rail marks the stops with ticks (done ink, current blue). */
 .who-body { font-family: var(--f-body); font-weight: 400; font-size: clamp(1.1rem, 1rem + .4vw, 1.3rem); line-height: 1.5; color: var(--graphite); max-width: 52ch; }
 .chap-grid { display: grid; grid-template-columns: minmax(0, 17rem) minmax(0, 1fr); gap: 32px 72px; align-items: start; }
 .chap-rail { display: flex; flex-direction: column; gap: 28px; }
@@ -566,7 +563,7 @@ a.btn { display: inline-flex; align-items: center; text-decoration: none; }
 .steps-stops { display: grid; gap: 64px; }
 .steps-stop { display: flex; flex-direction: column; align-items: flex-start; gap: 24px; scroll-margin-top: calc(var(--top-h) + 24px); }
 .steps-ico { color: var(--blue); }
-.steps-snap, .chap-next { display: none; }
+.chap-next { display: none; }
 @media (max-width: 959px) { .chap-grid { grid-template-columns: minmax(0, 1fr); gap: 40px; } }
 /* stacked beside a wide window: the index stays in view while the stops scroll past */
 @media (min-width: 960px) { .steps:not(.pinned) .chap-rail { position: sticky; top: calc(var(--top-h) + 32px); } }
@@ -586,13 +583,11 @@ a.btn { display: inline-flex; align-items: center; text-decoration: none; }
 .chap-off-t { margin: 0; font: 600 clamp(1.35rem, 1.1rem + .8vw, 1.875rem)/1.2 var(--f-body); }
 .chap-off-l { margin-top: 6px; font-size: clamp(1.05rem, .95rem + .4vw, 1.25rem); line-height: 1.4; color: var(--graphite); max-width: 52ch; }
 
-.steps.pinned { --per: 50vh; position: relative; box-sizing: border-box; height: calc(100svh - var(--top-h) + var(--n) * var(--per)); padding-block: 0; }
+.steps.pinned { --per: 50vh; box-sizing: border-box; height: calc(100svh - var(--top-h) + var(--n) * var(--per)); padding-block: 0; }
 .steps.pinned .steps-pin { position: sticky; top: var(--top-h); height: calc(100svh - var(--top-h)); display: flex; align-items: center; }
 .steps.pinned .chap-grid { width: 100%; box-sizing: border-box; }
 .steps.pinned .steps-stop { grid-area: 1 / 1; }
 .steps.pinned .steps-stop:not([data-on]) { visibility: hidden; }
-/* one point per stop where a scroll comes to rest; scroll-snap-stop keeps a fling from passing over a stop */
-.steps.pinned .steps-snap { display: block; position: absolute; left: 0; width: 1px; height: 1px; top: calc((var(--i) + .5) * var(--per) + var(--scroll-pad) - var(--top-h)); scroll-snap-align: start; scroll-snap-stop: always; pointer-events: none; }
 
 /* the rail: each chapter's name over a tick per stop, then the stop count */
 .steps.pinned .chap-rail { gap: 22px; }

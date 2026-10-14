@@ -1,8 +1,8 @@
 // "Who I am" and "What I build" as chapters (round 2, the canvas board "Sections A", picked 2026-10-15): a rail with a
 // tick per stop, and one idea per stop: the three ways I work (each with its drawing, a big title, the line and my
 // note), the numbers, then the six offerings three to a stop. Server-rendered as the rail's index over the stops,
-// stacked, which is the whole section with no JS or under reduced motion; Steps pins it, steps through the stops as
-// you scroll and lets a scroll come to rest on each one.
+// stacked, which is the whole section with no JS or under reduced motion; Steps pins it and steps through the stops
+// as you scroll.
 import { HOME } from "@/content/home";
 import { Steps } from "@/components/home/steps";
 
@@ -174,10 +174,6 @@ export function Chapters({ counts }: { counts: readonly { label: string; value: 
           </div>
         </div>
       </div>
-      {/* where a scroll comes to rest: one point per stop (CSS: .steps-snap) */}
-      {Array.from({ length: n }, (_, i) => (
-        <span className="steps-snap" key={i} style={{ "--i": i } as React.CSSProperties} aria-hidden="true" />
-      ))}
       <Steps id="who" />
     </section>
   );

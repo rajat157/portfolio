@@ -947,9 +947,8 @@ async function checkWide(browser) {
 }
 
 // "Who I am" / "What I build" (components/home/chapters.tsx): stepped (above) through six stops. The rail's ticks mark
-// the stops behind as done; the numbers (stop 4) count up from 0 and end at their values; a tick jumps to its stop; a
-// scroll comes to rest on each stop and can't pass over one (a long wheel scroll moves one stop), then moves on out of
-// the section. Under reduced motion all of it is stacked, the numbers showing their values.
+// the stops behind as done; the numbers (stop 4) count up from 0 and end at their values; a tick jumps to its stop.
+// Under reduced motion all of it is stacked, the numbers showing their values.
 async function checkChapters(browser) {
   const out = [];
   const check = (ok, msg) => out.push({ ok: !!ok, msg });
@@ -973,19 +972,6 @@ async function checkChapters(browser) {
   await page.locator("#who .steps-i").nth(1).click();
   await page.waitForTimeout(400);
   check((await opened()).on === 1, "clicking tick 02 jumps to stop 2");
-  await toStop(0);
-  await page.waitForTimeout(500);
-  await page.mouse.move(700, 450);
-  const seen = [];
-  for (let k = 1; k < n; k++) {
-    await page.mouse.wheel(0, 1600);
-    await page.waitForTimeout(1000);
-    seen.push((await opened()).on);
-  }
-  check(seen.join() === "1,2,3,4,5", `each long wheel scroll comes to rest on the next stop, never past one (${seen.join(" → ")})`);
-  await page.mouse.wheel(0, 1600);
-  await page.waitForTimeout(1000);
-  check(await page.evaluate(() => document.getElementById("who").getBoundingClientRect().bottom < innerHeight), "past the last stop, the scroll moves on out of the section");
   await ctx.close();
   const r = await stackedSection(browser, "who", check);
   const still = await r.page.evaluate(() => [...document.querySelectorAll("#who [data-count]")].map((d) => d.textContent));
