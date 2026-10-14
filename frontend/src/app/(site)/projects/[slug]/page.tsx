@@ -214,7 +214,7 @@ export default async function ProjectSheetPage({
                 <GalleryVideo src={getMediaURL(m.url) || m.url} label={m.alternativeText || `Gallery video ${i + 1}`} />
               ) : (
                 // eslint-disable-next-line @next/next/no-img-element -- plain markup only, no Tailwind/next-image sizing props needed (D11)
-                <img src={getMediaURL(m.url) || m.url} alt={m.alternativeText || ""} loading="lazy" />
+                <img src={getMediaURL(m.url) || m.url} alt={m.alternativeText || ""} loading="lazy" width={m.width ?? undefined} height={m.height ?? undefined} />
               )}
               <figcaption>
                 <span className="lab">Fig. {pad2(i + figOffset)}</span> <span data-fact>{m.alternativeText || ""}</span>

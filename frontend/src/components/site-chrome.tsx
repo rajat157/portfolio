@@ -5,8 +5,10 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
+import { useEffect } from "react";
 import { ConstructionToggle } from "@/components/construction";
 import { SoundToggle } from "@/components/sound-toggle";
+import { MotionToggle } from "@/components/motion-toggle";
 
 const NAV = [
   { href: "/projects", label: "Projects" },
@@ -17,6 +19,16 @@ const NAV = [
 
 export function Header() {
   const pathname = usePathname();
+
+  // --top-h is the header's real height (it wraps to two rows on phones): sticky bars and the reading progress
+  // sit just under it on every page, not only where the home stage measures it
+  useEffect(() => {
+    const top = document.getElementById("top");
+    if (!top) return;
+    const ro = new ResizeObserver(() => document.documentElement.style.setProperty("--top-h", Math.round(top.getBoundingClientRect().height) + "px"));
+    ro.observe(top);
+    return () => ro.disconnect();
+  }, []);
 
   return (
     <header className="top" id="top">
@@ -41,6 +53,7 @@ export function Header() {
           })}
         </nav>
         <div className="tools">
+          <MotionToggle />
           <SoundToggle />
           <ConstructionToggle />
         </div>

@@ -95,7 +95,7 @@ The prototype's name-style switcher was there to compare options only. Build Sha
 | # | Decision | Why | Rejected |
 |---|---|---|---|
 | D19 | The home is the experience above. Projects live on `/projects` (the index of works and the sheets, unchanged) | Rajat's direction after three prototype rounds | Drafted's works-index home |
-| D20 | three.js for the home stage only: `three` + `CSS2DRenderer`, loaded by dynamic `import()` inside an effect after first paint. Never loaded under reduced motion or without WebGL | Real perspective and depth for about 35 pieces plus cards is the interaction itself. The static page stands alone | CSS 3D transforms (no shared camera, no lines of sight) |
+| D20 | three.js for the home stage only: `three` + `CSS2DRenderer`, loaded by dynamic `import()` inside an effect at hydration (after first paint; P5 moved it off the `load` event), in parallel. Never loaded under reduced motion (unless the visitor turns the header's Motion toggle on) or without WebGL | Real perspective and depth for about 35 pieces plus cards is the interaction itself. The static page stands alone | CSS 3D transforms (no shared camera, no lines of sight) |
 | D21 | The name's source is an outlined "Rajat." SVG, generated once by `scripts/font-metrics.py` into `src/lib/name-outline.ts`. It is inlined as the SSR/no-JS/LCP mark and rasterized into the shard texture at runtime | Identical letterforms in every engine (the Safari letter-metrics item closes at the source), no font-load race, and LCP is inline SVG. Supersedes D8 and the per-letter construction overlay | Canvas `fillText` with the web font (what the prototype does) |
 | D22 | Home copy lives in `src/content/home.ts` (typed). "Projects shipped" = `cmsProjects()` length. The file doubles as the fallback | Marketing copy that changes rarely. No schema or migration (YAGNI) | A Payload `home` global |
 | D23 | Caveat (500–700) via next/font as `--font-hand`, used only for his handwritten notes | His voice, like pencil over the drawing | — |
@@ -137,7 +137,7 @@ Everything in it is **draft copy for Rajat to confirm**: the offerings (especial
 ### P3b — Home experience (after P3; builder)
 1. Generator emits `name-outline.ts` → verify: `NameMark` renders "Rajat." at the prototype's proportions (cap height and the square's size and position within ±2% of the prototype's canvas measure). A second run gives `git diff --exit-code` = 0.
 2. Server page with all copy and the SVG name → verify (no-JS context): every section listed above is present, and there is no canvas and no three request.
-3. `Stage` lazy-loads three → verify: the reduced-motion context and a WebGL-disabled context (`--disable-webgl`) make no request for the three chunk and show the static page. The default context requests it after the `load` event.
+3. `Stage` lazy-loads three → verify: the reduced-motion context and a WebGL-disabled context (`--disable-webgl`) make no request for the three chunk and show the static page. The default context requests it (at hydration; it is not part of the initial JS).
 4. Hook → verify (harness, desktop):
    - Focus the stage, press Enter → `[data-locked]` within 1.5 s; the HUD reads "Aligned · 0.0°".
    - Touch context: a sideways drag changes the Turn value, and vertical scrolling still scrolls.

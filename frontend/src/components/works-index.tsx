@@ -15,6 +15,7 @@ import { describe, drawLayout, type Drawing } from "@/lib/drawing";
 import { pad2, stackCell } from "@/lib/sheet-format";
 import { DrawingView } from "./drawing-view";
 import { markCameFromIndex } from "./sheet-keys";
+import { reducedMotion } from "@/lib/motion";
 
 export type SheetRow = {
   slug: string;
@@ -122,7 +123,7 @@ export function WorksIndex({ sheets }: { sheets: SheetRow[] }) {
 
   useEffect(() => {
     if (!layout) return;
-    if (matchMedia("(prefers-reduced-motion: reduce)").matches) {
+    if (reducedMotion()) {
       setDrafting(false);
       return;
     }

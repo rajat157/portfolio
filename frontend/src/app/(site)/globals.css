@@ -128,9 +128,9 @@ body {
   display: none !important;
 }
 
-/* --- reduced motion: instant, no transitions/animations --- */
+/* --- reduced motion: instant, no transitions/animations, unless the visitor turned Motion on (lib/motion.ts) --- */
 @media (prefers-reduced-motion: reduce) {
-  *, *::before, *::after {
+  html:not([data-motion="on"]) *, html:not([data-motion="on"]) *::before, html:not([data-motion="on"]) *::after {
     transition-duration: 0s !important;
     animation-duration: 0s !important;
     animation-iteration-count: 1 !important;
@@ -229,7 +229,12 @@ html.intro-run .cons, html:not([data-construction="on"]) .drafting .cons, html:n
 .drafting .a-set { animation: appear var(--t32) var(--ease-attack) var(--at) backwards; }
 @keyframes dash { from { stroke-dashoffset: 1; } to { stroke-dashoffset: 0; } }
 @keyframes appear { from { opacity: 0; } }
-@media (prefers-reduced-motion: reduce) { .drafting * { animation: none !important; } }
+@media (prefers-reduced-motion: reduce) { html:not([data-motion="on"]) .drafting * { animation: none !important; } }
+/* the Motion toggle exists only for visitors whose system asks for reduced motion */
+.motion-toggle { display: none; }
+@media (prefers-reduced-motion: reduce) { .js .motion-toggle { display: inline-flex; } }
+.mot-mark { border-radius: 50%; } /* a circle, so Motion and Sound differ when their labels collapse on phones */
+#motionBtn[aria-pressed="true"] .snd-mark { background: var(--blue); border-color: var(--blue); }
 #guides { position: absolute; left: 0; top: 0; pointer-events: none; z-index: 30; }
 
 /* ---------- works index ---------- */
@@ -284,7 +289,7 @@ html:not(.js) .tbl-wrap { grid-column: 1 / -1; }
 .inspect { position: fixed; inset: 0; z-index: 50; background: var(--lab); overflow-y: auto; overscroll-behavior: contain; }
 .sheet { max-width: 1280px; margin: 0 auto; padding: 0 24px 72px; }
 @media (max-width: 640px) { .sheet { padding: 0 16px 56px; } }
-.sheet-top { position: sticky; top: 0; z-index: 2; display: flex; align-items: center; justify-content: space-between; gap: 12px; min-height: 60px; background: var(--lab); border-bottom: 1px solid var(--ink-c); }
+.sheet-top { position: sticky; top: var(--top-h); z-index: 2; display: flex; align-items: center; justify-content: space-between; gap: 12px; min-height: 60px; background: var(--lab); border-bottom: 1px solid var(--ink-c); }
 .sheet-grid { display: grid; grid-template-columns: repeat(12, 1fr); gap: 24px var(--gap); margin-top: 28px; align-items: start; }
 .sh-head { grid-column: 1 / span 8; }
 .tb { grid-column: 9 / span 4; grid-row: 1 / span 2; border: 1px solid var(--ink-c); background: var(--lab); }
