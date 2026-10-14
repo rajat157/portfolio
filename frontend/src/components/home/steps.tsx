@@ -2,9 +2,10 @@
 
 // A home section told in stops ("Who I am" in who.tsx, "What's slowing you down?" in pick.tsx). The server renders
 // an index of #anchor links (.steps-i) over stacked stops (.steps-stop), which is the whole section with no JS or
-// under reduced motion. With motion on and a tall enough window, the section pins (CSS: .steps.pinned) and scrolling
-// steps through its stops one at a time; the index follows, a click on it jumps there, and numbers in a stop
-// ([data-count]) count up as it opens. A brief button ([data-need]) ticks that need in the contact brief.
+// under reduced motion. With motion on, and when the window can show a stop whole beside its index, the section pins
+// (CSS: .steps.pinned) and scrolling steps through its stops one at a time; the index follows, a click on it jumps
+// there, and numbers in a stop ([data-count]) count up as it opens. A brief button ([data-need]) ticks that need in
+// the contact brief.
 
 import { useEffect } from "react";
 import { reducedMotion } from "@/lib/motion";
@@ -27,7 +28,8 @@ export function Steps({ id }: { id: string }) {
   useEffect(() => {
     const sec = document.getElementById(id);
     const pin = sec?.querySelector<HTMLElement>(".steps-pin");
-    if (!sec || !pin) return;
+    const grid = sec?.querySelector<HTMLElement>(".steps-grid");
+    if (!sec || !pin || !grid) return;
     const chips = Array.from(sec.querySelectorAll<HTMLAnchorElement>(".steps-i"));
     const stops = Array.from(sec.querySelectorAll<HTMLElement>(".steps-stop"));
     const no = sec.querySelector<HTMLElement>(".steps-no");
@@ -72,11 +74,17 @@ export function Steps({ id }: { id: string }) {
       stops[i].querySelector<HTMLElement>("[tabindex='-1']")?.focus({ preventScroll: true });
     }
 
+    // the pinned layout, measured: the index and the tallest stop must fit the pinned box, or the section stays stacked
+    function fits() {
+      sec!.classList.add("pinned");
+      return grid!.offsetHeight <= pin!.clientHeight;
+    }
+
     function mode() {
-      const want = !reducedMotion() && innerHeight >= 560;
+      const want = !reducedMotion() && fits();
+      sec!.classList.toggle("pinned", want);
       if (want === pinned) return;
       pinned = want;
-      sec!.classList.toggle("pinned", want);
       cur = -1;
       if (want) update();
       else {
@@ -109,6 +117,8 @@ export function Steps({ id }: { id: string }) {
     };
 
     mode();
+    // the web fonts can change what fits
+    document.fonts.ready.then(onResize);
     sec.addEventListener("click", onClick);
     addEventListener("scroll", onScroll, { passive: true });
     addEventListener("resize", onResize);

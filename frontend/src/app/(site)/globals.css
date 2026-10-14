@@ -583,6 +583,12 @@ a.btn { display: inline-flex; align-items: center; text-decoration: none; }
   .steps.pinned .steps-grid { gap: 12px; }
   .steps.pinned .steps-stop { gap: 10px; }
 }
+/* a short wide window (a laptop): a tighter index, so it fits beside its stop */
+@media (min-width: 960px) and (max-height: 780px) {
+  .steps.pinned .steps-list { gap: 6px; }
+  .steps.pinned .steps-i { min-height: 40px; }
+}
+@media (min-width: 960px) and (max-height: 640px) { .steps.pinned .steps-note { display: none; } }
 
 /* ======================= who I am (components/home/who.tsx; canvas board "Sections A") =======================
    how I work, one way per stop (its icon, a big title, the line, my note), then a stop in numbers that count up */

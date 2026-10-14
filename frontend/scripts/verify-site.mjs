@@ -881,6 +881,40 @@ async function stackedSection(browser, id, check) {
   return { ctx, page };
 }
 
+// A stepped section pins only when its index and tallest stop fit the pinned box; common windows (a laptop, a tall
+// phone with its browser bars shown) keep the stepped version, and a tiny phone may fall back to stacked.
+async function checkStepsFit(browser) {
+  const out = [];
+  const check = (ok, msg) => out.push({ ok: !!ok, msg });
+  for (const [w, h, mustPin] of [
+    [1440, 900, true],
+    [1366, 657, true],
+    [1280, 600, false],
+    [390, 664, true],
+    [375, 667, true],
+    [320, 568, false],
+  ]) {
+    const mobile = w < 700;
+    const ctx = await browser.newContext({ viewport: { width: w, height: h }, deviceScaleFactor: mobile ? 2 : 1, isMobile: mobile, hasTouch: mobile });
+    const page = await ctx.newPage();
+    await page.goto(BASE_URL + "/", { waitUntil: "load" });
+    await page.evaluate(() => document.fonts.ready);
+    await page.waitForTimeout(300);
+    const secs = await page.evaluate(() =>
+      ["who", "build"].map((id) => {
+        const sec = document.getElementById(id);
+        return { id, pinned: sec.classList.contains("pinned"), grid: sec.querySelector(".steps-grid").offsetHeight, pin: sec.querySelector(".steps-pin").clientHeight };
+      }),
+    );
+    for (const s of secs) {
+      check(!s.pinned || s.grid <= s.pin, `${w}x${h} #${s.id}: pinned only when it fits (pinned ${s.pinned}, ${s.grid} in ${s.pin}px)`);
+      if (mustPin) check(s.pinned, `${w}x${h} #${s.id} pins`);
+    }
+    await ctx.close();
+  }
+  return out;
+}
+
 // "What's slowing you down?": stepped (above); clicking the index jumps to a stop; its brief button ticks that need in
 // the brief (never submitted).
 async function checkPick(browser) {
@@ -1295,6 +1329,7 @@ async function main() {
       ["stage scroll story", checkStageScrollStep],
       ["home overflow 390", checkHomeOverflow390],
       ["home splash", checkSplash],
+      ["home steps fit", checkStepsFit],
       ["home who", checkWho],
       ["home picker", checkPick],
       ["contact armed+sent", checkContactArmedAndSent],
