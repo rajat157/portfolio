@@ -117,7 +117,7 @@ The prototype's name-style switcher was there to compare options only. Build Sha
 - facts
 - notes
 
-Everything in it is **draft copy for Rajat to confirm**: the offerings (especially "A second look" and "AI where it helps"), "Largest team led: 6 people", the six problems and their fixes, and the notes.
+Everything in it was **draft copy for Rajat to confirm**: the offerings (especially "A second look" and "AI where it helps"), "Largest team led: 6 people", the six problems and their fixes, and the notes. **He confirmed it on 2026-10-14.**
 
 **Files**
 - **New:**
@@ -194,7 +194,7 @@ Success: `node scripts/verify-site.mjs --routes /` → `VERIFY OK` in every cont
    plain text list of facts. The game-pad and music-note icons go.
 7. Nav labels stay as they are: Projects / Blog / About / Contact.
 8. The home loads with your name whole, then it breaks into shards for the visitor to line up. three.js loads only on the
-   home, after first paint, and never under reduced motion. The home's copy is draft for you to confirm (§0, Data).
+   home, after first paint, and never under reduced motion. The home's copy was draft for you to confirm (§0, Data); confirmed 2026-10-14.
 9. Grain: the blend mode is chosen by measurement (P5). Expected result: normal blend, which looks the same at 4%.
 10. Verification adds `playwright-core` (dev dependency only) and downloads Playwright's WebKit (~70 MB, into
     `%LOCALAPPDATA%\ms-playwright`) for the Safari-engine checks.

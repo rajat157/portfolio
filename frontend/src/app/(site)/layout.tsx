@@ -1,35 +1,8 @@
 import type { Metadata } from "next";
-import { Instrument_Sans, Martian_Mono, Caveat, Doto } from "next/font/google";
 import "./globals.css";
 import { Header, Footer } from "@/components/site-chrome";
 import { Guides, CursorReadout } from "@/components/construction";
-
-const sans = Instrument_Sans({
-  subsets: ["latin"],
-  axes: ["wdth"],
-  variable: "--font-sans",
-  display: "swap",
-});
-
-const mono = Martian_Mono({
-  subsets: ["latin"],
-  variable: "--font-mono",
-  display: "swap",
-});
-
-const hand = Caveat({
-  subsets: ["latin"],
-  weight: ["500", "600", "700"],
-  variable: "--font-hand",
-  display: "swap",
-});
-
-const count = Doto({
-  subsets: ["latin"],
-  weight: ["700", "800", "900"],
-  variable: "--font-count",
-  display: "swap",
-});
+import { fontVariables } from "@/lib/fonts";
 
 const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || "http://localhost:3000";
 
@@ -135,7 +108,7 @@ export default function RootLayout({
   return (
     <html
       lang="en"
-      className={`${sans.variable} ${mono.variable} ${hand.variable} ${count.variable}`}
+      className={fontVariables}
       suppressHydrationWarning
     >
       <head>

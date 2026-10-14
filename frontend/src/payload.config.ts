@@ -20,7 +20,13 @@ const dirname = path.dirname(filename);
 
 // Local dev uses DATABASE_URI (.env.local); the Vercel-Neon marketplace
 // integration injects DATABASE_URL (pooled) and never DATABASE_URI.
-const databaseURI = process.env.DATABASE_URI || process.env.DATABASE_URL || "";
+// Neon's URLs ask for sslmode=require, which pg already treats as verify-full
+// and warns about (pg v9 will give it libpq's weaker meaning); asking for
+// verify-full outright keeps today's certificate check and ends the warning.
+const databaseURI = (process.env.DATABASE_URI || process.env.DATABASE_URL || "").replace(
+  /([?&]sslmode=)(?:prefer|require|verify-ca)(?=&|$)/,
+  "$1verify-full"
+);
 
 // Misconfiguration must fail the build loudly — every page-level fetch is
 // wrapped in try/catch, so a silently empty connection string would otherwise

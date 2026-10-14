@@ -358,5 +358,5 @@ and was burning the Vercel Hobby compute quota via hung ISR revalidations.
   seed scripts + live-page snapshots and imported. Pages rewired to a local-API
   data layer (lib/cms). Deployed and verified 2026-06-13.
 - Cleanup: backend/, docker-compose/nginx stack, render.yaml, lib/strapi removed.
-- Outstanding: ~July 2026 export of the old Strapi Neon DB (quota-locked) to
-  reconcile any unmigrated blog posts/drafts - scripts/export-strapi-neon.mjs.
+- Dropped (2026-10-14, Rajat): the planned export of the old Strapi Neon DB;
+  scripts/export-strapi-neon.mjs is removed.
