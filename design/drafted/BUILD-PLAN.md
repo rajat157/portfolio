@@ -151,7 +151,9 @@ Everything in it is **draft copy for Rajat to confirm**: the offerings (especial
      React 19 + the Next 16 runtime alone ship on every route and put every page above that, so the gate measures what the home
      adds over a page with only the shared layout's client code.)
    - The LCP element is the `NameMark` SVG.
-   - Frame p95 while scrubbing the story ≤ 25 ms (reuse `measure-grain.mjs`'s frame recorder).
+   - Scrubbing the story holds 60 fps at 1x CPU on the real GPU: frame p50 ≤ 17.5 ms, p95 ≤ 25 ms. (Changed in P5 with Rajat's OK
+     from p95 ≤ 25 ms at 4x CPU, which even `/projects` without three misses on the test laptop; 4x is now reported only, and
+     real phones are checked on the P6c preview.)
 
 Success: `node scripts/verify-site.mjs --routes /` → `VERIFY OK` in every context of §6.
 

@@ -830,27 +830,39 @@ async function checkHomePerf(browser) {
   await page
     .waitForFunction(() => document.getElementById("exp")?.classList.contains("gl-ready"), null, { timeout: 8000 })
     .catch(() => {});
-  const deltas = await page.evaluate(
-    () =>
-      new Promise((resolve) => {
-        const ds = [];
-        let last = performance.now();
-        let n = 0;
-        function step() {
-          const now = performance.now();
-          if (n > 0) ds.push(now - last);
-          last = now;
-          window.scrollBy(0, 8);
-          n++;
-          if (n < 180) requestAnimationFrame(step);
-          else resolve(ds);
-        }
-        requestAnimationFrame(step);
-      })
+  const scrub = (dy) =>
+    page.evaluate(
+      (d) =>
+        new Promise((resolve) => {
+          const ds = [];
+          let last = performance.now();
+          let n = 0;
+          function step() {
+            const now = performance.now();
+            if (n > 0) ds.push(now - last);
+            last = now;
+            window.scrollBy(0, d);
+            n++;
+            if (n < 180) requestAnimationFrame(step);
+            else resolve(ds.sort((a, b) => a - b));
+          }
+          requestAnimationFrame(step);
+        }),
+      dy
+    );
+  const pct = (s, p) => s[Math.floor(s.length * p)] ?? 0;
+
+  // The gate is 60fps at real speed (Rajat, 2026-10-14): median on the 16.7ms vsync, p95 within 1.5 frames.
+  // The 4x-CPU number is reported only: on this test laptop even /projects (no three) misses 25ms at 4x.
+  await client.send("Emulation.setCPUThrottlingRate", { rate: 1 });
+  const real = await scrub(8);
+  check(
+    pct(real, 0.5) <= 17.5 && pct(real, 0.95) <= 25,
+    `scrubbing holds 60fps at 1x CPU: frame p50 <= 17.5ms, p95 <= 25ms (got p50 ${pct(real, 0.5).toFixed(1)}, p95 ${pct(real, 0.95).toFixed(1)}ms)`
   );
-  const sorted = deltas.slice().sort((a, b) => a - b);
-  const p95 = sorted.length ? sorted[Math.floor(sorted.length * 0.95)] : 0;
-  check(p95 <= 25, `frame p95 while scrubbing at 4x CPU <= 25ms (got ${p95.toFixed(1)}ms, n=${sorted.length})`);
+  await client.send("Emulation.setCPUThrottlingRate", { rate: 4 });
+  const slow = await scrub(-8);
+  console.log(`[home perf] info: 4x CPU frame p50 ${pct(slow, 0.5).toFixed(1)}, p95 ${pct(slow, 0.95).toFixed(1)}ms`);
 
   await client.send("Emulation.setCPUThrottlingRate", { rate: 1 });
   await ctx.close();
