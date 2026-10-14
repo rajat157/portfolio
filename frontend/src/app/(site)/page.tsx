@@ -9,6 +9,7 @@ import Link from "next/link";
 import { ContactForm } from "@/components/contact-form";
 import { Chapters } from "@/components/home/chapters";
 import { NameMark } from "@/components/home/name-mark";
+import { SmoothScroll } from "@/components/home/smooth-scroll";
 import { Splash } from "@/components/home/splash";
 import { Stage } from "@/components/home/stage";
 import { HOME, mapProjectsDesc } from "@/content/home";
@@ -78,6 +79,7 @@ export default async function HomePage() {
 
   return (
     <>
+      <SmoothScroll />
       <div className="exp" id="exp" data-step="0">
         <Splash />
         <div
