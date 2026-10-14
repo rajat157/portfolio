@@ -11,6 +11,7 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { drawLayout, type Drawing } from "@/lib/drawing";
 import { DrawingView } from "./drawing-view";
+import { reducedMotion } from "@/lib/motion";
 
 const SSR_WIDTH = 848;
 
@@ -49,7 +50,7 @@ export function SheetFigure({
 
   const [drafting, setDrafting] = useState(false);
   useEffect(() => {
-    if (matchMedia("(prefers-reduced-motion: reduce)").matches) return;
+    if (reducedMotion()) return;
     const raf = requestAnimationFrame(() => setDrafting(true));
     const t = setTimeout(() => setDrafting(false), end + 34);
     return () => {

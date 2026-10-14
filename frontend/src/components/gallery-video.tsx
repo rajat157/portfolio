@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
+import { reducedMotion } from "@/lib/motion";
 
 interface GalleryVideoProps {
   src: string;
@@ -24,7 +25,7 @@ export function GalleryVideo({ src, label }: GalleryVideoProps) {
   useEffect(() => {
     const video = ref.current;
     if (!video) return;
-    if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) return;
+    if (reducedMotion()) return;
 
     if (isInView) {
       if (!userPaused.current) {

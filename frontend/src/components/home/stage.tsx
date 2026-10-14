@@ -11,8 +11,8 @@
  *
  * All of it is enhancement: without WebGL or under reduced motion the page
  * keeps the server-rendered NameMark and process copy (page.tsx). `three`
- * loads by dynamic import() in an effect, after the window `load` event, and
- * never loads under reduced motion or without WebGL (D20).
+ * loads by dynamic import() in an effect at hydration (not part of the
+ * initial JS), and never loads under reduced motion or without WebGL (D20).
  *
  * The name's own texture is rasterised from src/lib/name-outline.ts (a
  * Path2D), not canvas fillText (D21) — identical letterforms, no font-load
@@ -27,6 +27,7 @@
 import { useEffect } from "react";
 import * as NameOutline from "@/lib/name-outline";
 import { tick, thunk } from "@/lib/sound";
+import { reducedMotion } from "@/lib/motion";
 
 function hasWebGL(): boolean {
   try {
@@ -50,13 +51,13 @@ const PAIRS: [number, number][] = [
 
 export function Stage({ problems }: { problems: readonly { problem: string; fix: string }[] }) {
   useEffect(() => {
-    if (matchMedia("(prefers-reduced-motion: reduce)").matches) return;
+    if (reducedMotion()) return;
     if (!hasWebGL()) return;
 
     let disposed = false;
     let teardown: (() => void) | undefined;
 
-    function onLoad() {
+    function start() {
       boot()
         .then((c) => {
           if (disposed) c?.();
@@ -106,8 +107,8 @@ export function Stage({ problems }: { problems: readonly { problem: string; fix:
       const lockx = lockxMaybe;
       const header = headerMaybe;
 
-      const THREE = await import("three");
-      const { CSS2DRenderer, CSS2DObject } = await import("three/addons/renderers/CSS2DRenderer.js");
+      // in parallel: one round trip, not two
+      const [THREE, { CSS2DRenderer, CSS2DObject }] = await Promise.all([import("three"), import("three/addons/renderers/CSS2DRenderer.js")]);
       if (disposed) return undefined;
 
       // Created here, not by page.tsx: no-JS, reduced-motion and no-WebGL
@@ -817,14 +818,15 @@ export function Stage({ problems }: { problems: readonly { problem: string; fix:
       window.addEventListener("resize", onResize);
 
       buildName();
+      // Compile every program off the main thread (parallel shader compile) while the static name is still up,
+      // then upload the card faces, so neither the hand-off nor the first scroll into the story stalls on them.
+      // Everything is still visible here, so compileAsync covers every material.
+      await renderer.compileAsync(scene, camera);
+      faceTex.forEach((t) => renderer.initTexture(t));
       exp.classList.add("gl-ready");
       alignBtn.hidden = false;
       hud.hidden = false;
       layout();
-      // compile every program and upload the card faces now (everything is still visible), so the first
-      // scroll into the story doesn't stall on them mid-scrub
-      renderer.compile(scene, camera);
-      faceTex.forEach((t) => renderer.initTexture(t));
       raf = requestAnimationFrame(frameLoop);
 
       return () => {
@@ -848,12 +850,12 @@ export function Stage({ problems }: { problems: readonly { problem: string; fix:
       };
     }
 
-    if (document.readyState === "complete") onLoad();
-    else window.addEventListener("load", onLoad, { once: true });
+    // At hydration, not on `load`: the server-rendered name is already painted (it is the LCP), and waiting for
+    // every font and image kept the hero static for a visible beat on a cold load.
+    start();
 
     return () => {
       disposed = true;
-      window.removeEventListener("load", onLoad);
       teardown?.();
     };
   }, [problems]);

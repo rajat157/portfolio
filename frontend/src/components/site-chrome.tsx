@@ -7,6 +7,7 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { ConstructionToggle } from "@/components/construction";
 import { SoundToggle } from "@/components/sound-toggle";
+import { MotionToggle } from "@/components/motion-toggle";
 
 const NAV = [
   { href: "/projects", label: "Projects" },
@@ -41,6 +42,7 @@ export function Header() {
           })}
         </nav>
         <div className="tools">
+          <MotionToggle />
           <SoundToggle />
           <ConstructionToggle />
         </div>

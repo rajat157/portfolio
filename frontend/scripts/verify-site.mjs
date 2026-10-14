@@ -538,25 +538,24 @@ async function fillBrief(page, data) {
   await page.fill("#cform textarea[name=message]", data.message);
 }
 
-// Chunk requests fired strictly after `load`, filtered to ones whose body
-// contains a string unique to the three.js bundle -- robust to hashed chunk
-// filenames and to Next's own unrelated <Link> route-prefetch chunks.
-async function threeChunksAfterLoad(page, routePath) {
+// Chunk requests whose body is three.js itself: its WebGL extension list
+// ("WEBGL_compressed_texture_s3tc") is in the library, not in the stage code
+// that calls it -- robust to hashed chunk filenames and to Next's own unrelated
+// <Link> route-prefetch chunks.
+async function threeChunks(page, routePath) {
   const matches = [];
-  let loaded = false;
   const onReq = async (req) => {
-    if (!loaded || !/_next\/static\/chunks\/.+\.js(\?|$)/.test(req.url())) return;
+    if (!/_next\/static\/chunks\/.+\.js(\?|$)/.test(req.url())) return;
     try {
       const res = await req.response();
       const body = res ? await res.text() : "";
-      if (body.includes("WebGLRenderer")) matches.push(req.url());
+      if (body.includes("WEBGL_compressed_texture_s3tc")) matches.push(req.url());
     } catch {
       // the response can race the test's own teardown -- not a finding either way
     }
   };
   page.on("request", onReq);
   await page.goto(BASE_URL + routePath, { waitUntil: "load" });
-  loaded = true;
   await page.waitForTimeout(1500);
   page.off("request", onReq);
   return matches;
@@ -582,7 +581,7 @@ async function withNoWebGL(browser, fn) {
 
 // P3b step 2/3: no-JS shows every section with no canvas and no three
 // request; reduced-motion and no-WebGL make no three request either; the
-// default context does, after `load`.
+// default context does (at hydration, not part of the initial JS).
 async function checkStageLazyLoad(browser) {
   const out = [];
   const check = (ok, msg) => out.push({ ok: !!ok, msg });
@@ -601,7 +600,7 @@ async function checkStageLazyLoad(browser) {
     noJsPage.on("response", async (res) => {
       if (!/_next\/static\/chunks\/.+\.js(\?|$)/.test(res.url())) return;
       try {
-        if ((await res.text()).includes("WebGLRenderer")) chunks.push(res.url());
+        if ((await res.text()).includes("WEBGL_compressed_texture_s3tc")) chunks.push(res.url());
       } catch {
         /* ignore */
       }
@@ -615,17 +614,35 @@ async function checkStageLazyLoad(browser) {
 
   const defaultCtx = await browser.newContext({ viewport: { width: 1440, height: 900 } });
   const defaultPage = await defaultCtx.newPage();
-  const defaultChunks = await threeChunksAfterLoad(defaultPage, "/");
-  check(defaultChunks.length > 0, `the default context requests the three chunk after load (${defaultChunks.length})`);
+  const defaultChunks = await threeChunks(defaultPage, "/");
+  check(defaultChunks.length > 0, `the default context requests the three chunk (${defaultChunks.length})`);
   await defaultCtx.close();
 
   const reducedCtx = await browser.newContext({ viewport: { width: 1440, height: 900 }, reducedMotion: "reduce" });
   const reducedPage = await reducedCtx.newPage();
-  const reducedChunks = await threeChunksAfterLoad(reducedPage, "/");
+  const reducedChunks = await threeChunks(reducedPage, "/");
   check(reducedChunks.length === 0, `reduced-motion requests no three chunk (${reducedChunks.length})`);
   await reducedCtx.close();
 
-  const noWebglChunks = await withNoWebGL(browser, (page) => threeChunksAfterLoad(page, "/"));
+  // the Motion opt-in: shown only when the system asks for reduced motion, and once on, the stage loads anyway
+  const optCtx = await browser.newContext({ viewport: { width: 1440, height: 900 }, reducedMotion: "reduce" });
+  const optPage = await optCtx.newPage();
+  await optPage.goto(BASE_URL + "/", { waitUntil: "load" });
+  check(await optPage.locator("#motionBtn").isVisible(), "reduced-motion shows the Motion toggle");
+  await optPage.click("#motionBtn");
+  await optPage.waitForLoadState("load");
+  const optReady = await optPage
+    .waitForFunction(() => document.getElementById("exp")?.classList.contains("gl-ready"), null, { timeout: 10000 })
+    .then(() => true, () => false);
+  check(optReady, "turning Motion on under reduced motion boots the stage (and survives the reload)");
+  await optCtx.close();
+  const plainCtx = await browser.newContext({ viewport: { width: 1440, height: 900 } });
+  const plainPage = await plainCtx.newPage();
+  await plainPage.goto(BASE_URL + "/", { waitUntil: "load" });
+  check(!(await plainPage.locator("#motionBtn").isVisible()), "without reduced motion the Motion toggle stays hidden");
+  await plainCtx.close();
+
+  const noWebglChunks = await withNoWebGL(browser, (page) => threeChunks(page, "/"));
   check(noWebglChunks.length === 0, `--disable-webgl requests no three chunk (${noWebglChunks.length})`);
 
   return out;
@@ -755,14 +772,15 @@ async function checkHomeOverflow390(browser) {
   return out;
 }
 
-// JS requested before the load event, as transferred (gzip). The stage imports three from its load handler, so
-// the three chunk is left out by timing (sniffing for "WebGLRenderer" also matched the home's own route chunk).
+// The page's initial JS as transferred (gzip): the scripts named in the server HTML. The stage's dynamic import of
+// three is not among them (sniffing for "WebGLRenderer" also matched the home's own route chunk).
 async function jsBytesAtLoad(page) {
-  return page.evaluate(() => {
-    const load = performance.getEntriesByType("navigation")[0].loadEventStart;
+  return page.evaluate(async () => {
+    const html = await (await fetch(location.href)).text();
+    const initial = new Set([...html.matchAll(/<script[^>]+src="([^"]+)"/g)].map((m) => new URL(m[1].replace(/&amp;/g, "&"), location.href).href));
     return performance
       .getEntriesByType("resource")
-      .filter((e) => /\.js(\?|$)/.test(e.name) && e.startTime < load)
+      .filter((e) => initial.has(e.name))
       .reduce((n, e) => n + (e.transferSize || 0), 0);
   });
 }
@@ -925,10 +943,11 @@ async function checkContactFieldError(browser) {
   await page.goto(BASE_URL + "/#contact", { waitUntil: "load" });
   await fillBrief(page, CHIP_FIXTURE);
   await page.click(".brief-send");
-  await page.waitForTimeout(500);
-
-  const email = page.locator("#cform input[name=email]");
-  check((await email.getAttribute("aria-invalid")) === "true", "a 400 with details marks the field aria-invalid");
+  // the form waits out its send beat (T(1/4) + 60 = 560ms) before it shows a server error
+  const invalid = await page
+    .waitForFunction(() => document.querySelector("#cform input[name=email]")?.getAttribute("aria-invalid") === "true", null, { timeout: 3000 })
+    .then(() => true, () => false);
+  check(invalid, "a 400 with details marks the field aria-invalid");
   const errText = await page
     .locator('#cform .brief-row[data-f="email"] .err')
     .textContent()

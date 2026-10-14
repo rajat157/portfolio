@@ -6,10 +6,7 @@
 import { useEffect, useRef } from "react";
 import type { ReactNode } from "react";
 import { SPEED } from "@/lib/tempo";
-
-function reduced(): boolean {
-  return matchMedia("(prefers-reduced-motion: reduce)").matches;
-}
+import { reducedMotion as reduced } from "@/lib/motion";
 
 interface PenBlocksProps {
   children: ReactNode;

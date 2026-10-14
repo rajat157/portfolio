@@ -35,7 +35,9 @@ const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || "http://localhost:3000";
 
 // Pre-paint state, before React hydrates (D13): the root layout never
 // re-renders, so this is the only place `html.js` is ever set.
-const BOOT = "(function(){document.documentElement.classList.add('js')})()";
+// adds .js, and re-applies the visitor's Motion choice (lib/motion.ts) before paint
+const BOOT =
+  "(function(){var d=document.documentElement;d.classList.add('js');try{if(localStorage.getItem('motion')==='on')d.dataset.motion='on'}catch(e){}})()";
 
 export const metadata: Metadata = {
   title: {

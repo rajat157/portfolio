@@ -19,6 +19,7 @@
 import { useId, useRef, useState } from "react";
 import { T } from "@/lib/tempo";
 import { tick, thunk } from "@/lib/sound";
+import { reducedMotion } from "@/lib/motion";
 
 // subjects/replyHours come from the caller (src/content/home.ts) as props,
 // not a direct import of the whole content module -- this is a client
@@ -33,9 +34,6 @@ type RowKey = "name" | "email" | "subject" | "message";
 type FieldErrors = Partial<Record<RowKey, string>>;
 type Ok = Record<"name" | "email" | "need" | "message", boolean>;
 
-function reducedMotion(): boolean {
-  return typeof window !== "undefined" && matchMedia("(prefers-reduced-motion: reduce)").matches;
-}
 
 type Piece = { c: HTMLElement; dx: number; dy: number; k: number; d: number };
 
