@@ -210,19 +210,6 @@ export async function cmsBlogPostBySlug(
   return res.docs[0] ? toBlogPost(res.docs[0]) : null;
 }
 
-export async function cmsCategories(
-  kind: "project" | "blog"
-): Promise<Category[]> {
-  const payload = await cms();
-  const res = await payload.find({
-    collection: "categories",
-    where: { type: { in: [kind, "both"] } },
-    sort: "name",
-    limit: 100,
-  });
-  return res.docs.map(toCategory).filter(Boolean) as Category[];
-}
-
 export async function cmsAbout(): Promise<About | null> {
   const payload = await cms();
   const doc: any = await payload.findGlobal({ slug: "about" });

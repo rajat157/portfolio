@@ -49,6 +49,8 @@ export const metadata: Metadata = {
   authors: [{ name: "Rajat" }],
   creator: "Rajat",
   metadataBase: new URL(siteUrl),
+  // each page's own URL on the site host; "./" resolves against the route
+  alternates: { canonical: "./" },
   icons: {
     icon: [{ url: "/icon.svg", type: "image/svg+xml" }],
     apple: "/apple-icon",

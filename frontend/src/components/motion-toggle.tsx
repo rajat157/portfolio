@@ -14,20 +14,22 @@ export function MotionToggle() {
   const on = useSyncExternalStore(noop, () => document.documentElement.dataset.motion === "on", () => false);
 
   function toggle() {
+    if (on) delete document.documentElement.dataset.motion;
+    else document.documentElement.dataset.motion = "on";
     try {
       if (on) localStorage.removeItem(MOTION_KEY);
       else localStorage.setItem(MOTION_KEY, "on");
     } catch {
-      // storage blocked: the choice lasts for this page only
+      // storage blocked: a reload would forget the choice, so keep this page (CSS motion follows at once;
+      // the stage, which reads the setting on mount, stays as it is)
+      return;
     }
-    if (on) delete document.documentElement.dataset.motion;
-    else document.documentElement.dataset.motion = "on";
     location.reload();
   }
 
   return (
     <button id="motionBtn" className="toggle needs-js motion-toggle" type="button" aria-pressed={on} onClick={toggle}>
-      <span className="snd-mark" aria-hidden="true" />
+      <span className="snd-mark mot-mark" aria-hidden="true" />
       <span className="snd-label">Motion</span>
     </button>
   );

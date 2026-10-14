@@ -49,10 +49,6 @@ export function thunk(): void {
   click(0.18);
 }
 
-export function isSoundOn(): boolean {
-  return enabled;
-}
-
 export function setSoundOn(on: boolean): boolean {
   enabled = on;
   if (enabled && !ac) {

@@ -31,8 +31,9 @@ import { reducedMotion } from "@/lib/motion";
 
 function hasWebGL(): boolean {
   try {
-    const c = document.createElement("canvas");
-    return !!(c.getContext("webgl") || c.getContext("experimental-webgl"));
+    const gl = (document.createElement("canvas").getContext("webgl") || document.createElement("canvas").getContext("experimental-webgl")) as WebGLRenderingContext | null;
+    gl?.getExtension("WEBGL_lose_context")?.loseContext(); // a probe only: don't hold a context slot
+    return !!gl;
   } catch {
     return false;
   }
@@ -821,7 +822,8 @@ export function Stage({ problems }: { problems: readonly { problem: string; fix:
       // Compile every program off the main thread (parallel shader compile) while the static name is still up,
       // then upload the card faces, so neither the hand-off nor the first scroll into the story stalls on them.
       // Everything is still visible here, so compileAsync covers every material.
-      await renderer.compileAsync(scene, camera);
+      // capped: a context lost mid-compile never reports ready, and the teardown below only exists once boot returns
+      await Promise.race([renderer.compileAsync(scene, camera), new Promise((r) => setTimeout(r, 3000))]);
       faceTex.forEach((t) => renderer.initTexture(t));
       exp.classList.add("gl-ready");
       alignBtn.hidden = false;
@@ -846,6 +848,7 @@ export function Stage({ problems }: { problems: readonly { problem: string; fix:
         mo.disconnect();
         labelRenderer.domElement.remove();
         renderer.dispose();
+        renderer.forceContextLoss(); // browsers cap live WebGL contexts; free this one on navigation
         canvas.remove();
       };
     }
