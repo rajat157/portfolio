@@ -1,15 +1,16 @@
 // The home experience (BUILD-PLAN.md §0, "P3b — Home experience"): the
-// shard-cut name stage, the scroll story, "Who I am" / "What I build" /
-// "Where to next" and the close contact brief. Server-rendered (this file)
-// plus two client islands: Stage (three.js, lazy) and ContactForm
-// (progressive enhancement; posts natively without JS). Everything here is
-// readable with no JS, no WebGL and reduced motion.
+// shard-cut name stage, the scroll story, "Who I am" / "What's slowing you
+// down?" (Pick) / "Where to next" and the close contact brief. Server-rendered
+// (this file) plus client islands: Stage (three.js, lazy), PickScroll and
+// ContactForm (progressive enhancement; posts natively without JS).
+// Everything here is readable with no JS, no WebGL and reduced motion.
 import type { Metadata } from "next";
 import Link from "next/link";
 import { ContactForm } from "@/components/contact-form";
 import { NameMark } from "@/components/home/name-mark";
+import { Pick } from "@/components/home/pick";
+import { Splash } from "@/components/home/splash";
 import { Stage } from "@/components/home/stage";
-import { PenBlocks } from "@/components/reveal";
 import { HOME, mapProjectsDesc } from "@/content/home";
 import { cmsProjects } from "@/lib/cms";
 import { FALLBACK_EARLIER, FALLBACK_SHEETS } from "@/lib/cms/fallback";
@@ -70,6 +71,7 @@ export default async function HomePage() {
   return (
     <>
       <div className="exp" id="exp" data-step="0">
+        <Splash />
         <div
           className="exp-pin kit-registration"
           tabIndex={0}
@@ -153,7 +155,7 @@ export default async function HomePage() {
           <p className="sr-only" id="hookLive" aria-live="polite" />
         </div>
       </div>
-      <Stage problems={HOME.problems} leads={LEADS} />
+      <Stage problems={HOME.problems.map(({ problem, fix }) => ({ problem, fix }))} leads={LEADS} />
 
       <section className="sect" id="who" aria-labelledby="who-h">
         <div className="container gv">
@@ -188,35 +190,7 @@ export default async function HomePage() {
         </div>
       </section>
 
-      <section className="sect" id="build" aria-labelledby="build-h">
-        <div className="container gv">
-          <div className="sec-head">
-            <h2 id="build-h" className="t-h2" data-cons="text">
-              What I build
-            </h2>
-            <p className="lab">{HOME.build.sub}</p>
-          </div>
-          <div className="blocks offer">
-            {HOME.build.offerings.map((o, i) => (
-              <PenBlocks key={o.title}>
-                <h3 className="blk-h">
-                  <span className="num">{String(i + 1).padStart(2, "0")}</span> · {o.title}
-                </h3>
-                <p className="ln">{o.line}</p>
-              </PenBlocks>
-            ))}
-          </div>
-          <div className="cta-row">
-            <a className="btn btn-ink" href="#contact">
-              Tell me about your business
-            </a>
-            <Link className="btn" href="/projects">
-              See the projects
-            </Link>
-            <p className="hand">{HOME.build.ctaNote}</p>
-          </div>
-        </div>
-      </section>
+      <Pick />
 
       <section className="sect" id="map" aria-labelledby="map-h">
         <div className="container gv">

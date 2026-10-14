@@ -161,6 +161,8 @@ async function checkRoute(page, routePath, contextName) {
 async function checkConstruction(page, touch) {
   const out = [];
   const check = (ok, msg) => out.push({ ok: !!ok, msg });
+  // on the home, a first visit's splash covers the page for a moment: hover and tap only once it has lifted
+  await page.waitForFunction(() => !document.documentElement.hasAttribute("data-boot"), null, { timeout: 12000 }).catch(() => {});
 
   const btn = page.locator("#consBtn");
   const bb = await btn.boundingBox();
@@ -660,7 +662,7 @@ async function checkStageLock(browser) {
   });
   await page.goto(BASE_URL + "/", { waitUntil: "load" });
   await page
-    .waitForFunction(() => document.getElementById("exp")?.classList.contains("gl-ready"), null, { timeout: 8000 })
+    .waitForFunction(() => document.getElementById("exp")?.classList.contains("gl-ready") && !document.documentElement.hasAttribute("data-boot"), null, { timeout: 10000 })
     .catch(() => {});
   await page.locator(".exp-pin").focus();
   await page.keyboard.press("Enter");
@@ -683,7 +685,7 @@ async function checkStageTouch(browser) {
   const page = await ctx.newPage();
   await page.goto(BASE_URL + "/", { waitUntil: "load" });
   await page
-    .waitForFunction(() => document.getElementById("exp")?.classList.contains("gl-ready"), null, { timeout: 8000 })
+    .waitForFunction(() => document.getElementById("exp")?.classList.contains("gl-ready") && !document.documentElement.hasAttribute("data-boot"), null, { timeout: 10000 })
     .catch(() => {});
   const before = await page.evaluate(() => document.getElementById("hudRow1")?.textContent ?? "");
   const box = await page.locator(".exp-canvas").boundingBox();
@@ -721,7 +723,7 @@ async function checkStageScrollStep(browser) {
   const page = await ctx.newPage();
   await page.goto(BASE_URL + "/", { waitUntil: "load" });
   await page
-    .waitForFunction(() => document.getElementById("exp")?.classList.contains("gl-ready"), null, { timeout: 8000 })
+    .waitForFunction(() => document.getElementById("exp")?.classList.contains("gl-ready") && !document.documentElement.hasAttribute("data-boot"), null, { timeout: 10000 })
     .catch(() => {});
 
   for (const [frac, want] of [[0.2, "1"], [0.5, "2"], [0.85, "3"]]) {
@@ -764,7 +766,7 @@ async function checkHomeOverflow390(browser) {
   // once the stage is up the hero line is its callout (.d3-callout p), and .lead is visually hidden (1px wide, kept
   // for screen readers): checked as the callout, not as an overflowing 1px box
   await page
-    .waitForFunction(() => document.getElementById("exp")?.classList.contains("gl-ready"), null, { timeout: 8000 })
+    .waitForFunction(() => document.getElementById("exp")?.classList.contains("gl-ready") && !document.documentElement.hasAttribute("data-boot"), null, { timeout: 10000 })
     .catch(() => {});
   const overflowing = await page.evaluate(() => {
     const sels = ".cap-t,.lead,.d3-callout p,.node-t,.blk-h,.way-t,.end-t";
@@ -774,6 +776,113 @@ async function checkHomeOverflow390(browser) {
   });
   check(overflowing.length === 0, `no label overflows at 390px${overflowing.length ? "; " + overflowing.join(" | ") : ""}`);
   await ctx.close();
+  return out;
+}
+
+// The home opens on its loading sheet (html[data-boot]: "splash" on a first visit, "" later) until the stage is up,
+// never showing the name; the stage then starts scattered. Not under reduced motion, nor when a #fragment is asked
+// for (the page goes straight there).
+async function checkSplash(browser) {
+  const out = [];
+  const check = (ok, msg) => out.push({ ok: !!ok, msg });
+  const ctx = await browser.newContext({ viewport: { width: 1440, height: 900 } });
+  const page = await ctx.newPage();
+  const lifted = () =>
+    page
+      .waitForFunction(() => document.getElementById("exp")?.classList.contains("gl-ready") && !document.documentElement.hasAttribute("data-boot"), null, { timeout: 12000 })
+      .then(() => true, () => false);
+  await page.goto(BASE_URL + "/", { waitUntil: "commit" });
+  await page.waitForSelector(".splash", { state: "attached" });
+  const sheet = () =>
+    page.evaluate(() => ({
+      boot: document.documentElement.dataset.boot,
+      splash: getComputedStyle(document.querySelector(".splash")).visibility,
+      ready: !!document.getElementById("exp")?.classList.contains("gl-ready"),
+    }));
+  const first = await sheet();
+  check(first.boot === "splash" && first.splash === "visible", `a first visit opens on the loading sheet (boot "${first.boot}", sheet ${first.splash})`);
+  check(await lifted(), "the sheet lifts once the stage is up");
+  check(await page.evaluate(() => localStorage.getItem("seen") === "1"), "the visit is remembered");
+  // the stage starts scattered: no lined-up name gives away what the pieces spell
+  await page.waitForTimeout(200);
+  const off = await page.evaluate(() => parseFloat((document.getElementById("hudRow2")?.textContent ?? "").replace(/[^0-9.]/g, "")) || 0);
+  check(off > 5, `after the sheet the pieces start scattered (Off ${off}°)`);
+  await page.reload({ waitUntil: "commit" });
+  await page.waitForSelector(".splash", { state: "attached" });
+  const again = await sheet();
+  check(again.ready || (again.boot === "" && again.splash === "visible"), `a later visit gets the sheet too, without the first visit's hold (boot "${again.boot}")`);
+  check(await lifted(), "which lifts once the stage is up");
+  await ctx.close();
+  for (const [label, opts, path] of [
+    ["reduced motion", { reducedMotion: "reduce" }, "/"],
+    ["a #fragment", {}, "/#contact"],
+  ]) {
+    const c = await browser.newContext({ viewport: { width: 1440, height: 900 }, ...opts });
+    const p = await c.newPage();
+    await p.route("**/api/contact**", (r) => r.abort());
+    await p.goto(BASE_URL + path, { waitUntil: "commit" });
+    await p.waitForSelector(".fallback-name img", { state: "attached" });
+    check(!(await p.evaluate(() => document.documentElement.hasAttribute("data-boot"))), `no splash with ${label}`);
+    await c.close();
+  }
+  return out;
+}
+
+// "What's slowing you down?": pinned, scrolling opens each stop in turn and the index follows; clicking the index
+// jumps to a stop; its brief button ticks that need in the brief (/api/contact intercepted, never submitted).
+// Under reduced motion every stop is simply stacked.
+async function checkPick(browser) {
+  const out = [];
+  const check = (ok, msg) => out.push({ ok: !!ok, msg });
+  const ctx = await browser.newContext({ viewport: { width: 1440, height: 900 } });
+  const page = await ctx.newPage();
+  await page.route("**/api/contact**", (r) => r.abort());
+  await page.goto(BASE_URL + "/", { waitUntil: "load" });
+  await page.waitForFunction(() => document.getElementById("exp")?.classList.contains("gl-ready") && !document.documentElement.hasAttribute("data-boot"), null, { timeout: 10000 }).catch(() => {});
+  check(await page.evaluate(() => document.getElementById("build")?.classList.contains("pinned")), "the picker pins");
+  const toStop = (i) =>
+    page.evaluate((i) => {
+      const sec = document.getElementById("build");
+      const pin = sec.querySelector(".pick-pin");
+      const topH = document.getElementById("top").getBoundingClientRect().height;
+      const n = sec.querySelectorAll(".pick-p").length;
+      window.scrollTo(0, sec.getBoundingClientRect().top + window.scrollY - topH + ((i + 0.5) / n) * (sec.offsetHeight - pin.offsetHeight));
+    }, i);
+  const opened = () =>
+    page.evaluate(() => ({
+      on: [...document.querySelectorAll("#build .pick-p")].findIndex((p) => p.hasAttribute("data-on")),
+      cur: [...document.querySelectorAll("#build .pick-chip")].findIndex((c) => c.hasAttribute("aria-current")),
+    }));
+  const n = await page.locator("#build .pick-p").count();
+  const seen = [];
+  for (let i = 0; i < n; i++) {
+    await toStop(i);
+    await page.waitForTimeout(250);
+    const o = await opened();
+    if (o.on === i && o.cur === i) seen.push(i);
+  }
+  check(seen.length === n, `scrolling opens each of the ${n} stops in turn, the index following (${seen.length}/${n})`);
+  await toStop(0);
+  await page.waitForTimeout(250);
+  await page.locator("#build .pick-chip").nth(4).click();
+  await page.waitForTimeout(250);
+  check((await opened()).on === 4, "clicking index 05 jumps to stop 5");
+  const need = await page.locator("#build .pick-p").nth(4).locator("[data-need]").getAttribute("data-need");
+  await page.locator("#build .pick-p").nth(4).locator("[data-need]").click();
+  await page.waitForTimeout(300);
+  const ticked = await page.evaluate(() => document.querySelector('#cform input[name="subject"]:checked')?.value ?? null);
+  check(ticked === need, `its brief button ticks "${need}" in the brief (got ${ticked})`);
+  await ctx.close();
+
+  const rctx = await browser.newContext({ viewport: { width: 1440, height: 900 }, reducedMotion: "reduce" });
+  const rpage = await rctx.newPage();
+  await rpage.goto(BASE_URL + "/", { waitUntil: "load" });
+  const stacked = await rpage.evaluate(() => {
+    const sec = document.getElementById("build");
+    return !sec.classList.contains("pinned") && [...sec.querySelectorAll(".pick-p")].every((p) => getComputedStyle(p).visibility === "visible");
+  });
+  check(stacked, "under reduced motion every stop is stacked and visible");
+  await rctx.close();
   return out;
 }
 
@@ -851,7 +960,7 @@ async function checkHomePerf(browser) {
   check(lcp.inNameMark, "the LCP element is the NameMark SVG");
 
   await page
-    .waitForFunction(() => document.getElementById("exp")?.classList.contains("gl-ready"), null, { timeout: 8000 })
+    .waitForFunction(() => document.getElementById("exp")?.classList.contains("gl-ready") && !document.documentElement.hasAttribute("data-boot"), null, { timeout: 10000 })
     .catch(() => {});
   const scrub = (dy) =>
     page.evaluate(
@@ -1143,6 +1252,8 @@ async function main() {
       ["stage touch", checkStageTouch],
       ["stage scroll story", checkStageScrollStep],
       ["home overflow 390", checkHomeOverflow390],
+      ["home splash", checkSplash],
+      ["home picker", checkPick],
       ["contact armed+sent", checkContactArmedAndSent],
       ["contact field error", checkContactFieldError],
       ["contact empty submit", checkContactEmptySubmitBlocked],

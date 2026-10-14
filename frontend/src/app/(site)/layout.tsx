@@ -35,9 +35,14 @@ const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || "http://localhost:3000";
 
 // Pre-paint state, before React hydrates (D13): the root layout never
 // re-renders, so this is the only place `html.js` is ever set.
-// adds .js, and re-applies the visitor's Motion choice (lib/motion.ts) before paint
+// adds .js, re-applies the visitor's Motion choice (lib/motion.ts) before paint, and on the home, when its stage
+// will run (motion on, no #fragment asked for), covers the page with the loading sheet until the stage takes over
+// (html[data-boot]: globals.css, components/home/splash.tsx); "splash" marks a first visit ("seen" unset, so again
+// after site data is cleared), which holds it a beat longer. The stage clears it; this after 8 s regardless.
 const BOOT =
-  "(function(){var d=document.documentElement;d.classList.add('js');try{if(localStorage.getItem('motion')==='on')d.dataset.motion='on'}catch(e){}})()";
+  "(function(){var d=document.documentElement;d.classList.add('js');try{if(localStorage.getItem('motion')==='on')d.dataset.motion='on'}catch(e){}" +
+  "if(location.pathname==='/'&&!location.hash&&(d.dataset.motion==='on'||!matchMedia('(prefers-reduced-motion: reduce)').matches)){" +
+  "var s='splash';try{if(localStorage.getItem('seen'))s=''}catch(e){}d.dataset.boot=s;setTimeout(function(){delete d.dataset.boot},8000)}})()";
 
 export const metadata: Metadata = {
   title: {

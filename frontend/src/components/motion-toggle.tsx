@@ -29,8 +29,16 @@ export function MotionToggle() {
 
   return (
     <button id="motionBtn" className="toggle needs-js motion-toggle" type="button" aria-pressed={on} onClick={toggle}>
-      <span className="snd-mark mot-mark" aria-hidden="true" />
-      <span className="snd-label">Motion</span>
+      {/* its square glides when it is on */}
+      <svg className="tg-ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" aria-hidden="true">
+        <path d="M3 17h18" strokeDasharray="2 2.5" />
+        <path d="M3 12h6M3 8h4" />
+        <rect className="sq" x="12" y="7.5" width="6" height="6" fill="currentColor" stroke="none" />
+      </svg>
+      <span className="tg-label">Motion</span>
+      <span className="tip" aria-hidden="true">
+        {on ? "Motion on" : "Motion off"}
+      </span>
     </button>
   );
 }
