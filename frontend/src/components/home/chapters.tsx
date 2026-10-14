@@ -68,7 +68,7 @@ export function Chapters({ counts }: { counts: readonly { label: string; value: 
   return (
     <section className="sect steps chap" id="who" style={{ "--n": n } as React.CSSProperties}>
       <div className="steps-pin">
-        <div className="container gv chap-grid">
+        <div className="container gv steps-grid chap-grid">
           <div className="chap-rail">
             {chapters.map((c) => (
               <div className="chap-ch" key={c.id}>
