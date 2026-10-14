@@ -1,7 +1,5 @@
-// Home copy (BUILD-PLAN.md §0, "Data"), taken verbatim from
-// design/drafted/home-prototype.html. Draft copy for Rajat to confirm —
-// especially the offerings ("A second look", "AI where it helps"), "Largest
-// team led: 6 people", the six problems/fixes and the notes.
+// Home copy (BUILD-PLAN.md §0, "Data"), from design/drafted/home-prototype.html
+// and the review rounds after it. Confirmed by Rajat on 2026-10-14.
 //
 // This file doubles as the fallback (D22): counts that depend on the CMS
 // (platforms shipped, the map's case-study/earlier-project counts) are NOT
@@ -85,7 +83,7 @@ export const HOME = {
   ],
   // "What's slowing you down?" (round 2, canvas board Sections B): pick a problem, or just scroll, and each stop shows
   // its fix, what I'd build, where I did it and a brief with that need ticked. The last stop carries the two offerings
-  // no problem leads to. Draft copy for Rajat to confirm: `more`.
+  // no problem leads to.
   pick: {
     lab: "Where it hurts",
     title: "What’s slowing you down?",

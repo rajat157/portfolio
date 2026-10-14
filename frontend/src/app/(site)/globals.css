@@ -3,7 +3,7 @@
  * kit) and design/drafted/home-prototype.html, per BUILD-PLAN.md §4.3/§4.7/D26.
  * Differences from the prototype source:
  *  - font-family literals replaced with var(--font-sans)/var(--font-mono)
- *    (next/font, src/app/(site)/layout.tsx), fallbacks kept.
+ *    (next/font/local, src/lib/fonts.ts), fallbacks kept.
  *  - the .kit-cursor* rules (drafted.html:101-140) are dropped: Q6c replaces
  *    them with a native crosshair cursor + `.ro` coordinate readout below.
  *  - no global box-sizing reset (the prototype, and this port, are content-box).
@@ -43,6 +43,11 @@ html, body {
 }
 /* wide windows: the type grows with the page, from 16px at a 1680px window to 20px at about 2560 (sizes are in rem) */
 html { font-size: clamp(100%, 1rem + (100vw - 1680px) * .0045, 125%); }
+/* each family's fallback (src/lib/fonts.ts): Arial matched to its metrics, as next/font/google generated them */
+@font-face { font-family: 'Instrument Sans Fallback'; src: local("Arial"); ascent-override: 94.42%; descent-override: 24.33%; line-gap-override: 0%; size-adjust: 102.74%; }
+@font-face { font-family: 'Martian Mono Fallback'; src: local("Arial"); ascent-override: 63.69%; descent-override: 12.74%; line-gap-override: 0%; size-adjust: 157.02%; }
+@font-face { font-family: 'Caveat Fallback'; src: local("Arial"); ascent-override: 124.77%; descent-override: 38.99%; line-gap-override: 0%; size-adjust: 76.94%; }
+@font-face { font-family: 'Doto Fallback'; src: local("Arial"); ascent-override: 70.59%; descent-override: 18.58%; line-gap-override: 0%; size-adjust: 134.59%; }
 
 body {
   font-family: var(--font-sans), sans-serif;

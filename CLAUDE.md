@@ -38,7 +38,7 @@ portfolio/
 │   │   ├── migration/             # Recovered seed/snapshot content (import source)
 │   │   ├── lib/cms/               # Data layer: queries + types + getMediaURL
 │   │   └── components/
-│   └── scripts/export-strapi-neon.mjs  # Legacy Strapi DB export (July 2026 reconciliation)
+│   └── scripts/                   # Harness, content sync and one-off tools (see "Other scripts" below)
 ├── migration-data/                 # Extracted live-site content (migration archive)
 └── CLAUDE.md
 ```
@@ -95,7 +95,6 @@ DATABASE_URI=postgresql://payload:payload@localhost:5434/payload
 NEXT_PUBLIC_SITE_URL=http://localhost:3000
 RESEND_API_KEY=
 CONTACT_EMAIL=
-OLD_NEON_DATABASE_URL=<legacy Strapi DB, for scripts/export-strapi-neon.mjs>
 ```
 
 ### Vercel (production — already configured)
@@ -143,8 +142,8 @@ Dev uses drizzle push (automatic). Production uses committed migrations in `fron
   `page.route`) rather than let the request through.
 
 ## Pending / History
-- **~July 2026**: old Strapi Neon DB (`OLD_NEON_DATABASE_URL`) exits compute-quota lockout — run `node scripts/export-strapi-neon.mjs` and reconcile any blog posts/drafts not among the migrated content. Delete the Render service `portfolio-strapi` if not already done.
-- Migration history and details: see PROGRESS.md and git history (commits `30d4ccf`, `ee8041a`).
+- Migration history and details: see PROGRESS.md and git history (commits `30d4ccf`, `ee8041a`). The planned export of
+  the old Strapi Neon DB was dropped on 2026-10-14 (Rajat), and its script removed.
 
 ## Context handoff
 - `.claude/statusline.mjs` caches the context % (`.claude/.state/`, gitignored); `.claude/hooks/context-guard.mjs` (PostToolUse)

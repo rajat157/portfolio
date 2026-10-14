@@ -2,24 +2,28 @@
 
 ## Resume
 
-- Phase: round 2 leftovers, the last PR of the round: widescreen + Icons-board touches.
-- Live: PR #7 (Who I am as scroll-stepped stops; a stepped section pins only when a stop fits) merged, master 74ed8da.
-  Its first production build failed on a transient next/font/google fetch (Caveat); a redeploy (MCP create_deployment
-  with the failed deploymentId, target production) fixed it. Live check OK on www (desktop + phone).
-- Branch `feat/wide-icons` @ 66e2752 (local; not pushed yet):
-  - `--page-w: clamp(1280px, 100vw - 240px, 1920px)` on `.container` and `.sheet` (120px margins from a 1520 window).
-  - All CSS font sizes in rem (were px; identical at 16px, checked byte-identical at 1440) and
-    `html { font-size: clamp(100%, 1rem + (100vw - 1680px) * .0045, 125%) }`: 17.08px at 1920, 20px at 2560.
-    stage.tsx reads the root size for the static name (was `46 * 16`).
-  - Brief need chips at most 3 across (`.chips` minmax max(…, 30%)).
-  - "Where to next" nodes: Icons-board "Nav" drawings (redraw on hover/focus, `sp-draw`) + blue registration corners
-    (`.node::before`, 8 gradients).
-  - Harness: a `wide-2560x1080` context, `checkWide`, 2560 in `checkStepsFit`.
-- Next: full matrix (running) → push, PR, merge after the Vercel preview passes → live check (scratchpad live-check.mjs
-  idea: routes 200, stage boots, #who/#build pin and step, no page errors; /api/contact aborted) → Vercel runtime errors.
-- After that, round 2 is done. Open for Rajat: self-host the fonts (next/font/local) so a Google Fonts hiccup can't fail
-  a production build; the old Strapi export (CLAUDE.md "Pending", overdue since July).
-- Reprompt: `Continue the portfolio work from PROGRESS.md "Resume" (branch feat/wide-icons). Keep going till finished; merge each PR once verified.`
+- Phase: round 2 DONE. Nothing in progress. master = 5bde4a7 (PRs #1–#8 live); this Resume is a local commit on
+  master, not pushed (a docs-only push would rebuild production); it rides along with the next PR.
+- Shipped this round:
+  - #7: "Who I am" as scroll-stepped stops (Sections A) on the shared `components/home/steps.tsx` engine. A stepped
+    section pins only when its index and tallest stop fit the pinned box (it measures the pinned layout).
+  - #8: widescreen. `--page-w` (1280 → 1920, with 120px margins from a 1520 window) on `.container`/`.sheet`. Type in
+    rem, with a root that grows from 16px at 1680 to 20px at 2560. Brief chips at most 3 across. Map nodes: Nav
+    drawings that redraw on hover, plus registration corners.
+  - Harness: `home who`, `home steps fit`, `wide`, a `wide-2560x1080` context. The last matrix was 1600/0.
+- Ops notes: a production build can fail on a transient next/font/google fetch (seen twice). Redeploy with the Vercel
+  MCP `create_deployment` (deploymentId = the failed one, target production). Vercel runtime errors: only an old pg
+  SSL-mode warning.
+- Verify worktree removed. To recreate it: `git worktree add --detach D:\Projects\portfolio-verify <sha>`; give it a
+  credential-free `frontend\.env.local` (PAYLOAD_SECRET, DATABASE_URI, NEXT_PUBLIC_SITE_URL only); `npm install`;
+  `cmd /c mklink /J frontend\media D:\Projects\portfolio\frontend\media`; `next build` + `next start -p 3005`. Unlink
+  the junction (`cmd /c rmdir`) BEFORE `git worktree remove --force`.
+- Open, needing Rajat's call:
+  1. Self-host the fonts (next/font/local) so Google Fonts can't fail a production build.
+  2. The old Strapi Neon export (CLAUDE.md "Pending", due ~July 2026).
+  3. The draft copy flagged in `src/content/home.ts` (offerings, problems/fixes, notes, "Largest team led: 6").
+  4. Optional: set `sslmode=verify-full` explicitly on the Neon URL to silence the pg warning.
+- Reprompt (when there is new work): `Continue the portfolio work from PROGRESS.md "Resume". Keep going till finished; merge each PR once verified.`
 
 ---
 
@@ -354,5 +358,5 @@ and was burning the Vercel Hobby compute quota via hung ISR revalidations.
   seed scripts + live-page snapshots and imported. Pages rewired to a local-API
   data layer (lib/cms). Deployed and verified 2026-06-13.
 - Cleanup: backend/, docker-compose/nginx stack, render.yaml, lib/strapi removed.
-- Outstanding: ~July 2026 export of the old Strapi Neon DB (quota-locked) to
-  reconcile any unmigrated blog posts/drafts - scripts/export-strapi-neon.mjs.
+- Dropped (2026-10-14, Rajat): the planned export of the old Strapi Neon DB;
+  scripts/export-strapi-neon.mjs is removed.
