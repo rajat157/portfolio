@@ -432,9 +432,9 @@ html { scroll-padding-top: calc(var(--top-h) + 15px); }
 .exp[data-variant="a"] .proto-switch [data-v="a"], .exp[data-variant="b"] .proto-switch [data-v="b"] { color: var(--lab); background: var(--ink); }
 /* step captions arrive word by word; the key phrase is underlined as it lands */
 .cap .cw { display: inline-block; opacity: 0; transform: translateY(.25em); transition: opacity 260ms var(--ease-attack), transform 420ms var(--ease-attack), background-size 600ms var(--ease-weight); transition-delay: calc(var(--i) * 55ms); }
-.cap .cw.key { background: linear-gradient(var(--orange), var(--orange)) 0 94% / 0 .08em no-repeat; }
+.cap .cw-key { background: linear-gradient(var(--orange), var(--orange)) 0 94% / 0 .08em no-repeat; }
 .exp[data-step="1"] .cap[data-step="1"] .cw, .exp[data-step="2"] .cap[data-step="2"] .cw, .exp[data-step="3"] .cap[data-step="3"] .cw { opacity: 1; transform: none; }
-.exp[data-step="1"] .cap[data-step="1"] .cw.key, .exp[data-step="2"] .cap[data-step="2"] .cw.key, .exp[data-step="3"] .cap[data-step="3"] .cw.key { background-size: 100% .08em; transition-delay: calc(var(--i) * 55ms), calc(var(--i) * 55ms), calc(var(--i) * 55ms + 380ms); }
+.exp[data-step="1"] .cap[data-step="1"] .cw-key, .exp[data-step="2"] .cap[data-step="2"] .cw-key, .exp[data-step="3"] .cap[data-step="3"] .cw-key { background-size: 100% .08em; transition-delay: calc(var(--i) * 55ms), calc(var(--i) * 55ms), calc(var(--i) * 55ms + 380ms); }
 /* the hero line: swapped in each breather, underlined while the name pauses (option A, under the name) */
 @keyframes leadIn { from { opacity: 0; transform: translateY(.35em); } to { opacity: 1; transform: none; } }
 .swap > span { display: inline; animation: leadIn 650ms var(--ease-attack) both; }
@@ -443,11 +443,20 @@ html { scroll-padding-top: calc(var(--top-h) + 15px); }
 /* option B: the line hangs from the name's orange dot as a drafting callout; the original stays for screen readers */
 .exp[data-variant="b"].gl-ready .hook-copy .lead { position: absolute; width: 1px; height: 1px; overflow: hidden; clip-path: inset(50%); white-space: nowrap; }
 .d3-callout { position: relative; width: 0; height: 0; }
-.d3-callout .ldr { position: absolute; left: -1px; top: 12px; width: 1px; height: 54px; background: var(--blue); }
+/* --half/--drop (px, set by the stage): the dot's half size and its centre down to the j's descender */
+.d3-callout .ldr { position: absolute; left: -1px; top: calc(var(--half, 12px) + 3px); width: 1px; height: calc(var(--drop, 66px) - var(--half, 12px) + 12px); background: var(--blue); }
 .d3-callout .ldr::after { content: ''; position: absolute; left: -3px; bottom: -3px; width: 7px; height: 7px; background: var(--blue); }
-.d3-callout .box { position: absolute; right: -4px; top: 74px; width: min(26rem, 72vw); display: grid; gap: 6px; text-align: right; }
+/* a ground-coloured knockout keeps the note readable over the drifting pieces */
+.d3-callout .box { position: absolute; right: -10px; top: calc(var(--drop, 66px) + 18px); width: max-content; max-width: min(26rem, 72vw); display: grid; gap: 6px; padding: 8px 10px; text-align: right; background: color-mix(in srgb, var(--lab) 88%, transparent); }
 .d3-callout .no { font: 400 10px/1.2 var(--font-mono), ui-monospace, monospace; letter-spacing: .08em; text-transform: uppercase; color: var(--graphite); }
 .d3-callout p { margin: 0; font: 500 clamp(1.05rem, .9rem + .6vw, 1.5rem)/1.3 var(--f-body); color: var(--ink); text-wrap: balance; }
+@media (max-width: 639px) {
+  /* --sx: the dot's x on screen (set by the stage); the note spans the screen inside the 16px gutters */
+  .d3-callout .box { right: auto; left: calc(16px - var(--sx, 0px)); width: calc(100vw - 52px); max-width: none; text-align: left; }
+  .proto-switch { top: 64px; left: 16px; transform: none; padding: 0 4px; }
+  .proto-switch .lab { display: none; }
+  .proto-switch a { white-space: nowrap; }
+}
 /* a hovered or tapped block's peek at its other side */
 .d3-peek { padding: 6px 9px; font: 500 11px/1.3 var(--font-mono), ui-monospace, monospace; letter-spacing: .03em; color: var(--lab); background: var(--ink); white-space: nowrap; }
 /* ===== end PROTOTYPE ===== */

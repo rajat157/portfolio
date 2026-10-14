@@ -222,6 +222,8 @@ export function Stage({ problems, leads }: { problems: readonly { problem: strin
       const WORLD_NAME_W = 340; // world units the whole name (incl. the dot) spans
       let parts: Piece[] = [];
       let nameH = 100;
+      let dotHalf = 0; // world units: half the orange square, and its centre down to the j's descender (option B)
+      let dotDrop = 0;
       let projPos = new Float32Array(0);
       const projGeo = new THREE.BufferGeometry();
       const projectors = new THREE.LineSegments(projGeo, lineMat(0));
@@ -261,6 +263,8 @@ export function Stage({ problems, leads }: { problems: readonly { problem: strin
 
         const U = WORLD_NAME_W / TOTAL_W;
         nameH = NameOutline.NAME_VIEW_H * U;
+        dotHalf = (NameOutline.NAME_DOT / 2) * U;
+        dotDrop = (NameOutline.NAME_VIEW_H - NameOutline.NAME_CAP + NameOutline.NAME_DOT / 2) * U;
         const cxu = NameOutline.NAME_VIEW_W / 2;
         const cyu = NameOutline.NAME_VIEW_H / 2;
         const wpt = (xu: number, yu: number) => V((xu - cxu) * U, -(yu - cyu) * U, 0);
@@ -603,6 +607,12 @@ export function Stage({ problems, leads }: { problems: readonly { problem: strin
         const nameWorldW = (WORLD_NAME_W * NameOutline.NAME_VIEW_W) / (NameOutline.NAME_VIEW_W + 2 * Math.round(NameOutline.NAME_UNITS_PER_EM * 0.03));
         introZoom = svgPx / ((nameWorldW * W) / (2 * tan * camera.aspect * Dn));
         introDy = 0.05 * W;
+        if (calloutEl) {
+          // the callout's leader leaves the dot's edge and its note clears the j's descender, at any size
+          const pxU = H / (2 * tan * Dn);
+          calloutEl.style.setProperty("--half", (dotHalf * pxU).toFixed(1) + "px");
+          calloutEl.style.setProperty("--drop", (dotDrop * pxU).toFixed(1) + "px");
+        }
         const cols = narrow ? 2 : 3;
         const rows = problems.length / cols;
         const gw = cols * TWd + (cols - 1) * GAP;
@@ -617,12 +627,15 @@ export function Stage({ problems, leads }: { problems: readonly { problem: strin
             s.G.set(cd.G.x + s.lx, cd.G.y + s.ly, 0);
             s.S.set(s.G.x * s.k, s.G.y * s.k, Dt * (1 - s.k));
           });
+          cd.peek.center.set(cd.G.x > 1 ? 1 : 0, 0); // right-hand blocks hang their peek leftwards, so it stays on screen
         });
         const fx = gw / 2 + 22;
         const f0 = -gh / 2 - 22 + yo;
         const f1 = gh / 2 + 22 + yo;
         frameGeo.setFromPoints([V(-fx, f0, 0), V(fx, f0, 0), V(fx, f0, 0), V(fx, f1, 0), V(fx, f1, 0), V(-fx, f1, 0), V(-fx, f1, 0), V(-fx, f0, 0)]);
-        sys.position.set(-fx, f1 + 8, 0);
+        // on a phone the frame runs to the screen's edges: centre its label so it isn't cut off
+        sys.center.set(narrow ? 0.5 : 0, 1);
+        sys.position.set(narrow ? 0 : -fx, f1 + 8, 0);
         dirty = true;
       }
 
@@ -744,7 +757,7 @@ export function Stage({ problems, leads }: { problems: readonly { problem: strin
       /* frame */
       const P = V(0, 0, 0);
       const dot = V(0, 0, 0);
-      const sgn =(v: number) => (v < 0 ? "−" : "+") + Math.abs(v).toFixed(1).padStart(4, "0") + "°";
+      const sgn = (v: number) => (v < 0 ? "−" : "+") + Math.abs(v).toFixed(1).padStart(4, "0") + "°";
       const hint = () => {
         const h: string[] = [];
         if (Math.abs(th) > 1.5) h.push(input === "touch" ? (th > 0 ? "→" : "←") : th > 0 ? "←" : "→");
@@ -908,6 +921,12 @@ export function Stage({ problems, leads }: { problems: readonly { problem: strin
           const co = (1 - intro) * (1 - seg(sS, 0.01, 0.08));
           calloutEl.style.opacity = co.toFixed(3);
           calloutEl.style.visibility = co > 0.001 ? "visible" : "hidden";
+          if (W < 640) {
+            // no room beside the drifting dot on a phone: the note spans the screen under it (CSS), placed from the
+            // dot's screen x this frame
+            camera.updateMatrixWorld();
+            calloutEl.style.setProperty("--sx", (((P.copy(dot).project(camera).x + 1) * W) / 2).toFixed(1) + "px");
+          }
         }
 
         const appear = seg(sS, 0.08, 0.26);
@@ -934,7 +953,7 @@ export function Stage({ problems, leads }: { problems: readonly { problem: strin
           (s.fm.material as InstanceType<typeof THREE.MeshBasicMaterial>).opacity = op;
           (s.bm.material as InstanceType<typeof THREE.MeshBasicMaterial>).opacity = op;
           const edgeMat = s.edge.material as InstanceType<typeof THREE.LineBasicMaterial>;
-          edgeMat.opacity = Math.max(op * (cons ? 0.7 : 0.45 * (1 - ls)), 0.9 * hv * op);
+          edgeMat.opacity = op * (cons ? 0.7 : 0.45 * (1 - ls)); // a gathered block is seamless; its corner marks say "this one"
           s.edge.visible = edgeMat.opacity > 0;
           edgeMat.color.lerpColors(BLUE, INK, seg(lf, 0.4, 0.6));
         });
@@ -962,7 +981,7 @@ export function Stage({ problems, leads }: { problems: readonly { problem: strin
             cd.peekText = pt;
             cd.peekEl.textContent = pt;
           }
-          cd.peek.position.set(cd.G.x - TWd / 2, cd.G.y - THd / 2 - 8, 14 * hv);
+          cd.peek.position.set(cd.G.x + (cd.G.x > 1 ? TWd / 2 : -TWd / 2), cd.G.y - THd / 2 - 8, 14 * hv);
           cd.peekEl.style.opacity = hv.toFixed(3);
           cd.peekEl.style.visibility = hv > 0.001 ? "visible" : "hidden";
         });

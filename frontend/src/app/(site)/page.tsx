@@ -53,7 +53,7 @@ function CapTitle({ text, mark }: { text: string; mark: string }) {
         const key = from >= 0 && starts[i] >= from && starts[i] < to;
         return (
           <span key={i}>
-            <span className={key ? "cw key" : "cw"} style={{ "--i": i } as React.CSSProperties}>
+            <span className={key ? "cw cw-key" : "cw"} style={{ "--i": i } as React.CSSProperties}>
               {w}
             </span>{" "}
           </span>
