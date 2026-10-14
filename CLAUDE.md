@@ -146,6 +146,15 @@ Dev uses drizzle push (automatic). Production uses committed migrations in `fron
 - **~July 2026**: old Strapi Neon DB (`OLD_NEON_DATABASE_URL`) exits compute-quota lockout — run `node scripts/export-strapi-neon.mjs` and reconcile any blog posts/drafts not among the migrated content. Delete the Render service `portfolio-strapi` if not already done.
 - Migration history and details: see PROGRESS.md and git history (commits `30d4ccf`, `ee8041a`).
 
+## Context handoff
+- `.claude/statusline.mjs` caches the context % (`.claude/.state/`, gitignored); `.claude/hooks/context-guard.mjs` (PostToolUse)
+  warns at 85% and demands a handoff at 96%; `.claude/hooks/session-start.mjs` injects PROGRESS.md "## Resume" into every
+  new session (after /clear too).
+- Handoff = stop background servers, commit (WIP is fine) + push the branch, rewrite PROGRESS.md "## Resume" (branch/commit,
+  done, exact next action, blockers) and the memory note's RESUME HERE, then reply with a short report ending in the
+  reprompt line; the user /clears and pastes it. Don't wait for 96% at a natural stopping point when context is high.
+- Keep "## Resume" short and current: it is the first thing a new session reads.
+
 ## Working mode
 - The main session reads, searches, edits and runs commands itself — no delegation for lookups or small edits.
 - Use subagents only when they pay off, and put the context they need in the prompt:
