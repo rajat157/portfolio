@@ -452,6 +452,9 @@ export function Stage({ problems }: { problems: readonly { problem: string; fix:
       let th = 0;
       let ph = 0;
       let introAt: number | null = null;
+      let intro = 1; // 1 → 0 over the hand-off
+      const driftTh = (now: number) => 16 + 6 * Math.sin(now / 2600);
+      const driftPh = (now: number) => -7 + 3 * Math.sin(now / 3700);
       let introZoom = 1;
       let introDy = 0;
       let thT = th;
@@ -517,8 +520,10 @@ export function Stage({ problems }: { problems: readonly { problem: string; fix:
           input = kind;
           playAt = performance.now();
           if (kind !== "mouse") {
-            thT = th;
-            phT = ph;
+            // taking over mid hand-off: start from where the drift is heading, not from the aligned pose
+            const now = performance.now();
+            thT = intro > 0 ? driftTh(now) : th;
+            phT = intro > 0 ? driftPh(now) : ph;
           }
         }
         mode = "play";
@@ -614,7 +619,7 @@ export function Stage({ problems }: { problems: readonly { problem: string; fix:
         const sT = scrollTarget();
         if (sT > 0.012 && mode !== "locked" && !tween) lineUp(true);
         if (introAt === null) introAt = now;
-        const intro = 1 - weight(seg(now - introAt, 150, 1150));
+        intro = 1 - weight(seg(now - introAt, 150, 1150));
         if (intro > 0) dirty = true;
         const s0 = sS;
         sS += (sT - sS) * (1 - Math.exp(-dt * 10));
@@ -635,8 +640,8 @@ export function Stage({ problems }: { problems: readonly { problem: string; fix:
           if (u >= 1) lock(now);
         } else if (mode !== "locked") {
           if (input === "drift") {
-            thT = (16 + 6 * Math.sin(now / 2600)) * (1 - intro);
-            phT = (-7 + 3 * Math.sin(now / 3700)) * (1 - intro);
+            thT = driftTh(now) * (1 - intro);
+            phT = driftPh(now) * (1 - intro);
           } else if (input === "mouse") {
             thT = clamp((px - 0.36) * 80, -55, 55);
             phT = clamp(-(py - 0.58) * 46, -30, 30);
@@ -647,7 +652,8 @@ export function Stage({ problems }: { problems: readonly { problem: string; fix:
           th += (thT * f - th) * k;
           ph += (phT * f - ph) * k;
           dirty = true;
-          if (input !== "drift" && Math.hypot(th, ph) < 1.6 && d * f < 2.4) lock(now);
+          // not during the hand-off: the name starts aligned, and that isn't the visitor finding the view
+          if (intro === 0 && input !== "drift" && Math.hypot(th, ph) < 1.6 && d * f < 2.4) lock(now);
         } else {
           const look = fine && moved && !step;
           const k = 1 - Math.exp(-dt * 9);
