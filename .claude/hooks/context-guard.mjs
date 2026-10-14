@@ -1,13 +1,13 @@
 #!/usr/bin/env node
 // PostToolUse hook: tells the main agent when its context is filling up (ported from shripratima).
 //   >= WARN (85%): once per session: finish the current step, commit, update the PROGRESS.md "Resume" section.
-//   >= CRIT (96%): every call: stop and hand off (the user /clears and pastes the reprompt).
+//   >= CRIT (90%, Rajat's rule): every call: stop and hand off (the user /clears and pastes the reprompt).
 // Reads the % cached by .claude/statusline.mjs; silent if unknown or inside a subagent. See CLAUDE.md "Context handoff".
 import { readFileSync, writeFileSync, mkdirSync } from 'node:fs'
 import { join } from 'node:path'
 
 const WARN = Number(process.env.CTX_WARN_PCT || 85)
-const CRIT = Number(process.env.CTX_CRIT_PCT || 96)
+const CRIT = Number(process.env.CTX_CRIT_PCT || 90)
 
 let input = {}
 try { input = JSON.parse(readFileSync(0, 'utf8')) } catch {}

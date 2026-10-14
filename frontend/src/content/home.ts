@@ -22,83 +22,19 @@ export const HOME = {
   alignLabel: "Line it up",
   processStatic:
     "Most businesses run on parts that don’t talk to each other. I take them apart until I understand them, then put them back together until they feel right: one system your team can run, and keep changing.",
-  // The stage's six blocks (problem on the front, fix on the back), opened up again in "What's slowing you down?":
-  // the offering that builds the fix (`offer`, a title in build.offerings), the brief subject it ticks (`need`, one of
-  // `subjects`), where I did it and how (`proof`, taken from that case study) and the sheet it links to.
+  // The stage’s six blocks: a problem on the front, its fix on the back.
   problems: [
-    {
-      problem: "Orders arrive by email",
-      fix: "Orders tracked end to end",
-      offer: "Portals and platforms",
-      need: "Portals and platforms",
-      work: "Offpriced",
-      href: "/projects/b2b-wholesale-platform",
-      proof: "Buyers enquire, get quotes and order in one portal; every deal leaves a trail instead of an inbox thread.",
-    },
-    {
-      problem: "Stock lives in a spreadsheet",
-      fix: "Live stock, one source",
-      offer: "Internal tools",
-      need: "Internal tools",
-      work: "Offpriced",
-      href: "/projects/b2b-wholesale-platform",
-      proof: "Staff keep the catalogue of lots current from a phone, so what buyers see is what is on the floor.",
-    },
-    {
-      problem: "Only a developer can update the site",
-      fix: "A site your team edits",
-      offer: "Sites you run yourself",
-      need: "A site you run yourself",
-      work: "lucif3r",
-      href: "/projects/esports-talent-portfolio",
-      proof: "The talent adds events, photos and even brand colours from a control room, without waiting on anyone.",
-    },
-    {
-      problem: "A login for every tool",
-      fix: "One login, the right access",
-      offer: "Portals and platforms",
-      need: "Portals and platforms",
-      work: "a staffing company",
-      href: "/projects/staffing-operations-platform",
-      proof: "Five portals on one login, and every company’s data walled off inside the database itself.",
-    },
-    {
-      problem: "Reports built by hand",
-      fix: "Reports that build themselves",
-      offer: "Real-time data",
-      need: "Real-time data",
-      work: "Tredye",
-      href: "/projects/tredye-trading-platform",
-      proof: "About 800 live indicator streams computed as the market moves and pushed to the browser every two seconds.",
-    },
-    {
-      problem: "The same data typed in four places",
-      fix: "Data entered once",
-      offer: "Internal tools",
-      need: "Internal tools",
-      work: "a staffing company",
-      href: "/projects/staffing-operations-platform",
-      proof: "Work approved once and billed from the same record; commissions calculated, not reconstructed.",
-    },
+    { problem: "Orders arrive by email", fix: "Orders tracked end to end" },
+    { problem: "Stock lives in a spreadsheet", fix: "Live stock, one source" },
+    { problem: "Only a developer can update the site", fix: "A site your team edits" },
+    { problem: "A login for every tool", fix: "One login, the right access" },
+    { problem: "Reports built by hand", fix: "Reports that build themselves" },
+    { problem: "The same data typed in four places", fix: "Data entered once" },
   ],
-  // "What's slowing you down?" (round 2, canvas board Sections B): pick a problem, or just scroll, and each stop shows
-  // its fix, what I'd build, where I did it and a brief with that need ticked. The last stop carries the two offerings
-  // no problem leads to.
-  pick: {
-    lab: "Where it hurts",
-    title: "What’s slowing you down?",
-    note: "pick the one that sounds like Monday",
-    fixLab: "The fix",
-    buildLab: "What I’d build",
-    workLab: "Where I did it",
-    sheet: "Open the sheet",
-    cta: "Start a brief about this",
-    ticked: "already ticked in your brief",
-    more: { chip: "Something else", lab: "Not on the list?", title: "Something else.", offers: ["AI where it helps", "A second look"], cta: "Start a brief" },
-  },
-  // "Who I am" (round 2, canvas board Sections A): one stop per way of working, then one in numbers.
+  // "Who I am" and "What I build", told as chapters (canvas board Sections A, picked 2026-10-15): one stop per way of
+  // working, one in numbers, then the offerings three to a stop. `next` labels the cue to scroll on.
   who: {
-    intro: "I’m Rajat, an independent software architect and developer. This is how I work.",
+    title: "Who I am",
     wayLab: "How I work",
     numbers: "In numbers",
     ways: [
@@ -127,6 +63,7 @@ export const HOME = {
     ],
   },
   build: {
+    title: "What I build",
     offerings: [
       { title: "Portals and platforms", line: "Customer, partner and staff portals on one codebase, each person seeing only what they should." },
       { title: "Internal tools", line: "Back-office apps and small ERPs that replace the spreadsheet and the email thread." },
@@ -137,6 +74,7 @@ export const HOME = {
     ],
     ctaNote: "not sure which one you need? ask me",
   },
+  next: { step: "Next", build: "Next · what I build", brief: "Next · the brief" },
   map: {
     sub: "Site map · 4 destinations",
     rootNote: "start anywhere",

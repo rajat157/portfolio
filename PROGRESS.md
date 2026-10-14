@@ -2,27 +2,38 @@
 
 ## Resume
 
-- Phase: round 2 DONE. Nothing in progress. master = 5bde4a7 (PRs #1–#8 live); this Resume is a local commit on
-  master, not pushed (a docs-only push would rebuild production); it rides along with the next PR.
-- Shipped this round:
+- IN PROGRESS (2026-10-15): Rajat picked board **Sections A** for both "Who I am" and "What I build", with relevant
+  icons. Branch `feat/chapters` @ 9b5edd6 (pushed when the PR opens):
+  - `components/home/chapters.tsx` (one pinned section, 6 stops, a rail of chapter ticks) replaces who.tsx and the
+    picker (pick.tsx; recoverable from 3051ed1). New drawings for the ways and the offerings.
+  - Scroll snapping was tried and DROPPED: WebKit never let the scroll leave the last stop, and Chrome passed stops.
+  - Status line made cwd-proof; handoff at 90% (CLAUDE.md, context-guard).
+  - Next: full matrix (running in D:\Projects\portfolio-verify, port 3005) → PR (body in the session scratchpad,
+    pr10.md) → merge after the Vercel preview passes → live check → remove the verify worktree (junction first).
+- Before this (2026-10-14): all done, master = 3051ed1 (PRs #1–#9 live).
+- Shipped this session:
   - #7: "Who I am" as scroll-stepped stops (Sections A) on the shared `components/home/steps.tsx` engine. A stepped
     section pins only when its index and tallest stop fit the pinned box (it measures the pinned layout).
   - #8: widescreen. `--page-w` (1280 → 1920, with 120px margins from a 1520 window) on `.container`/`.sheet`. Type in
     rem, with a root that grows from 16px at 1680 to 20px at 2560. Brief chips at most 3 across. Map nodes: Nav
     drawings that redraw on hover, plus registration corners.
-  - Harness: `home who`, `home steps fit`, `wide`, a `wide-2560x1080` context. The last matrix was 1600/0.
-- Ops notes: a production build can fail on a transient next/font/google fetch (seen twice). Redeploy with the Vercel
-  MCP `create_deployment` (deploymentId = the failed one, target production). Vercel runtime errors: only an old pg
-  SSL-mode warning.
+  - #9 (Rajat's answers: fonts "do what's best", Strapi "remove", copy "confirm", SSL "yes"):
+    - Fonts are self-hosted: `src/lib/fonts.ts` uses next/font/local with the exact files next/font/google served, the
+      same unicode-range and the same Fallback faces; screenshots match master pixel for pixel. Turbopack gotcha: it
+      ignores a `font-family` given in `declarations`, so each face is named after its const.
+    - `payload.config.ts` rewrites sslmode prefer/require/verify-ca to verify-full. Same TLS check; the pg warning is
+      gone from the build logs.
+    - The Strapi export script and notes are removed, and the dead Strapi keys are gone from `.env.local`.
+    - The home copy is confirmed.
+  - Harness: `home who`, `home steps fit`, `wide`, a `wide-2560x1080` context. Last matrix: 1600/0.
+- Ops: the Vercel runtime errors list is empty. If a production build ever fails transiently, redeploy it with the
+  Vercel MCP `create_deployment` (deploymentId = the failed one, target production).
+- Unconfirmed (dashboards I can't reach): whether the Render service `portfolio-strapi` and the old Strapi Neon project
+  still exist. Deleting them is safe now that the export is dropped.
 - Verify worktree removed. To recreate it: `git worktree add --detach D:\Projects\portfolio-verify <sha>`; give it a
-  credential-free `frontend\.env.local` (PAYLOAD_SECRET, DATABASE_URI, NEXT_PUBLIC_SITE_URL only); `npm install`;
+  credential-free `frontend\.env.local` (PAYLOAD_SECRET, DATABASE_URI, NEXT_PUBLIC_SITE_URL only); `npm ci`;
   `cmd /c mklink /J frontend\media D:\Projects\portfolio\frontend\media`; `next build` + `next start -p 3005`. Unlink
   the junction (`cmd /c rmdir`) BEFORE `git worktree remove --force`.
-- Open, needing Rajat's call:
-  1. Self-host the fonts (next/font/local) so Google Fonts can't fail a production build.
-  2. The old Strapi Neon export (CLAUDE.md "Pending", due ~July 2026).
-  3. The draft copy flagged in `src/content/home.ts` (offerings, problems/fixes, notes, "Largest team led: 6").
-  4. Optional: set `sslmode=verify-full` explicitly on the Neon URL to silence the pg warning.
 - Reprompt (when there is new work): `Continue the portfolio work from PROGRESS.md "Resume". Keep going till finished; merge each PR once verified.`
 
 ---

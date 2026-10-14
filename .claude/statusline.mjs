@@ -53,7 +53,7 @@ if (pct != null) {
   const col = p >= 90 ? C.r : p >= 70 ? C.y : C.g
   const filled = Math.round(p / 10)
   ctx = `${col}${'█'.repeat(filled)}${C.dim}${'░'.repeat(10 - filled)}${C.x} ${col}${C.b}${p.toFixed(0)}%${C.x}` +
-    (used != null ? ` ${C.dim}${k(used)}/${k(win)}${C.x}` : '') + (p >= 96 ? ` ${C.r}${C.b}⚠ HANDOFF${C.x}` : '')
+    (used != null ? ` ${C.dim}${k(used)}/${k(win)}${C.x}` : '') + (p >= 90 ? ` ${C.r}${C.b}⚠ HANDOFF${C.x}` : '')
 }
 
 let branch = ''

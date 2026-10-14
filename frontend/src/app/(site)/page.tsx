@@ -1,17 +1,16 @@
 // The home experience (BUILD-PLAN.md §0, "P3b — Home experience"): the
-// shard-cut name stage, the scroll story, "Who I am" (Who) / "What's slowing
-// you down?" (Pick) / "Where to next" and the close contact brief. Server-rendered
+// shard-cut name stage, the scroll story, "Who I am" / "What I build" (Chapters),
+// "Where to next" and the close contact brief. Server-rendered
 // (this file) plus client islands: Stage (three.js, lazy), Steps and
 // ContactForm (progressive enhancement; posts natively without JS).
 // Everything here is readable with no JS, no WebGL and reduced motion.
 import type { Metadata } from "next";
 import Link from "next/link";
 import { ContactForm } from "@/components/contact-form";
+import { Chapters } from "@/components/home/chapters";
 import { NameMark } from "@/components/home/name-mark";
-import { Pick } from "@/components/home/pick";
 import { Splash } from "@/components/home/splash";
 import { Stage } from "@/components/home/stage";
-import { Who } from "@/components/home/who";
 import { HOME, mapProjectsDesc } from "@/content/home";
 import { cmsProjects } from "@/lib/cms";
 import { FALLBACK_EARLIER, FALLBACK_SHEETS } from "@/lib/cms/fallback";
@@ -166,9 +165,7 @@ export default async function HomePage() {
       </div>
       <Stage problems={HOME.problems.map(({ problem, fix }) => ({ problem, fix }))} leads={LEADS} />
 
-      <Who counts={whoCounts} />
-
-      <Pick />
+      <Chapters counts={whoCounts} />
 
       <section className="sect" id="map" aria-labelledby="map-h">
         <div className="container gv">

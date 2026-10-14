@@ -594,7 +594,7 @@ async function checkStageLazyLoad(browser) {
   await noJsPage.goto(BASE_URL + "/", { waitUntil: "load" });
   const noJs = await noJsPage.evaluate(() => ({
     canvas: !!document.querySelector(".exp-canvas"),
-    sections: ["#who", "#build", "#map", "#contact"].every((s) => !!document.querySelector(s)),
+    sections: ["#who", "#build-1", "#map", "#contact"].every((s) => !!document.querySelector(s)),
   }));
   check(!noJs.canvas, "no-JS renders no <canvas>");
   check(noJs.sections, "no-JS renders every section (who/build/map/contact)");
@@ -770,7 +770,7 @@ async function checkHomeOverflow390(browser) {
     .waitForFunction(() => document.getElementById("exp")?.classList.contains("gl-ready") && !document.documentElement.hasAttribute("data-boot"), null, { timeout: 10000 })
     .catch(() => {});
   const overflowing = await page.evaluate(() => {
-    const sels = ".cap-t,.lead,.d3-callout p,.node-t,.blk-h,.who-t,.who-counts dd,.pick-fix,.end-t";
+    const sels = ".cap-t,.lead,.d3-callout p,.node-t,.blk-h,.chap-t,.chap-counts dd,.chap-off-t,.end-t";
     return [...document.querySelectorAll(sels)]
       .filter((el) => el.clientWidth > 1 && el.scrollWidth > el.clientWidth + 1)
       .map((el) => el.className + ": " + (el.textContent || "").slice(0, 30));
@@ -828,7 +828,7 @@ async function checkSplash(browser) {
   return out;
 }
 
-// A stepped home section (components/home/steps.tsx: #who, #build): it pins, and scrolling opens each stop in turn
+// A stepped home section (components/home/steps.tsx; #who in chapters.tsx): it pins, and scrolling opens each stop in turn
 // with the index following. Returns the open page for the section's own checks (/api/contact intercepted).
 async function steppedSection(browser, id, check) {
   const ctx = await browser.newContext({ viewport: { width: 1440, height: 900 } });
@@ -903,7 +903,7 @@ async function checkStepsFit(browser) {
     await page.evaluate(() => document.fonts.ready);
     await page.waitForTimeout(300);
     const secs = await page.evaluate(() =>
-      ["who", "build"].map((id) => {
+      ["who"].map((id) => {
         const sec = document.getElementById(id);
         return { id, pinned: sec.classList.contains("pinned"), grid: sec.querySelector(".steps-grid").offsetHeight, pin: sec.querySelector(".steps-pin").clientHeight };
       }),
@@ -946,38 +946,22 @@ async function checkWide(browser) {
   return out;
 }
 
-// "What's slowing you down?": stepped (above); clicking the index jumps to a stop; its brief button ticks that need in
-// the brief (never submitted).
-async function checkPick(browser) {
-  const out = [];
-  const check = (ok, msg) => out.push({ ok: !!ok, msg });
-  const { ctx, page, toStop, opened } = await steppedSection(browser, "build", check);
-  await toStop(0);
-  await page.waitForTimeout(250);
-  await page.locator("#build .steps-i").nth(4).click();
-  await page.waitForTimeout(250);
-  check((await opened()).on === 4, "clicking index 05 jumps to stop 5");
-  const cta = page.locator("#build .steps-stop").nth(4).locator("[data-need]");
-  const need = await cta.getAttribute("data-need");
-  await cta.click();
-  await page.waitForTimeout(300);
-  const ticked = await page.evaluate(() => document.querySelector('#cform input[name="subject"]:checked')?.value ?? null);
-  check(ticked === need, `its brief button ticks "${need}" in the brief (got ${ticked})`);
-  await ctx.close();
-  await (await stackedSection(browser, "build", check)).ctx.close();
-  return out;
-}
-
-// "Who I am": stepped (above), three ways of working and a stop in numbers, which count up from 0 as it opens and
-// end at their values; under reduced motion they just show them.
-async function checkWho(browser) {
+// "Who I am" / "What I build" (components/home/chapters.tsx): stepped (above) through six stops. The rail's ticks mark
+// the stops behind as done; the numbers (stop 4) count up from 0 and end at their values; a tick jumps to its stop.
+// Under reduced motion all of it is stacked, the numbers showing their values.
+async function checkChapters(browser) {
   const out = [];
   const check = (ok, msg) => out.push({ ok: !!ok, msg });
   const counts = (page) => page.evaluate(() => [...document.querySelectorAll("#who [data-count]")].map((d) => ({ shown: d.textContent, final: d.dataset.count })));
-  const { ctx, page, n, toStop } = await steppedSection(browser, "who", check);
+  const { ctx, page, n, toStop, opened } = await steppedSection(browser, "who", check);
+  check(n === 6, `six stops: three ways, the numbers, two of offerings (${n})`);
+  await toStop(4);
+  await page.waitForTimeout(250);
+  const rail = await page.evaluate(() => [...document.querySelectorAll("#who .steps-i")].map((t) => (t.hasAttribute("aria-current") ? "c" : t.hasAttribute("data-done") ? "d" : "-")).join(""));
+  check(rail === "ddddc-", `at stop 5 the rail reads four done, the current, one to come (${rail})`);
   await toStop(0);
   await page.waitForTimeout(250);
-  await toStop(n - 1);
+  await toStop(3);
   // a few frames in, the numbers are on their way up (900 ms, easing out)
   await page.evaluate(() => new Promise((r) => requestAnimationFrame(() => requestAnimationFrame(() => requestAnimationFrame(r)))));
   const early = await counts(page);
@@ -985,6 +969,9 @@ async function checkWho(browser) {
   await page.waitForTimeout(1200);
   const late = await counts(page);
   check(late.length === 4 && late.every((c) => c.final && c.shown === c.final), `and they end at their values (${late.map((c) => c.shown).join(", ")})`);
+  await page.locator("#who .steps-i").nth(1).click();
+  await page.waitForTimeout(400);
+  check((await opened()).on === 1, "clicking tick 02 jumps to stop 2");
   await ctx.close();
   const r = await stackedSection(browser, "who", check);
   const still = await r.page.evaluate(() => [...document.querySelectorAll("#who [data-count]")].map((d) => d.textContent));
@@ -1362,8 +1349,7 @@ async function main() {
       ["home splash", checkSplash],
       ["home steps fit", checkStepsFit],
       ["wide", checkWide],
-      ["home who", checkWho],
-      ["home picker", checkPick],
+      ["home chapters", checkChapters],
       ["contact armed+sent", checkContactArmedAndSent],
       ["contact field error", checkContactFieldError],
       ["contact empty submit", checkContactEmptySubmitBlocked],
