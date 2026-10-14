@@ -2,28 +2,24 @@
 
 ## Resume
 
-- Phase: round 3, "Who I am" as scroll-stepped chapters (canvas board Sections A). Then: widescreen, Icons-board touches.
-- Branch `feat/home-who-steps` @ the WIP commit "shared Steps engine" (pushed, no PR). master = 4d76f17; PRs #4–#6 are live.
-- Live now: hero option B (callout from the dot), scroll-stepped "What's slowing you down?" picker, icon header tools
-  (no Scale label), loading sheet ("Loading the drawing", no name) after which the pieces start scattered.
-- Done on the branch: `components/home/steps.tsx` (shared pinned-stepping engine + `[data-count]` count-up; replaces
-  pick-scroll.tsx); `pick.tsx` markup renamed to shared `steps-*` classes. The picker is BROKEN on this commit until step 1.
-- Next:
-  1. globals.css: turn the `.pick.pinned` / `.pick-*` mechanics into shared `.steps*` rules (pin, grid, side, list, i,
-     i-t, note, count, no, stops, stop, ico; the narrow "numbered squares" rules); keep only stop content as `.pick-*`;
-     `.pick-p-more` → `.pick-more-stop`.
-  2. `components/home/who.tsx`: side = h2 "Who I am" + HOME.who.intro + index (01–03 = HOME.who.ways titles,
-     04 = "In numbers") + count; stops = icon drawing on (Icons board "Way" paths), "How I work · 0N", big title,
-     body, Caveat note (wrap in a div: the stop's draw-in transform kills `.hand`'s tilt); stop 04 = HOME.who.counts
-     with `data-count` on each value. `<Steps id="who" />`. Replace the old #who section in page.tsx; drop .ways/.counts
-     CSS only if /about doesn't use it.
-  3. Harness: checkPick selectors → `.steps-i` / `.steps-stop` / `.steps-pin`; add checkWho (pins, steps, counts end
-     at their values, reduced motion stacked).
-  4. Verify in D:\Projects\portfolio-verify (credential-free, `next start -p 3005`; check `git -C` it's on the branch);
-     full matrix; PR → merge (Rajat: "merge and keep going till finished"); live check.
-- Then (round 2 leftovers): widescreen (boards Wide A rail / Wide B split, none picked; default: widen the layout on
-  ≥1800px screens), Icons board (nav icons on "Where to next" nodes, block corner marks on hover).
-- Reprompt: `Continue the portfolio work from PROGRESS.md "Resume" (branch feat/home-who-steps). Keep going till finished; merge each PR once verified.`
+- Phase: round 2 leftovers, the last PR of the round: widescreen + Icons-board touches.
+- Live: PR #7 (Who I am as scroll-stepped stops; a stepped section pins only when a stop fits) merged, master 74ed8da.
+  Its first production build failed on a transient next/font/google fetch (Caveat); a redeploy (MCP create_deployment
+  with the failed deploymentId, target production) fixed it. Live check OK on www (desktop + phone).
+- Branch `feat/wide-icons` @ 66e2752 (local; not pushed yet):
+  - `--page-w: clamp(1280px, 100vw - 240px, 1920px)` on `.container` and `.sheet` (120px margins from a 1520 window).
+  - All CSS font sizes in rem (were px; identical at 16px, checked byte-identical at 1440) and
+    `html { font-size: clamp(100%, 1rem + (100vw - 1680px) * .0045, 125%) }`: 17.08px at 1920, 20px at 2560.
+    stage.tsx reads the root size for the static name (was `46 * 16`).
+  - Brief need chips at most 3 across (`.chips` minmax max(…, 30%)).
+  - "Where to next" nodes: Icons-board "Nav" drawings (redraw on hover/focus, `sp-draw`) + blue registration corners
+    (`.node::before`, 8 gradients).
+  - Harness: a `wide-2560x1080` context, `checkWide`, 2560 in `checkStepsFit`.
+- Next: full matrix (running) → push, PR, merge after the Vercel preview passes → live check (scratchpad live-check.mjs
+  idea: routes 200, stage boots, #who/#build pin and step, no page errors; /api/contact aborted) → Vercel runtime errors.
+- After that, round 2 is done. Open for Rajat: self-host the fonts (next/font/local) so a Google Fonts hiccup can't fail
+  a production build; the old Strapi export (CLAUDE.md "Pending", overdue since July).
+- Reprompt: `Continue the portfolio work from PROGRESS.md "Resume" (branch feat/wide-icons). Keep going till finished; merge each PR once verified.`
 
 ---
 
