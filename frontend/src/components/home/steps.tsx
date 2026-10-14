@@ -1,11 +1,10 @@
 "use client";
 
-// A home section told in stops ("Who I am" in who.tsx, "What's slowing you down?" in pick.tsx). The server renders
-// an index of #anchor links (.steps-i) over stacked stops (.steps-stop), which is the whole section with no JS or
-// under reduced motion. With motion on, and when the window can show a stop whole beside its index, the section pins
-// (CSS: .steps.pinned) and scrolling steps through its stops one at a time; the index follows, a click on it jumps
-// there, and numbers in a stop ([data-count]) count up as it opens. A brief button ([data-need]) ticks that need in
-// the contact brief.
+// A home section told in stops ("Who I am" / "What I build" in chapters.tsx). The server renders an index of #anchor
+// links (.steps-i) over stacked stops (.steps-stop), which is the whole section with no JS or under reduced motion.
+// With motion on, and when the window can show a stop whole beside its index, the section pins (CSS: .steps.pinned)
+// and scrolling steps through its stops one at a time; the index follows (the stops behind marked done), a click on
+// it jumps there, and numbers in a stop ([data-count]) count up as it opens.
 
 import { useEffect } from "react";
 import { reducedMotion } from "@/lib/motion";
@@ -49,7 +48,11 @@ export function Steps({ id }: { id: string }) {
         s.toggleAttribute("data-on", k === i);
         s.inert = k !== i;
       });
-      chips.forEach((c, k) => (k === i ? c.setAttribute("aria-current", "step") : c.removeAttribute("aria-current")));
+      chips.forEach((c, k) => {
+        if (k === i) c.setAttribute("aria-current", "step");
+        else c.removeAttribute("aria-current");
+        c.toggleAttribute("data-done", k < i);
+      });
       if (no) no.textContent = String(i + 1).padStart(2, "0");
       stops[i].querySelectorAll<HTMLElement>("[data-count]").forEach(countUp);
       if (!first) tick();
@@ -92,20 +95,15 @@ export function Steps({ id }: { id: string }) {
           s.removeAttribute("data-on");
           s.inert = false;
         });
-        chips.forEach((c) => c.removeAttribute("aria-current"));
+        chips.forEach((c) => {
+          c.removeAttribute("aria-current");
+          c.removeAttribute("data-done");
+        });
       }
     }
 
     const onClick = (e: MouseEvent) => {
-      const t = e.target as Element;
-      // a real click on the brief's radio, so the form's own handlers see it; the link then goes on to #contact
-      const cta = t.closest<HTMLElement>("[data-need]");
-      if (cta) {
-        const radio = Array.from(document.querySelectorAll<HTMLInputElement>('#cform input[name="subject"]')).find((r) => r.value === cta.dataset.need);
-        if (radio && !radio.checked) radio.click();
-        return;
-      }
-      const chip = t.closest<HTMLAnchorElement>(".steps-i");
+      const chip = (e.target as Element).closest<HTMLAnchorElement>(".steps-i");
       if (chip && pinned) {
         e.preventDefault();
         jump(chips.indexOf(chip));

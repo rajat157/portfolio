@@ -147,11 +147,13 @@ Dev uses drizzle push (automatic). Production uses committed migrations in `fron
 
 ## Context handoff
 - `.claude/statusline.mjs` caches the context % (`.claude/.state/`, gitignored); `.claude/hooks/context-guard.mjs` (PostToolUse)
-  warns at 85% and demands a handoff at 96%; `.claude/hooks/session-start.mjs` injects PROGRESS.md "## Resume" into every
-  new session (after /clear too).
+  warns at 85% and demands a handoff at 90% (Rajat's rule); `.claude/hooks/session-start.mjs` injects PROGRESS.md
+  "## Resume" into every new session (after /clear too).
+- The guard only sees what the status line cached, so keep the status line alive: never leave the shell `cd`'d outside
+  the repo root (use absolute paths or `git -C`). Check the % in `.claude/.state/context.json` at natural stopping points.
 - Handoff = stop background servers, commit (WIP is fine) + push the branch, rewrite PROGRESS.md "## Resume" (branch/commit,
   done, exact next action, blockers) and the memory note's RESUME HERE, then reply with a short report ending in the
-  reprompt line; the user /clears and pastes it. Don't wait for 96% at a natural stopping point when context is high.
+  reprompt line; the user /clears and pastes it. Don't wait for 90% at a natural stopping point when context is high.
 - Keep "## Resume" short and current: it is the first thing a new session reads.
 
 ## Working mode
