@@ -2,8 +2,24 @@
 
 ## Resume
 
-- ALL DONE (2026-10-15). Nothing in progress. master = ec2f227 (PRs #1–#10 live). This Resume is a local commit on
-  master, not pushed (a docs-only push rebuilds production); it rides along with the next PR.
+- WAITING ON RAJAT (2026-10-15): two review items; nothing to merge until he decides.
+  1. "Where to next" as a 3D world you warp into: https://claude.ai/artifact/MeDaNXXTgmeD4JisstsFRS (an A/B/C switcher
+     over three working three.js prototypes; the sources are in the old session scratchpad `wtn/`, and the artifact keeps
+     them under a/ b/ c/):
+     - A: sheet set, dive into a drawing;
+     - B: site model, fly through a door;
+     - C: warp field, portals among the shards.
+     After his pick: port it into `components/home` (lazy three.js like the stage, the plain-link fallback, the
+     harness).
+  2. Lenis smooth scroll + snapping: DRAFT PR #11 (`proto/smooth-snap`), preview
+     https://portfolio-git-proto-smooth-snap-rajats-projects-6181289d.vercel.app.
+     - Snaps at the hero steps, the six chapter stops, #map and #contact. No WebKit trap.
+     - Its `--routes /` run was 188/1. The FAIL is home perf: scrub p95 29.6ms against a 25ms gate.
+     - If he keeps it: fix the perf, rebase and merge. If not: close it.
+     - The builder's worktree is `.claude/worktrees/agent-a8e74a64a20092fa7`; remove it after his decision (check for a
+       media junction first).
+- Before that: all done. master = ec2f227 (PRs #1–#10 live). This Resume is a local commit on master, not pushed
+  (a docs-only push rebuilds production); it rides along with the next PR.
 - #10 (Rajat: "option A for who I am and what I do, but use relevant icons"): `components/home/chapters.tsx` is one
   pinned section of 6 stops (3 ways, in numbers, offerings ×2) under a rail of chapter ticks, with new drawings. It
   replaces who.tsx and the picker (pick.tsx and its copy; recoverable from 3051ed1). Matrix 1586/0; live OK.
