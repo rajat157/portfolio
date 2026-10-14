@@ -1,5 +1,7 @@
 // Strapi 5 API response types (flat structure, no attributes wrapper)
 
+import type { Drawing } from "@/lib/drawing";
+
 export interface StrapiResponse<T> {
   data: T;
   meta: {
@@ -41,6 +43,16 @@ export interface StrapiImageFormat {
   url: string;
 }
 
+export interface Sheet {
+  short_title: string | null;
+  kind: string | null;
+  client: string | null;
+  problem: string | null;
+  built: string[];
+  decisions: string[];
+  outcome: string | null;
+}
+
 export interface Project {
   id: number;
   documentId: string;
@@ -58,6 +70,8 @@ export interface Project {
   github_url: string | null;
   start_date: string | null;
   end_date: string | null;
+  sheet: Sheet | null;
+  drawing: Drawing | null;
   createdAt: string;
   updatedAt: string;
   publishedAt: string;

@@ -1,285 +1,246 @@
+// The home experience (BUILD-PLAN.md §0, "P3b — Home experience"): the
+// shard-cut name stage, the scroll story, "Who I am" / "What I build" /
+// "Where to next" and the close contact brief. Server-rendered (this file)
+// plus two client islands: Stage (three.js, lazy) and ContactForm
+// (progressive enhancement; posts natively without JS). Everything here is
+// readable with no JS, no WebGL and reduced motion.
+import type { Metadata } from "next";
 import Link from "next/link";
-import { Hero, SkillsMarquee } from "@/components/sections";
-import { cmsProjects, cmsBlogPosts, getMediaURL } from "@/lib/cms";
-import type { Project, BlogPost } from "@/lib/cms/types";
-import { ProjectCard } from "@/components/projects/project-card";
-import { ArticleCard } from "@/components/blog/article-card";
+import { ContactForm } from "@/components/contact-form";
+import { NameMark } from "@/components/home/name-mark";
+import { Stage } from "@/components/home/stage";
+import { PenBlocks } from "@/components/reveal";
+import { HOME, mapProjectsDesc } from "@/content/home";
+import { cmsProjects } from "@/lib/cms";
+import { FALLBACK_EARLIER, FALLBACK_SHEETS } from "@/lib/cms/fallback";
+import type { Project } from "@/lib/cms/types";
 
-// Regenerate at most hourly — keeps ISR cadence fixed even if data fetches skip the cache
 export const revalidate = 3600;
 
-// Default fallback data when API returns empty
-const defaultProjects = [
-  {
-    id: "1",
-    slug: "staffing-operations-platform",
-    title: "Staffing Operations Platform — Five Portals on One System",
-    description: "Five portals, one login, and every company's data walled off inside the database itself.",
-    technologies: ["Next.js", "React", "TypeScript", "Turborepo", "Drizzle ORM", "PostgreSQL", "Better Auth", "CASL", "Row-Level Security", "State Machines"],
-    category: "Web Dev" as const,
-  },
-  {
-    id: "2",
-    slug: "b2b-wholesale-platform",
-    title: "B2B Wholesale Platform — Buyer Portal, CRM & CMS in One App",
-    description: "One app for buyers, staff and editors — with a site the owner updates by talking to an AI.",
-    technologies: ["Next.js", "React", "TypeScript", "Payload CMS", "PostgreSQL", "Cloudflare R2", "Resend", "Vercel", "Progressive Web Apps", "Web Push", "Model Context Protocol"],
-    category: "Web Dev" as const,
-  },
-  {
-    id: "3",
-    slug: "esports-talent-portfolio",
-    title: "Esports Talent Portfolio — Broadcast-Style Motion & a Custom Control Room",
-    description: "A booking site that feels like a live broadcast — kept current by the talent, not a developer.",
-    technologies: ["Next.js", "React", "TypeScript", "Payload CMS", "PostgreSQL", "Tailwind CSS", "Lenis", "Vercel Blob", "Resend", "Cloudflare Turnstile", "Vitest", "Playwright", "Vercel"],
-    category: "Web Dev" as const,
-  },
-];
+export const metadata: Metadata = {
+  title: "Rajat",
+  description: HOME.lead,
+};
 
-const defaultBlogPosts = [
-  {
-    id: "1",
-    slug: "building-real-time-trading-platforms",
-    title: "Building Real-Time Trading Platforms",
-    excerpt: "Lessons learned from architecting high-frequency trading systems with modern tech stack.",
-    category: "Architecture",
-    readingTime: 8,
-    publishedAt: "2026-01-15",
-    imageUrl: "/images/covers/building-real-time-trading-platforms.svg",
-  },
-  {
-    id: "2",
-    slug: "ai-accelerated-development",
-    title: "AI-Accelerated Development",
-    excerpt: "How I use Claude and Gemini to 10x my development productivity.",
-    category: "AI",
-    readingTime: 5,
-    publishedAt: "2026-01-10",
-    imageUrl: "/images/covers/ai-accelerated-development.svg",
-  },
-  {
-    id: "3",
-    slug: "managing-supercomputers",
-    title: "Managing India's Fastest Supercomputer",
-    excerpt: "My experience managing SahasraT at IISc with 33,000 cores.",
-    category: "DevOps",
-    readingTime: 12,
-    publishedAt: "2026-01-05",
-    imageUrl: "/images/covers/managing-supercomputers.svg",
-  },
-];
-
-async function getFeaturedProjects(): Promise<Project[]> {
+async function getCounts(): Promise<{ featured: number; earlier: number }> {
+  let projects: Project[] = [];
   try {
-    return await cmsProjects({ featured: true, limit: 6 });
+    projects = await cmsProjects();
   } catch (error) {
-    console.error("Failed to fetch featured projects:", error);
-    return [];
+    console.error("Failed to fetch projects:", error);
   }
+  if (projects.length === 0) {
+    return { featured: FALLBACK_SHEETS.length, earlier: FALLBACK_EARLIER.length };
+  }
+  // /projects' rule, so the counts match what it shows as sheets and earlier works
+  const featured = projects.filter((p) => p.featured && p.sheet && p.drawing).length;
+  return { featured, earlier: projects.length - featured };
 }
 
-async function getLatestBlogPosts(): Promise<BlogPost[]> {
-  try {
-    return await cmsBlogPosts({ limit: 3 });
-  } catch (error) {
-    console.error("Failed to fetch latest blog posts:", error);
-    return [];
-  }
-}
-
-// Transform Strapi 5 project data to component format (flat structure)
-function transformProject(project: Project) {
-  // Defensive check for valid project structure
-  if (!project || !project.id) {
-    return null;
-  }
-
-  const coverUrl = project.cover_image?.url
-    ? getMediaURL(project.cover_image.url)
-    : undefined;
-
-  return {
-    id: String(project.id || ""),
-    slug: project.slug || "",
-    title: project.title || "Untitled",
-    description: project.description || "",
-    technologies: project.technologies || [],
-    category: (project.category?.name || "Web Dev") as string,
-    imageUrl: coverUrl || undefined,
-  };
-}
-
-// Transform Strapi 5 blog post data to component format (flat structure)
-function transformBlogPost(post: BlogPost) {
-  // Defensive check for valid post structure
-  if (!post || !post.id) {
-    return null;
-  }
-
-  const coverUrl = post.cover_image?.url
-    ? getMediaURL(post.cover_image.url)
-    : undefined;
-
-  return {
-    id: String(post.id || ""),
-    slug: post.slug || "",
-    title: post.title || "Untitled",
-    excerpt: post.excerpt || "",
-    category: post.category?.name || "General",
-    readingTime: post.reading_time || 5,
-    publishedAt: post.published_date || new Date().toISOString(),
-    imageUrl: coverUrl || undefined,
-  };
-}
-
-export default async function Home() {
-  const [featuredProjects, latestBlogPosts] = await Promise.all([
-    getFeaturedProjects(),
-    getLatestBlogPosts(),
-  ]);
-
-  // Transform API data or use defaults (filter out null results from transformation)
-  const transformedProjects = featuredProjects
-    .map(transformProject)
-    .filter((p): p is NonNullable<typeof p> => p !== null);
-
-  const transformedBlogPosts = latestBlogPosts
-    .map(transformBlogPost)
-    .filter((p): p is NonNullable<typeof p> => p !== null);
-
-  const projects = transformedProjects.length > 0
-    ? transformedProjects
-    : defaultProjects;
-
-  const blogPosts = transformedBlogPosts.length > 0
-    ? transformedBlogPosts
-    : defaultBlogPosts;
+export default async function HomePage() {
+  const counts = await getCounts();
+  const whoCounts = HOME.who.counts.map((c) => (c.value === null ? { ...c, value: String(counts.featured) } : c));
 
   return (
     <>
-      <Hero />
-
-      {/* Skills Marquee Section */}
-      <SkillsMarquee />
-
-      {/* About Preview Section */}
-      <section className="py-24 px-4">
-        <div className="container mx-auto max-w-4xl">
-          <h2 className="text-heading font-bold mb-6">About Me</h2>
-          <p className="text-lg text-muted-foreground mb-8">
-            Experienced Software Architect with 8+ years building high-performance systems.
-            From managing India&apos;s fastest supercomputer (SahasraT at IISc) to architecting
-            real-time trading platforms, I bring deep expertise in Python, cloud infrastructure,
-            and modern web technologies.
-          </p>
-          <Link
-            href="/about"
-            className="text-foreground font-medium hover:underline underline-offset-4"
-          >
-            Learn more about me &rarr;
-          </Link>
-        </div>
-      </section>
-
-      {/* Featured Projects Section */}
-      <section className="py-24 px-4 bg-muted/30">
-        <div className="container mx-auto">
-          <div className="flex justify-between items-center mb-12">
-            <h2 className="text-heading font-bold">Featured Projects</h2>
-            <Link
-              href="/projects"
-              className="text-muted-foreground hover:text-foreground transition-colors"
-            >
-              View all &rarr;
-            </Link>
+      <div className="exp" id="exp" data-step="0">
+        <div
+          className="exp-pin kit-registration"
+          tabIndex={0}
+          role="group"
+          aria-roledescription="interactive drawing"
+          aria-label="Rajat, cut into pieces at different depths. Use the arrow keys to turn the view until the pieces line up, or press Enter to line them up."
+        >
+          {/* Stage (client) creates the <canvas> itself, only once WebGL is
+              confirmed available -- so no-JS, reduced-motion and no-WebGL
+              contexts never have one in the DOM at all. */}
+          <div className="fallback-name" aria-hidden="true">
+            <NameMark />
           </div>
-
-          {/* Project grid */}
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {projects.map((project) => (
-              <ProjectCard key={project.id} project={project} />
-            ))}
-          </div>
-        </div>
-      </section>
-
-      {/* Latest Posts Section */}
-      <section className="py-24 px-4">
-        <div className="container mx-auto">
-          <div className="flex justify-between items-center mb-12">
-            <h2 className="text-heading font-bold">Latest Posts</h2>
-            <Link
-              href="/blog"
-              className="text-muted-foreground hover:text-foreground transition-colors"
-            >
-              View all &rarr;
-            </Link>
-          </div>
-
-          {/* Blog post grid */}
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {blogPosts.map((post) => (
-              <ArticleCard key={post.id} article={post} />
-            ))}
-          </div>
-        </div>
-      </section>
-
-      {/* Newsletter Section */}
-      <section className="py-24 px-4 bg-muted/30">
-        <div className="container mx-auto max-w-2xl text-center">
-          <h2 className="text-heading font-bold mb-4">Stay Updated</h2>
-          <p className="text-muted-foreground mb-8">
-            Subscribe to my newsletter to get updates on new projects, blog posts,
-            and things I find interesting.
-          </p>
-          <form className="flex flex-col sm:flex-row gap-4 max-w-md mx-auto">
-            <input
-              type="email"
-              placeholder="your@email.com"
-              className="flex-1 px-4 py-3 rounded-full border border-border bg-background focus:outline-none focus:ring-2 focus:ring-ring"
-            />
-            <button
-              type="submit"
-              className="px-8 py-3 bg-foreground text-background rounded-full font-medium hover:opacity-90 transition-opacity"
-            >
-              Subscribe
-            </button>
-          </form>
-        </div>
-      </section>
-
-      {/* Built With Section */}
-      <section className="py-12 px-4 border-t border-border/40">
-        <div className="container mx-auto">
-          <div className="flex flex-col items-center gap-6">
-            <p className="text-sm text-muted-foreground">Built with</p>
-            <div className="flex flex-wrap items-center justify-center gap-6 md:gap-8 opacity-60 hover:opacity-100 transition-opacity">
-              <a href="https://nextjs.org" target="_blank" rel="noopener noreferrer" title="Next.js" className="hover:opacity-80 transition-opacity">
-                <img src="https://cdn.simpleicons.org/nextdotjs/currentColor" alt="Next.js" className="h-6 w-auto dark:invert" />
-              </a>
-              <a href="https://vercel.com" target="_blank" rel="noopener noreferrer" title="Vercel" className="hover:opacity-80 transition-opacity">
-                <img src="https://cdn.simpleicons.org/vercel/currentColor" alt="Vercel" className="h-5 w-auto dark:invert" />
-              </a>
-              <a href="https://strapi.io" target="_blank" rel="noopener noreferrer" title="Strapi" className="hover:opacity-80 transition-opacity">
-                <img src="https://cdn.simpleicons.org/strapi/currentColor" alt="Strapi" className="h-6 w-auto dark:invert" />
-              </a>
-              <a href="https://neon.tech" target="_blank" rel="noopener noreferrer" title="Neon (PostgreSQL)" className="hover:opacity-80 transition-opacity">
-                <img src="https://cdn.simpleicons.org/postgresql/currentColor" alt="Neon (PostgreSQL)" className="h-6 w-auto dark:invert" />
-              </a>
-              <a href="https://cloudinary.com" target="_blank" rel="noopener noreferrer" title="Cloudinary" className="hover:opacity-80 transition-opacity">
-                <img src="https://cdn.simpleicons.org/cloudinary/currentColor" alt="Cloudinary" className="h-6 w-auto dark:invert" />
-              </a>
-              <a href="https://ui.shadcn.com" target="_blank" rel="noopener noreferrer" title="shadcn/ui" className="hover:opacity-80 transition-opacity">
-                <img src="https://cdn.simpleicons.org/shadcnui/currentColor" alt="shadcn/ui" className="h-5 w-auto dark:invert" />
-              </a>
-              <a href="https://tailwindcss.com" target="_blank" rel="noopener noreferrer" title="Tailwind CSS" className="hover:opacity-80 transition-opacity">
-                <img src="https://cdn.simpleicons.org/tailwindcss/currentColor" alt="Tailwind CSS" className="h-5 w-auto dark:invert" />
-              </a>
-              <a href="https://cloudflare.com" target="_blank" rel="noopener noreferrer" title="Cloudflare" className="hover:opacity-80 transition-opacity">
-                <img src="https://cdn.simpleicons.org/cloudflare/currentColor" alt="Cloudflare" className="h-6 w-auto dark:invert" />
-              </a>
+          <div className="lockx" aria-hidden="true" />
+          <div className="exp-ui">
+            <div className="container">
+              <div className="meta">
+                <p className="lab">Software architect &amp; developer</p>
+                <p className="lab">Bangalore, India · 10+ years</p>
+              </div>
+              <div className="mid" aria-hidden="true" />
+              <div className="exp-foot">
+                <div className="stack">
+                  <div className="hook-copy">
+                    <h1 className="sr-only">Rajat, software architect and developer</h1>
+                    <p className="hand hook-note" aria-hidden="true">
+                      {HOME.hookNote}
+                    </p>
+                    <p className="lead">{HOME.lead}</p>
+                    <div className="proc-static">
+                      <p className="process">{HOME.processStatic}</p>
+                    </div>
+                    <p className="hint lab" hidden>
+                      <span className="fine">{HOME.hint.fine}</span>
+                      <span className="coarse">{HOME.hint.coarse}</span>
+                    </p>
+                    <button className="btn" id="alignBtn" type="button" hidden>
+                      {HOME.alignLabel}
+                    </button>
+                    <p className="cue lab">{HOME.cue}</p>
+                  </div>
+                  <ol className="caps stack" aria-label="How I help">
+                    <li className="cap" data-step="1">
+                      <span className="lab">
+                        <span className="num">{HOME.steps[0].num}</span> · {HOME.steps[0].lab}
+                      </span>
+                      <span className="cap-t">{HOME.steps[0].title}</span>
+                      <span className="sr-only">{HOME.problems.map((p) => p.problem).join(". ")}.</span>
+                    </li>
+                    <li className="cap" data-step="2">
+                      <span className="lab">
+                        <span className="num">{HOME.steps[1].num}</span> · {HOME.steps[1].lab}
+                      </span>
+                      <span className="cap-t">{HOME.steps[1].title}</span>
+                      <span className="hand cap-note">{HOME.stepNote}</span>
+                    </li>
+                    <li className="cap" data-step="3">
+                      <span className="lab">
+                        <span className="num">{HOME.steps[2].num}</span> · {HOME.steps[2].lab}
+                      </span>
+                      <span className="cap-t">{HOME.steps[2].title}</span>
+                      <span className="cap-s">{HOME.subLine}</span>
+                      <span className="sr-only">{HOME.problems.map((p) => p.fix).join(". ")}.</span>
+                    </li>
+                  </ol>
+                </div>
+                <div className="hud" aria-hidden="true" hidden>
+                  <p className="lab" id="hudRow1">
+                    Turn +00.0° · Tilt +00.0°
+                  </p>
+                  <p className="lab" id="hudRow2">
+                    Off 00.0°
+                  </p>
+                  <div className="meter">
+                    <i id="hudBar" />
+                  </div>
+                </div>
+              </div>
             </div>
+          </div>
+          <p className="sr-only" id="hookLive" aria-live="polite" />
+        </div>
+      </div>
+      <Stage problems={HOME.problems} />
+
+      <section className="sect" id="who" aria-labelledby="who-h">
+        <div className="container gv">
+          <div className="sec-head">
+            <h2 id="who-h" className="t-h2" data-cons="text">
+              Who I am
+            </h2>
+          </div>
+          <div className="who-v">
+            <p className="who-body who-intro">{HOME.who.intro}</p>
+            <ol className="ways">
+              {HOME.who.ways.map((w, i) => (
+                <li key={w.title} data-cons="box">
+                  <span className="num">{String(i + 1).padStart(2, "0")}</span>
+                  <div>
+                    <h3 className="way-t">{w.title}</h3>
+                    <p className="who-body">{w.body}</p>
+                  </div>
+                  <p className="hand">{w.note}</p>
+                </li>
+              ))}
+            </ol>
+            <dl className="counts counts-row">
+              {whoCounts.map((c) => (
+                <div key={c.label}>
+                  <dt className="lab">{c.label}</dt>
+                  <dd className="num">{c.value}</dd>
+                </div>
+              ))}
+            </dl>
+          </div>
+        </div>
+      </section>
+
+      <section className="sect" id="build" aria-labelledby="build-h">
+        <div className="container gv">
+          <div className="sec-head">
+            <h2 id="build-h" className="t-h2" data-cons="text">
+              What I build
+            </h2>
+            <p className="lab">{HOME.build.sub}</p>
+          </div>
+          <div className="blocks offer">
+            {HOME.build.offerings.map((o, i) => (
+              <PenBlocks key={o.title}>
+                <h3 className="blk-h">
+                  <span className="num">{String(i + 1).padStart(2, "0")}</span> · {o.title}
+                </h3>
+                <p className="ln">{o.line}</p>
+              </PenBlocks>
+            ))}
+          </div>
+          <div className="cta-row">
+            <a className="btn btn-ink" href="#contact">
+              Tell me about your business
+            </a>
+            <Link className="btn" href="/projects">
+              See the projects
+            </Link>
+            <p className="hand">{HOME.build.ctaNote}</p>
+          </div>
+        </div>
+      </section>
+
+      <section className="sect" id="map" aria-labelledby="map-h">
+        <div className="container gv">
+          <div className="sec-head">
+            <h2 id="map-h" className="t-h2" data-cons="text">
+              Where to next
+            </h2>
+            <p className="lab">{HOME.map.sub}</p>
+          </div>
+          <div className="map-root">
+            <span className="here" aria-hidden="true" />
+            <span className="lab">You are here · Home</span>
+            <span className="hand">{HOME.map.rootNote}</span>
+          </div>
+          <ul className="map-nodes">
+            {HOME.map.nodes.map((node) => {
+              const desc = node.desc ?? mapProjectsDesc(counts.featured, counts.earlier);
+              return (
+                <li key={node.heading}>
+                  <Link className="node" href={node.href} data-cons="box">
+                    <span className="lab">
+                      <span className="num">{node.num}</span> · {node.heading}
+                    </span>
+                    <span className="node-t">{node.title}</span>
+                    <span className="node-d">{desc}</span>
+                    <span className="node-go lab">
+                      {node.cta}
+                      <span aria-hidden="true">{node.cta === "Write" ? " ↓" : " →"}</span>
+                    </span>
+                  </Link>
+                </li>
+              );
+            })}
+          </ul>
+        </div>
+      </section>
+
+      <section className="foot end" id="contact">
+        <div className="container">
+          <div className="end-grid">
+            <div className="end-copy">
+              <p className="end-t" data-cons="text">
+                {HOME.close.title}
+              </p>
+              <p className="hand end-note">{HOME.close.note}</p>
+              <p className="lab end-reply">
+                I usually reply within <span className="num">{HOME.close.replyHours}</span> hours
+              </p>
+            </div>
+            <ContactForm subjects={HOME.subjects} replyHours={HOME.close.replyHours} />
           </div>
         </div>
       </section>

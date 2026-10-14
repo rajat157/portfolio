@@ -1,7 +1,8 @@
 # Portfolio Website
 
 ## Overview
-Modern, dark-mode-first portfolio website with blog functionality for **Rajat Kumar R** - Software Architect & Developer. Live at https://www.rajatkumarr.com.
+Portfolio website with blog functionality for **Rajat Kumar R** - Software Architect & Developer, in the "Drafted" design
+(a light-only drafting-sheet language — see `design/drafted/BUILD-PLAN.md`). Live at https://www.rajatkumarr.com.
 
 Single Next.js app with **Payload CMS embedded** (admin at `/admin`). There is no separate backend service — the former Strapi-on-Render backend was retired in June 2026.
 
@@ -10,8 +11,9 @@ Single Next.js app with **Payload CMS embedded** (admin at `/admin`). There is n
 - **CMS**: Payload 3 (embedded; Postgres adapter, schema `payload`)
 - **Database**: Neon Postgres via Vercel Marketplace (prod) / Docker Postgres on port 5434 (dev)
 - **Media**: Vercel Blob, public store `portfolio-media` (prod) / local disk `frontend/media/` (dev, gitignored)
-- **Styling**: Tailwind CSS v4 + shadcn/ui
-- **Animations**: Framer Motion + Lenis (smooth scroll)
+- **Styling**: plain CSS (`frontend/src/app/(site)/globals.css`, one file, no Tailwind/shadcn, no dark mode — the "Drafted" design kit, light only)
+- **Fonts**: next/font — Instrument Sans (sans, variable wdth/wght), Martian Mono (mono), Caveat (hand notes), Doto (counters)
+- **3D**: three.js, loaded only on the home page (the shard stage), lazily
 - **Email**: Resend
 - **Deployment**: Vercel only (project `portfolio`, root directory `frontend`, auto-deploys from `master`)
 
@@ -55,11 +57,34 @@ Local dev DB (one-time): `docker run -d --name portfolio-payload-pg -p 5434:5432
 
 Seed/reseed dev content: `curl -X POST http://localhost:3000/api/dev-import`
 
+Local builds on Windows + podman: set `NODE_OPTIONS=--network-family-autoselection-attempt-timeout=3000` first — podman answers on
+`::1` only, and under build load the default 250ms per-address Happy Eyeballs try times out, so pages fall back to a slower retry.
+
+Other scripts (`frontend/scripts/`):
+- `node_modules\.bin\tsx.cmd scripts/check-drawing.mts` — regression test of the `drawing` layout invariants (exact `describe()`
+  strings, geometry at 4 widths).
+- `node scripts/verify-site.mjs --routes /,/projects,/projects/*,/blog,/blog/*,/about,/contact` — the browser verification harness
+  (system Chrome + WebKit via `playwright-core`, no downloaded Chromium). Run it against a built `npm run start`, not `npm run dev`.
+  **Every check that submits the contact form intercepts `/api/contact`** — see the caution below.
+- `node scripts/measure-grain.mjs` — the grain-overlay cost/visual-diff measurement (§4.7 Q6b of `design/drafted/BUILD-PLAN.md`),
+  also against a running `npm run start`.
+- `node scripts/og-image.mjs` — regenerates `public/og-image.png` from an HTML template via Playwright + system Chrome.
+- `scripts/font-metrics.py` (fontTools; generates `src/lib/font-metrics.ts` and `src/lib/name-outline.ts`) — run with the miniconda
+  Python environment (fontTools + brotli installed there), not whatever `python` resolves to by default.
+- `node_modules\.bin\payload.cmd run scripts/import-case-studies.ts -- --content [--execute]` — content import/sync. Every run syncs
+  title, description, technologies, live_url, featured/featured_order, `sheet` and `drawing` (overwriting admin edits to them);
+  `--content` also syncs the markdown body. Defaults to dry-run; add `--execute` to write.
+
 ## Content Model (frontend/src/payload/)
 - **Collections**: `projects`, `blog-posts` (both with drafts), `categories`, `media` (upload), `users` (admin auth)
 - **Globals**: `about` (skills/experience/education arrays), `site-settings`
 - Long-form `content` fields are **Markdown** (code field), rendered with react-markdown — not Lexical.
 - Public queries MUST filter `_status: published` — `lib/cms` does this; Payload's local API otherwise returns drafts.
+- `projects` has a `sheet` group (title-block fields shown on the case-study sheet) and a `drawing` json field (the
+  deterministic layout data consumed by `src/lib/drawing.ts`/`drawing-view.tsx`); see `src/migration/case-studies/sheets.json`
+  for the content source these were ported from.
+- `featured_order` on `projects` sorts the featured set on `/` and `/projects` (ascending, then `start_date` descending as
+  the tiebreak) — `frontend/src/lib/cms/index.ts`.
 
 ## Environment Variables
 
@@ -90,23 +115,32 @@ Dev uses drizzle push (automatic). Production uses committed migrations in `fron
 - Admin password-reset email uses the Resend adapter (`@payloadcms/email-resend`) from `onboarding@resend.dev` (Resend sandbox sender — only delivers to the account owner's address; fine for the single admin).
 - `payload run` rewrites `process.argv` — a flag passed normally (`npx payload run scripts/x.ts --execute`) is invisible to the script; it only registers after a bare `--` (`npx payload run scripts/x.ts -- --execute`). An "execute" run without it silently no-ops into dry-run.
 - `payload run` calls `loadEnv()` before importing the target script, so `frontend/.env.local`'s `DATABASE_URI` shadows a production URL you meant to target — the script hits the local DB while appearing to run against prod. Pre-setting the var in the process environment before invoking does override it (`@next/env` won't clobber an already-set var). See `frontend/scripts/import-case-studies.ts`: defaults to dry-run, prints a `local | REMOTE / production` banner, forces `PAYLOAD_DB_PUSH=false`.
-- `featured_order` on `projects` sorts nothing — no query uses it; featured display order comes from `start_date` (`frontend/src/lib/cms/index.ts`).
+- `featured_order` on `projects` sorts the featured set (see Content Model above).
 
 ## Code Conventions
 - TypeScript strict mode; absolute imports via `@/`; `@payload-config` resolves to src/payload.config.ts
-- Components PascalCase; Reveal component for scroll animations; dark mode default
+- Components PascalCase; `PenBlocks` (`src/components/reveal.tsx`) for the sheet blocks' scroll-in drafting; light only, no dark mode
 - Pages keep hardcoded fallback content for when the DB returns nothing — preserve this pattern
 - ISR: all CMS pages export `revalidate = 3600`
 
 ## Pages
 | Route | Description |
 |-------|-------------|
-| `/` | Home - Hero, Skills marquee, Featured projects, Latest posts |
-| `/about` | Bio, Experience timeline, Skills grid |
-| `/projects` + `/projects/[slug]` | Listing with filters + case studies |
+| `/` | Home - the three.js shard stage, scroll story, "how I work", offerings, site map, routed contact brief |
+| `/about` | Bio, experience timeline, skills grid |
+| `/projects` + `/projects/[slug]` | Index of works (architecture drawn per sheet) + earlier works table + case-study sheets |
 | `/blog` + `/blog/[slug]` | Listing + article with reading progress |
-| `/contact` | Contact form (Resend) |
+| `/contact` | Routed contact brief (Resend) |
 | `/admin` | Payload admin |
+
+## Local prod builds (caution)
+- `frontend/.env.production.local` holds **production** secrets (`DATABASE_URL`, `DATABASE_URL_UNPOOLED`, `BLOB_READ_WRITE_TOKEN`,
+  `RESEND_API_KEY`...). `next build`/`next start` load it; `next dev` does not. The DB stays local anyway because `DATABASE_URI`
+  wins over `DATABASE_URL` in `payload.config.ts`, but the **production Blob token and Resend key are live** under `next start`.
+  Never open `/admin` or submit the contact form under `next start` in this tree — check `/admin` under `next dev` only.
+- `/api/contact` sends a real email to Rajat via Resend whenever `RESEND_API_KEY` is set (which it is, from `.env.production.local`,
+  under `next start`). Any test or harness that submits the contact form **must intercept `/api/contact`** (e.g. Playwright
+  `page.route`) rather than let the request through.
 
 ## Pending / History
 - **~July 2026**: old Strapi Neon DB (`OLD_NEON_DATABASE_URL`) exits compute-quota lockout — run `node scripts/export-strapi-neon.mjs` and reconcile any blog posts/drafts not among the migrated content. Delete the Render service `portfolio-strapi` if not already done.

@@ -1,0 +1,2002 @@
+<title>Drafted</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Instrument+Sans:wdth,wght@75..100,400..700&family=Martian+Mono:wdth,wght@75..112.5,300..700&display=swap">
+<style>
+/*
+ * KIT — shared design kit for "Drafted" and "Cut" prototypes.
+ * Paste this whole file inline in a <style> tag (or link it) before any
+ * study-specific CSS. See README.md for the Google Fonts <link> to pair
+ * with this file and for a token/helper reference.
+ */
+
+:root {
+  color-scheme: light;
+
+  /* --- color tokens --- */
+  --lab: #E7E9EC;       /* ground */
+  --panel: #F6F7F8;
+  --ink: #0D0F12;
+  --graphite: #4F5560;  /* secondary text, >=4.5:1 on --lab */
+  --hairline: #C3C7CE;
+  --orange: #FF4D12;    /* fills and large marks only, never small text */
+  --deep-orange: #C93400; /* thin marks */
+  --blue: #2448FF;      /* links, focus, construction lines */
+
+  /* --- easing --- */
+  --ease-attack: cubic-bezier(.2, 0, 0, 1);
+  --ease-weight: cubic-bezier(.7, 0, .2, 1);
+
+  /* --- fluid type scale --- */
+  --fs-display: clamp(2.5rem, 1.8rem + 3vw, 5rem);
+  --fs-h1: clamp(2rem, 1.5rem + 2vw, 3.5rem);
+  --fs-h2: clamp(1.5rem, 1.2rem + 1vw, 2.25rem);
+  --fs-body: clamp(1rem, 0.95rem + 0.2vw, 1.125rem);
+  --fs-mono: clamp(0.8rem, 0.78rem + 0.1vw, 0.95rem);
+}
+
+html, body {
+  background: var(--lab);
+  color: var(--ink);
+}
+
+body {
+  font-family: 'Instrument Sans', sans-serif;
+  font-size: var(--fs-body);
+}
+
+/* --- type --- */
+.t-display, .t-h1, .t-h2 {
+  font-family: 'Instrument Sans', sans-serif;
+  font-variation-settings: 'wdth' 85, 'wght' 700;
+  line-height: 1.05;
+  margin: 0;
+}
+.t-display { font-size: var(--fs-display); }
+.t-h1 { font-size: var(--fs-h1); }
+.t-h2 { font-size: var(--fs-h2); font-variation-settings: 'wdth' 90, 'wght' 600; }
+
+.t-body {
+  font-family: 'Instrument Sans', sans-serif;
+  font-variation-settings: 'wdth' 100, 'wght' 400;
+  font-size: var(--fs-body);
+  color: var(--graphite);
+}
+
+.t-mono {
+  font-family: 'Martian Mono', monospace;
+  font-variation-settings: 'wdth' 100, 'wght' 400;
+  font-size: var(--fs-mono);
+  letter-spacing: 0.01em;
+}
+
+/* --- 12-column grid utility --- */
+.container {
+  max-width: 1280px;
+  margin: 0 auto;
+  padding: 0 24px;
+}
+.grid {
+  display: grid;
+  grid-template-columns: repeat(12, 1fr);
+  gap: var(--grid-gap, 16px);
+}
+
+/* --- registration marks: small "+" at grid intersections --- */
+.kit-registration {
+  background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='48' height='48'><path d='M24 20v8M20 24h8' stroke='%23C3C7CE' stroke-width='1'/></svg>");
+  background-repeat: repeat;
+  background-size: 48px 48px;
+}
+
+/* --- grain overlay (static, 4% opacity) --- */
+.kit-grain {
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  opacity: 0.04;
+  z-index: 9999;
+  mix-blend-mode: multiply;
+  background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='200' height='200'><filter id='n'><feTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='2' stitchTiles='stitch'/></filter><rect width='100%25' height='100%25' filter='url(%23n)'/></svg>");
+}
+
+/* --- drafting cursor (fine pointers only) --- */
+@media (pointer: fine) {
+  html.kit-cursor-on, html.kit-cursor-on * { cursor: none; }
+  html.kit-cursor-on a,
+  html.kit-cursor-on input,
+  html.kit-cursor-on textarea,
+  html.kit-cursor-on select,
+  html.kit-cursor-on button,
+  html.kit-cursor-on [contenteditable] {
+    cursor: auto;
+  }
+}
+.kit-cursor {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 0;
+  height: 0;
+  pointer-events: none;
+  z-index: 10000;
+  will-change: transform;
+}
+.kit-cursor-mark {
+  position: absolute;
+  width: 21px;
+  height: 21px;
+  margin: -10.5px 0 0 -10.5px;
+  background:
+    linear-gradient(var(--ink), var(--ink)) no-repeat center / 1px 21px,
+    linear-gradient(var(--ink), var(--ink)) no-repeat center / 21px 1px;
+}
+.kit-cursor-coords {
+  position: absolute;
+  left: 14px;
+  top: 14px;
+  white-space: nowrap;
+  font-family: 'Martian Mono', monospace;
+  font-size: 11px;
+  color: var(--ink);
+}
+
+/* --- reveal helper: visible at rest, animates from a visible state --- */
+.kit-reveal {
+  transform: translateY(12px);
+  transition: transform 500ms var(--ease-weight);
+}
+.kit-reveal.is-in {
+  transform: translateY(0);
+}
+
+/* --- accessibility --- */
+:focus-visible {
+  outline: 2px solid var(--blue);
+  outline-offset: 2px;
+}
+.tap-target {
+  min-width: 44px;
+  min-height: 44px;
+}
+[hidden] {
+  display: none !important;
+}
+
+/* --- reduced motion: instant, no transitions/animations --- */
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    transition-duration: 0s !important;
+    animation-duration: 0s !important;
+    animation-iteration-count: 1 !important;
+  }
+}
+
+/* ======================= Drafted: study styles ======================= */
+:root {
+  --ink-c: var(--ink);
+  --sub-c: var(--graphite);
+  --orange-c: var(--orange);
+  --rule-c: var(--hairline);
+  --t32: 62.5ms; --t16: 125ms; --t8: 250ms; --t38: 750ms; /* rewritten from KIT.t() at boot */
+  --d: 0ms; --i: 0;
+  --gap: 16px;
+}
+[data-construction="on"] { --rule-c: var(--blue); }
+html { scroll-padding-top: 76px; }
+html.inspecting { overflow: hidden; }
+body { margin: 0; color: var(--ink-c); line-height: 1.5; transition: color var(--t16) var(--ease-attack); }
+p { margin: 0; }
+a { color: var(--ink-c); text-decoration-thickness: 1px; text-underline-offset: 3px; }
+a:hover { color: var(--blue); }
+@media (max-width: 640px) { .container { padding: 0 16px; } }
+.sr-only { position: absolute; width: 1px; height: 1px; margin: -1px; padding: 0; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; border: 0; }
+.skip { position: absolute; left: 16px; top: -120px; z-index: 45; background: var(--ink); color: var(--lab); padding: 12px 16px; }
+.skip:focus { top: 8px; color: var(--lab); }
+.lab { font-family: 'Martian Mono', ui-monospace, monospace; font-size: 11px; line-height: 1.5; letter-spacing: .06em; text-transform: uppercase; color: var(--sub-c); font-variant-numeric: tabular-nums; }
+.btn { white-space: nowrap; font: 400 11px/1 'Martian Mono', ui-monospace, monospace; letter-spacing: .06em; text-transform: uppercase; min-height: 44px; min-width: 44px; padding: 0 14px; background: transparent; color: var(--ink-c); border: 1px solid var(--ink-c); border-radius: 0; cursor: pointer; transition: background var(--t32) var(--ease-attack), color var(--t32) var(--ease-attack), transform var(--t32) var(--ease-attack); }
+.btn:hover { background: var(--ink-c); color: var(--lab); }
+.btn:active { transform: translateY(1px); }
+
+/* 12-column grid, shown as faint columns while construction is shown */
+[data-construction="on"] .gv {
+  background-image: linear-gradient(to right, rgba(36, 72, 255, .06) calc(100% - var(--gap)), transparent 0);
+  background-size: calc((100% + var(--gap)) / 12) 100%;
+  background-origin: content-box; background-clip: content-box; background-repeat: repeat-x;
+}
+
+/* ---------- header + construction toggle ---------- */
+.top { position: sticky; top: env(safe-area-inset-top, 0px); z-index: 40; background: var(--lab); border-bottom: 1px solid var(--hairline); }
+.top-in { display: flex; align-items: center; justify-content: space-between; gap: 12px; min-height: 60px; }
+.mark { display: inline-flex; align-items: center; gap: 12px; min-height: 44px; text-decoration: none; }
+.mark b { font: 650 22px/1 'Instrument Sans', 'Arial Narrow', sans-serif; font-stretch: 75%; letter-spacing: .01em; }
+.toggle { display: inline-flex; align-items: center; gap: 10px; min-height: 44px; min-width: 44px; padding: 0 14px; font: 500 14px/1 'Instrument Sans', sans-serif; color: var(--ink-c); background: transparent; border: 1px solid var(--hairline); border-radius: 0; cursor: pointer; transition: border-color var(--t32) var(--ease-attack), color var(--t32) var(--ease-attack); }
+.toggle:hover { border-color: var(--ink-c); }
+.tg-mark { width: 11px; height: 11px; flex: none; background: linear-gradient(var(--blue), var(--blue)) no-repeat center / 1px 11px, linear-gradient(var(--blue), var(--blue)) no-repeat center / 11px 1px; }
+[data-construction="on"] .toggle { border-color: var(--blue); color: var(--blue); }
+@media (pointer: coarse) { .hint .fine { display: none; } }
+@media (pointer: fine) { .hint .coarse { display: none; } }
+@media (max-width: 560px) { .mark .lab { display: none; } }
+
+/* ---------- hero ---------- */
+.hero { padding-block: 28px 36px; border-bottom: 1px solid var(--hairline); }
+.meta { display: flex; flex-wrap: wrap; justify-content: space-between; gap: 4px 24px; }
+.name { margin: 18px 0 0; font-size: 1rem; line-height: 0; }
+.name-svg { display: block; width: 100%; height: auto; overflow: visible; will-change: transform; touch-action: manipulation; }
+.sub { display: grid; grid-template-columns: repeat(12, 1fr); gap: 20px var(--gap); margin-top: 24px; align-items: start; }
+.role-wrap { grid-column: 1 / span 4; }
+.proc-wrap { grid-column: 6 / span 7; }
+.sub .lab { margin-bottom: 8px; }
+.role { font-family: 'Instrument Sans', sans-serif; font-weight: 600; font-stretch: 85%; font-size: var(--fs-h2); line-height: 1.12; text-wrap: balance; }
+.process { font-family: 'Instrument Sans', sans-serif; font-weight: 450; font-size: clamp(1.25rem, 1rem + .9vw, 1.75rem); line-height: 1.3; text-wrap: pretty; }
+.process span { display: block; }
+.role, .process span { transition: color var(--t32) var(--ease-attack); }
+.hero .pending { color: var(--blue); }
+.hint { margin-top: 28px; }
+@media (max-width: 760px) { .role-wrap, .proc-wrap { grid-column: 1 / -1; } }
+
+/* ---------- drawing primitives (SVG) ---------- */
+.c { fill: none; stroke: var(--blue); stroke-width: 1; }
+.c-soft { stroke-opacity: .42; }
+.c-dashed { stroke-dasharray: 2 3; }
+.c-txt { fill: var(--blue); stroke: none; font-family: 'Martian Mono', ui-monospace, monospace; font-size: 10px; letter-spacing: .02em; font-variant-numeric: tabular-nums; }
+.c-knock { fill: var(--lab); stroke: none; }
+.panel .c-knock { fill: var(--panel); }
+.cons { transition: opacity var(--t16) var(--ease-attack); }
+html:not([data-construction="on"]) .cons { opacity: 0; }
+html.intro-run .cons, html:not([data-construction="on"]) .drafting .cons, html:not([data-construction="on"]) .cons.hot, html:not([data-construction="on"]) .dia:hover .cons, html:not([data-construction="on"]) .peek .cons { opacity: 1; }
+.cd { opacity: 0; transition: opacity var(--t32) var(--ease-attack); }
+.cd.hot { opacity: 1; }
+.glyph { font-family: 'Instrument Sans', 'Arial Narrow', sans-serif; font-weight: 650; font-stretch: 75%; fill: var(--ink-c); stroke: var(--ink-c); stroke-width: 1; transition: fill var(--t16) var(--ease-attack), stroke var(--t16) var(--ease-attack), fill-opacity var(--t16) var(--ease-attack); }
+.dot { fill: var(--orange-c); stroke: none; transition: fill var(--t16) var(--ease-attack); }
+.dia { display: block; overflow: visible; }
+.d-box { fill: none; stroke: var(--ink-c); stroke-width: 1.5; }
+.d-edge, .d-wall, .d-dim { fill: none; stroke: var(--ink-c); stroke-width: 1; }
+.d-arrow { fill: var(--ink-c); stroke: none; }
+.d-label { fill: var(--ink-c); font-family: 'Instrument Sans', sans-serif; font-weight: 500; }
+.d-elabel { fill: var(--sub-c); font-family: 'Martian Mono', ui-monospace, monospace; letter-spacing: .02em; }
+.d-note { fill: var(--ink-c); font-family: 'Martian Mono', ui-monospace, monospace; letter-spacing: .02em; }
+#guides { position: absolute; left: 0; top: 0; pointer-events: none; z-index: 30; }
+
+/* ---------- works index ---------- */
+.works { padding-block: 36px 72px; }
+.sec-head { display: flex; flex-wrap: wrap; align-items: baseline; justify-content: space-between; gap: 8px 24px; padding-top: 14px; border-top: 1px solid var(--ink-c); }
+.works-grid { display: grid; grid-template-columns: repeat(12, 1fr); gap: 28px var(--gap); margin-top: 28px; align-items: start; }
+.tbl-wrap { grid-column: 1 / span 7; position: relative; }
+.panel { grid-column: 8 / span 5; position: sticky; top: 76px; background: var(--panel); border: 1px solid var(--hairline); }
+@media (max-width: 1199px) { .tbl-wrap, .panel { grid-column: 1 / -1; } .panel { position: static; } }
+html:not(.js) .tbl-wrap { grid-column: 1 / -1; }
+.panel-row > td { padding: 0 0 16px; border-bottom: 1px solid var(--hairline); }
+.idx { width: 100%; border-collapse: collapse; font-size: 14px; line-height: 1.35; }
+.idx th, .idx td { text-align: left; vertical-align: baseline; padding: 10px 12px 10px 0; border-bottom: 1px solid var(--hairline); font-weight: 400; }
+.idx td { color: var(--sub-c); }
+.idx thead th { font: 400 10px/1.4 'Martian Mono', ui-monospace, monospace; letter-spacing: .08em; text-transform: uppercase; color: var(--sub-c); padding-block: 0 10px; border-bottom-color: var(--ink-c); }
+.idx tbody tr { transition: background var(--t32) var(--ease-attack); }
+.idx tbody tr.prow:hover, .idx tbody tr.sel { background: var(--panel); }
+.idx .sh { font: 400 13px/1.35 'Martian Mono', ui-monospace, monospace; color: var(--sub-c); padding-left: 10px; width: 3.4em; font-variant-numeric: tabular-nums; }
+.rowbtn { display: inline-flex; align-items: center; text-decoration: none; min-height: 44px; font: 600 19px/1.15 'Instrument Sans', sans-serif; font-stretch: 85%; color: var(--ink-c); text-align: left; cursor: pointer; }
+.rowbtn:focus-visible { outline: 2px solid var(--blue); outline-offset: 3px; }
+.more { font: 400 11px/1 'Martian Mono', ui-monospace, monospace; white-space: nowrap; }
+.idx .k { width: 22%; } .idx .st { width: 24%; }
+@media (min-width: 720px) { .idx thead th:nth-child(3) { width: 20%; } }
+@media (max-width: 719px) { .idx .k, .idx .st { display: none; } .rowbtn { font-size: 17px; } }
+.key { margin-top: 36px; }
+.key ul { list-style: none; margin: 10px 0 0; padding: 0; display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px 24px; }
+.key li { display: flex; align-items: center; gap: 12px; font-size: 13px; line-height: 1.35; color: var(--sub-c); }
+.key svg { flex: none; overflow: visible; }
+@media (max-width: 640px) { .key ul { grid-template-columns: 1fr; } }
+.rule { position: absolute; left: 0; right: 0; top: 0; height: 2px; margin-top: -1px; background: var(--ink-c); pointer-events: none; opacity: 0; transition: opacity var(--t16) var(--ease-attack); }
+.rule.on { opacity: 1; }
+@media (min-width: 1200px) { .rule { right: calc(-1 * var(--gap)); } }
+.panel-head, .panel-foot { display: flex; align-items: center; justify-content: space-between; gap: 12px; padding: 8px 14px; }
+.panel-head { border-bottom: 1px solid var(--hairline); min-height: 44px; }
+.panel-foot { border-top: 1px solid var(--hairline); padding-block: 12px; }
+.dia-box { height: 460px; }
+.panel-foot .btn { flex: none; }
+.panel-cap { font-size: 15px; line-height: 1.4; color: var(--ink-c); max-width: 40ch; }
+@media (max-width: 640px) { .dia-box { height: 456px; } .panel-foot { flex-direction: column; align-items: stretch; } }
+
+/* ---------- sheets: static and readable without JS; JS moves one into the inspect view ---------- */
+.sheets { padding-block: 8px 72px; }
+.psheet { margin-top: 44px; padding-top: 8px; border-top: 1px solid var(--ink-c); }
+.inspect .psheet { margin-top: 0; padding-top: 0; border-top: 0; }
+.dia-text { font-size: 14px; line-height: 1.5; color: var(--sub-c); max-width: 62ch; }
+.js .dia-text { position: absolute; width: 1px; height: 1px; margin: -1px; padding: 0; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; border: 0; }
+html:not(.js) .fig-box { display: none; }
+
+/* ---------- inspect sheet ---------- */
+.inspect { position: fixed; inset: 0; z-index: 50; background: var(--lab); overflow-y: auto; overscroll-behavior: contain; }
+.sheet { max-width: 1280px; margin: 0 auto; padding: 0 24px 72px; }
+@media (max-width: 640px) { .sheet { padding: 0 16px 56px; } }
+.sheet-top { position: sticky; top: 0; z-index: 2; display: flex; align-items: center; justify-content: space-between; gap: 12px; min-height: 60px; background: var(--lab); border-bottom: 1px solid var(--ink-c); }
+.sheet-grid { display: grid; grid-template-columns: repeat(12, 1fr); gap: 24px var(--gap); margin-top: 28px; align-items: start; }
+.sh-head { grid-column: 1 / span 8; }
+.tb { grid-column: 9 / span 4; grid-row: 1 / span 2; border: 1px solid var(--ink-c); background: var(--lab); }
+.fig { grid-column: 1 / span 8; margin: 0; }
+@media (max-width: 959px) { .sh-head, .tb, .fig { grid-column: 1 / -1; grid-row: auto; } }
+.sheet-title { font-family: 'Instrument Sans', 'Arial Narrow', sans-serif; font-weight: 650; font-stretch: 75%; font-size: clamp(2.5rem, 1.6rem + 3.6vw, 4.75rem); line-height: .98; margin: 8px 0 14px; text-wrap: balance; outline-offset: 6px; }
+.sheet-one { font-size: clamp(1.125rem, 1rem + .4vw, 1.375rem); line-height: 1.35; max-width: 46ch; }
+.tb dl { margin: 0; }
+.tb-row { display: grid; grid-template-columns: 6.2em 1fr; border-bottom: 1px solid var(--hairline); }
+.tb dt { padding: 11px 12px; border-right: 1px solid var(--hairline); }
+.tb dd { margin: 0; padding: 10px 12px; font-size: 14px; line-height: 1.45; }
+.tb-sheet { position: relative; isolation: isolate; font: 650 34px/1 'Instrument Sans', 'Arial Narrow', sans-serif !important; font-stretch: 75% !important; color: var(--ink); padding: 14px 12px !important; font-variant-numeric: tabular-nums; }
+.tb-sheet::before { content: ''; position: absolute; inset: 0; z-index: -1; background: var(--orange-c); transform-origin: 0 50%; transition: transform var(--t16) var(--ease-attack); }
+.fill-pending .tb-sheet::before { transform: scaleX(0); }
+.tb-link { display: flex; align-items: center; justify-content: space-between; min-height: 52px; padding: 0 12px; font-weight: 600; text-decoration: none; transition: background var(--t32) var(--ease-attack), color var(--t32) var(--ease-attack); }
+.tb-link:hover { background: var(--ink-c); color: var(--lab); }
+.fig-box { border-top: 1px solid var(--ink-c); border-bottom: 1px solid var(--hairline); padding-block: 12px; }
+.fig figcaption { margin-top: 8px; }
+.fig-cap { margin-top: 4px; }
+.blocks { display: grid; grid-template-columns: repeat(2, 1fr); gap: 44px 48px; margin-top: 52px; }
+@media (max-width: 759px) { .blocks { grid-template-columns: 1fr; gap: 36px; } }
+.blk-h { font: 600 12px/1.3 'Martian Mono', ui-monospace, monospace; letter-spacing: .08em; text-transform: uppercase; color: var(--ink-c); margin: 0 0 6px; }
+.blk ul { list-style: none; margin: 0; padding: 0; }
+.ln { position: relative; padding-top: 12px; margin: 0 0 14px; font-size: 16px; line-height: 1.55; max-width: 62ch; }
+.ln::before { content: ''; position: absolute; left: 0; right: 0; top: 0; height: 1px; background: var(--rule-c); transform-origin: 0 0; }
+.blk.pre .ln { color: var(--blue); }
+.blk.pre .ln::before { transform: scaleX(0); background: var(--blue); }
+.blk.pre.is-in .ln { color: var(--ink-c); transition: color var(--t32) var(--ease-attack) calc(var(--i) * var(--t16) + var(--d)); }
+.blk.pre.is-in .ln::before { transform: none; background: var(--rule-c); transition: transform var(--d) linear calc(var(--i) * var(--t16)), background-color var(--t16) var(--ease-attack) calc(var(--i) * var(--t16) + var(--d) + var(--t8)); }
+
+/* ---------- footer ---------- */
+.foot { border-top: 1px solid var(--ink-c); }
+.foot-in { display: flex; flex-wrap: wrap; align-items: center; gap: 4px 18px; padding-block: 14px 28px; }
+.email { font-family: 'Martian Mono', ui-monospace, monospace; font-size: 14px; user-select: all; }
+.foot a { display: inline-flex; align-items: center; min-height: 44px; }
+.foot .place { margin-left: auto; }
+</style>
+
+<a class="skip" href="#works">Skip to the index of works</a>
+<div class="kit-grain" aria-hidden="true"></div>
+
+<header class="top" id="top">
+  <div class="container top-in">
+    <a class="mark" href="#top"><b>RKR</b><span class="lab">Scale 1:1 · px</span></a>
+    <button class="toggle" id="consBtn" type="button" hidden><span class="tg-mark" aria-hidden="true"></span><span class="tg-label">Show construction</span></button>
+  </div>
+</header>
+
+<main id="main">
+  <section class="hero kit-registration" aria-label="Introduction">
+    <div class="container gv">
+      <div class="meta">
+        <p class="lab" data-cons="text">Portfolio · Sheet 00 of 04</p>
+        <p class="lab" data-cons="text">Bangalore, India · 8+ years</p>
+      </div>
+      <h1 class="name" id="name">
+        <span class="sr-only">Rajat Kumar R</span>
+        <svg id="nameSvg" class="name-svg" viewBox="0 0 1000 214" aria-hidden="true" focusable="false">
+          <text class="glyph" x="0" y="160" font-size="205" textLength="1000" lengthAdjust="spacingAndGlyphs">Rajat Kumar R</text>
+        </svg>
+      </h1>
+      <div class="sub">
+        <div class="role-wrap">
+          <p class="lab">Role</p>
+          <p class="role" data-cons="text">Software Architect &amp; Developer</p>
+        </div>
+        <div class="proc-wrap">
+          <p class="lab">Process</p>
+          <p class="process" data-cons="text"><span>I take things apart until I understand them.</span> <span>Then I put them back together until they feel right.</span></p>
+        </div>
+      </div>
+      <p class="hint lab" hidden><span class="fine">Hover any part to see how it is built</span><span class="coarse">Tap the letters to see how they are built</span></p>
+    </div>
+  </section>
+
+  <section class="works" id="works" aria-labelledby="works-h">
+    <div class="container gv">
+      <div class="sec-head">
+        <h2 id="works-h" class="t-h2" data-cons="text">Index of works</h2>
+        <p class="lab">4 sheets · each drawing is the real architecture</p>
+      </div>
+      <div class="works-grid">
+        <div class="tbl-wrap">
+          <table class="idx">
+            <caption class="sr-only">Index of works. Each project links to its sheet.</caption>
+            <thead><tr><th scope="col">Sheet</th><th scope="col">Project</th><th scope="col">For</th><th scope="col" class="k">Kind</th><th scope="col" class="st">Stack</th></tr></thead>
+            <tbody id="rows">
+              <tr class="prow"><td class="sh">01</td><th scope="row"><a class="rowbtn" href="#p-offpriced">Offpriced</a></th><td data-fact>a Montréal stocklot house</td><td class="k" data-fact>B2B Wholesale Platform</td><td class="st" data-fact>Next.js · Payload CMS · PostgreSQL <span class="more">+8<span class="sr-only"> more</span></span></td></tr>
+              <tr class="prow"><td class="sh">02</td><th scope="row"><a class="rowbtn" href="#p-staffing">Staffing operations platform</a></th><td data-fact>a staffing company</td><td class="k" data-fact>a small ERP, built from scratch</td><td class="st" data-fact>Next.js · Drizzle ORM · PostgreSQL <span class="more">+7<span class="sr-only"> more</span></span></td></tr>
+              <tr class="prow"><td class="sh">03</td><th scope="row"><a class="rowbtn" href="#p-lucif3r">lucif3r</a></th><td data-fact>an esports caster, stage host and broadcast voice</td><td class="k" data-fact>a website with one job</td><td class="st" data-fact>Payload CMS · Lenis · Vercel Blob <span class="more">+10<span class="sr-only"> more</span></span></td></tr>
+              <tr class="prow"><td class="sh">04</td><th scope="row"><a class="rowbtn" href="#p-tredye">Tredye</a></th><td data-fact>Voltvave Innovations</td><td class="k" data-fact>Real-Time NSE Market Monitoring on an Event-Driven Stack</td><td class="st" data-fact>Python · Apache Kafka · Redis <span class="more">+12<span class="sr-only"> more</span></span></td></tr>
+            </tbody>
+          </table>
+          <div class="rule" aria-hidden="true"></div>
+          <div class="key" hidden>
+            <p class="lab">Drawing key</p>
+            <ul>
+              <li><svg width="40" height="14" aria-hidden="true"><path class="c" d="M0 7.5H40M20.5 1V14"/></svg><span>Construction: guides and real measurements, in px</span></li>
+              <li><svg width="40" height="14" aria-hidden="true"><rect class="d-box" x="1" y="1.5" width="38" height="11"/></svg><span>A part of the system, as built</span></li>
+              <li><svg width="40" height="14" aria-hidden="true"><path class="d-edge" d="M0 7.5H34"/><path class="d-arrow" d="M40 7.5L32 4V11Z"/></svg><span>Direction of data or requests</span></li>
+              <li><svg width="40" height="14" aria-hidden="true"><path class="d-wall" d="M0 3.5H40M0 10.5H40M2 10L8 4M8 10L14 4M14 10L20 4M20 10L26 4M26 10L32 4M32 10L38 4"/></svg><span>Wall: data kept apart inside the database</span></li>
+            </ul>
+          </div>
+        </div>
+        <aside class="panel" aria-labelledby="panel-h" hidden>
+          <div class="panel-head"><p id="panel-h" class="lab">Sheet 01 · Offpriced</p><p class="lab" id="panel-size" aria-hidden="true"></p></div>
+          <div class="dia-box"><svg id="panelSvg" class="dia" data-fact role="img" aria-label="Architecture drawing"></svg></div>
+          <div class="panel-foot"><p class="panel-cap" id="panel-cap" data-cons="text" data-fact>One app for buyers, staff and editors — with a site the owner updates by talking to an AI.</p><button id="openBtn" class="btn" type="button" aria-haspopup="dialog">Open sheet 01</button></div>
+        </aside>
+      </div>
+    </div>
+  </section>
+
+  <section class="sheets" id="sheets" aria-labelledby="sheets-h">
+    <div class="container">
+      <div class="sec-head">
+        <h2 id="sheets-h" class="t-h2">Sheets</h2>
+        <p class="lab">The four projects in full</p>
+      </div>
+      <div class="sheet-list">
+      <article class="psheet" id="p-offpriced" aria-labelledby="t-offpriced">
+        <div class="sheet-grid">
+          <div class="sh-head">
+            <p class="lab" data-fact>B2B Wholesale Platform</p>
+            <h3 class="sheet-title" id="t-offpriced" tabindex="-1">Offpriced</h3>
+            <p class="sheet-one" data-fact>One app for buyers, staff and editors — with a site the owner updates by talking to an AI.</p>
+          </div>
+          <aside class="tb" aria-label="Title block">
+            <dl>
+              <div class="tb-row"><dt class="lab">Sheet</dt><dd class="tb-sheet">01 / 04</dd></div>
+              <div class="tb-row"><dt class="lab">Project</dt><dd data-fact>Offpriced</dd></div>
+              <div class="tb-row"><dt class="lab">For</dt><dd data-fact>Offpriced, a Montréal stocklot house selling clothing by the lot to retailers and wholesalers buying surplus, cancelled orders and factory over-runs in bulk.</dd></div>
+              <div class="tb-row"><dt class="lab">Kind</dt><dd data-fact>B2B Wholesale Platform</dd></div>
+              <div class="tb-row"><dt class="lab">Stack</dt><dd data-fact>Next.js, React, TypeScript, Payload CMS, PostgreSQL, Cloudflare R2, Resend, Vercel, Progressive Web Apps, Web Push, Model Context Protocol</dd></div>
+            </dl>
+            <a class="tb-link" href="https://www.rajatkumarr.com/projects/b2b-wholesale-platform" target="_blank" rel="noopener noreferrer"><span>Full case study</span><span aria-hidden="true">↗</span><span class="sr-only"> (opens in a new tab)</span></a>
+          </aside>
+          <figure class="fig">
+            <div class="fig-box"><svg class="dia dia-big" data-fact aria-hidden="true" focusable="false"></svg></div>
+            <figcaption>
+              <p class="dia-text" data-fact>Architecture of Offpriced: The public, Signed-in buyers, The team working those deals and Whoever edits the site to One application; One application to One database (one codebase, one database).</p>
+              <p class="lab fig-cap">Architecture, drawn 1:1</p>
+            </figcaption>
+          </figure>
+        </div>
+        <div class="blocks">
+          <section class="blk"><h4 class="blk-h">Problem</h4><div data-fact><p class="ln">Deals were negotiated by email with no single record of what was promised, and because every lot is a one-off with no restock, a public site nobody in the business could edit quickly became stale and a liability.</p></div></section>
+          <section class="blk"><h4 class="blk-h">What I built</h4><div data-fact><ul><li class="ln">The public site — a shop window centred on ‘The Floor’, the catalogue of lots currently available.</li><li class="ln">The buyer portal — line sheets, enquiries, quotes and orders tracked end to end instead of scattered across inboxes.</li><li class="ln">The internal operations app — a mobile-first CRM for staff to keep The Floor current and manage quotes and fulfilment.</li><li class="ln">The admin CMS, plus an MCP-based AI publishing flow so the owner can draft and publish articles by talking to Claude.</li></ul></div></section>
+          <section class="blk"><h4 class="blk-h">Key decisions</h4><div data-fact><ul><li class="ln">Embedded Payload CMS in the same Next.js codebase rather than running it as a second service, so there is one deployment and one login model instead of two systems to keep in sync.</li><li class="ln">Built the MCP server as a deliberately small, fixed set of actions behind a secret token, because the point was giving the AI assistant specific controls, not open access.</li><li class="ln">Modelled the sales lifecycle end to end with an automatic email and a permanent record at each transition, so a buyer dispute over a missed quote is a lookup, not an argument.</li><li class="ln">Segregated push notifications by audience, so an internal alert about a deal or a late shipment never reaches a customer’s phone.</li><li class="ln">Fixed the design system — colour, type and spacing — before building any screens, so a new screen is assembly, not invention.</li></ul></div></section>
+          <section class="blk"><h4 class="blk-h">Outcome</h4><div data-fact><p class="ln">One system where there were several disconnected ones. Buyers self-serve instead of waiting on a reply, staff work deals from a phone, and the site is edited by the people who know what it should say. Every enquiry, quote and order has a trail. And the owner publishes by talking.</p></div></section>
+        </div>
+      </article>
+
+      <article class="psheet" id="p-staffing" aria-labelledby="t-staffing">
+        <div class="sheet-grid">
+          <div class="sh-head">
+            <p class="lab" data-fact>a small ERP, built from scratch</p>
+            <h3 class="sheet-title" id="t-staffing" tabindex="-1">Staffing operations platform</h3>
+            <p class="sheet-one" data-fact>Five portals, one login, and every company’s data walled off inside the database itself.</p>
+          </div>
+          <aside class="tb" aria-label="Title block">
+            <dl>
+              <div class="tb-row"><dt class="lab">Sheet</dt><dd class="tb-sheet">02 / 04</dd></div>
+              <div class="tb-row"><dt class="lab">Project</dt><dd data-fact>Staffing operations platform</dd></div>
+              <div class="tb-row"><dt class="lab">For</dt><dd data-fact>a staffing company</dd></div>
+              <div class="tb-row"><dt class="lab">Kind</dt><dd data-fact>a small ERP, built from scratch</dd></div>
+              <div class="tb-row"><dt class="lab">Stack</dt><dd data-fact>Next.js, React, TypeScript, Turborepo, Drizzle ORM, PostgreSQL, Better Auth, CASL, Row-Level Security, State Machines</dd></div>
+            </dl>
+            <a class="tb-link" href="https://www.rajatkumarr.com/projects/staffing-operations-platform" target="_blank" rel="noopener noreferrer"><span>Full case study</span><span aria-hidden="true">↗</span><span class="sr-only"> (opens in a new tab)</span></a>
+          </aside>
+          <figure class="fig">
+            <div class="fig-box"><svg class="dia dia-big" data-fact aria-hidden="true" focusable="false"></svg></div>
+            <figcaption>
+              <p class="dia-text" data-fact>Architecture of Staffing operations platform: Admin, Client, Worker, Partner and Onboarding to Shared core; Shared core to Database — row-level security.</p>
+              <p class="lab fig-cap">Architecture, drawn 1:1</p>
+            </figcaption>
+          </figure>
+        </div>
+        <div class="blocks">
+          <section class="blk"><h4 class="blk-h">Problem</h4><div data-fact><p class="ln">A staffing company manages five relationships at once — its own team, the client companies, the people it places, the recruiters who source them, and the prospects it chases. On spreadsheets, that produces the two failure modes that hurt: money that quietly leaks, and information reaching the wrong company. The requirement: one system, five doors into it, and doors that do not connect.</p></div></section>
+          <section class="blk"><h4 class="blk-h">What I built</h4><div data-fact><ul><li class="ln">Five portals — Admin, Client, Worker, Partner, and an Onboarding flow that converts a prospect into a client once money changes hands.</li><li class="ln">Permissions through CASL, precise enough to say a person may approve a specific record, not just that they hold a role.</li><li class="ln">A workflow engine of state machines for approvals, so a request can’t skip a step and changing a process happens in one place.</li><li class="ln">An invoicing engine on integer minor-currency units with one written rounding rule, and an append-only audit log.</li></ul></div></section>
+          <section class="blk"><h4 class="blk-h">Key decisions</h4><div data-fact><ul><li class="ln">Enforced tenant isolation as row-level security inside the database itself rather than in application code, because an application filter can be forgotten in one query and leak another company’s payroll.</li><li class="ln">Ran ordinary traffic through a deliberately powerless database account that cannot switch the row-level security checks off; a separate privileged account exists only for maintenance.</li><li class="ln">Stored money as whole numbers of the smallest currency unit rather than binary floating point, because floating point cannot represent most money amounts exactly and the error accumulates.</li><li class="ln">Made the audit log append-only, so rewriting history takes deliberate action through the maintenance account rather than a quiet edit from inside the app.</li><li class="ln">Deliberately left out the codebase knowledge graph used on another project, because five portals over one shared core is a structure that fits in one person’s head.</li></ul></div></section>
+          <section class="blk"><h4 class="blk-h">Outcome</h4><div data-fact><p class="ln">Five groups, one platform, each seeing only its own slice. Work approved once and billed from the same record, commissions calculated rather than reconstructed, a history that cannot be quietly rewritten.</p></div></section>
+        </div>
+      </article>
+
+      <article class="psheet" id="p-lucif3r" aria-labelledby="t-lucif3r">
+        <div class="sheet-grid">
+          <div class="sh-head">
+            <p class="lab" data-fact>a website with one job — turn a tournament organiser or a brand’s event manager into a booking enquiry</p>
+            <h3 class="sheet-title" id="t-lucif3r" tabindex="-1">lucif3r</h3>
+            <p class="sheet-one" data-fact>A booking site that feels like a live broadcast — kept current by the talent, not a developer.</p>
+          </div>
+          <aside class="tb" aria-label="Title block">
+            <dl>
+              <div class="tb-row"><dt class="lab">Sheet</dt><dd class="tb-sheet">03 / 04</dd></div>
+              <div class="tb-row"><dt class="lab">Project</dt><dd data-fact>lucif3r</dd></div>
+              <div class="tb-row"><dt class="lab">For</dt><dd data-fact>lucif3r, an esports caster, stage host and broadcast voice working across esports finals, brand launches and live conventions</dd></div>
+              <div class="tb-row"><dt class="lab">Kind</dt><dd data-fact>a website with one job — turn a tournament organiser or a brand’s event manager into a booking enquiry</dd></div>
+              <div class="tb-row"><dt class="lab">Stack</dt><dd data-fact>Next.js, React, TypeScript, Payload CMS, PostgreSQL, Tailwind CSS, Lenis, Vercel Blob, Resend, Cloudflare Turnstile, Vitest, Playwright, Vercel</dd></div>
+            </dl>
+            <a class="tb-link" href="https://www.rajatkumarr.com/projects/esports-talent-portfolio" target="_blank" rel="noopener noreferrer"><span>Full case study</span><span aria-hidden="true">↗</span><span class="sr-only"> (opens in a new tab)</span></a>
+          </aside>
+          <figure class="fig">
+            <div class="fig-box"><svg class="dia dia-big" data-fact aria-hidden="true" focusable="false"></svg></div>
+            <figcaption>
+              <p class="dia-text" data-fact>Architecture of lucif3r: Control Room (Payload CMS) to PostgreSQL (stores content); Control Room (Payload CMS) to Live pages (publish); PostgreSQL to Live pages (serves).</p>
+              <p class="lab fig-cap">Architecture, drawn 1:1</p>
+            </figcaption>
+          </figure>
+        </div>
+        <div class="blocks">
+          <section class="blk"><h4 class="blk-h">Problem</h4><div data-fact><p class="ln">Generic talent sites and link-in-bio pages don’t sell a broadcaster, and the site needed to turn organisers, brand managers and sponsors into booking enquiries, with content the talent could keep current without a developer for each new event.</p></div></section>
+          <section class="blk"><h4 class="blk-h">What I built</h4><div data-fact><ul><li class="ln">A broadcast-style design system — near-black ground, one magenta accent, gold for highlights, square corners by rule, and a film-grain texture layer.</li><li class="ln">Motion with a reduced-motion off switch: a glitching wordmark, a gold shimmer, a ticker, and smoothed scrolling.</li><li class="ln">A home page built around one path to the booking form, with a bento grid of past events and a gallery from the stage.</li><li class="ln">A custom Control Room on top of embedded Payload CMS, with live preview, draft/publish, and even the brand colours editable.</li></ul></div></section>
+          <section class="blk"><h4 class="blk-h">Key decisions</h4><div data-fact><ul><li class="ln">Kept all effects to plain CSS plus one small scrolling library, so nothing heavy has to download before the page comes alive.</li><li class="ln">Gave mobile its own layout rather than a squeezed desktop one, because a booking often starts with a link opened on a phone.</li><li class="ln">Settled the look through two HTML prototypes rather than debating directions, and removed a layered custom cursor once the grain layer supplied the same depth.</li><li class="ln">Validated the booking form in the browser and again on the server against the same rules, and used Cloudflare Turnstile to keep bots out.</li><li class="ln">Kept analytics and Speed Insights on the public site only, never inside the Control Room.</li></ul></div></section>
+          <section class="blk"><h4 class="blk-h">Outcome</h4><div data-fact><p class="ln">A site that looks like the job: broadcast energy from the first frame, proof of the stages already worked, and a booking form at the end of every path. It stays current because the talent keeps it current — new events, new photos, even new colours — without waiting on anyone.</p></div></section>
+        </div>
+      </article>
+
+      <article class="psheet" id="p-tredye" aria-labelledby="t-tredye">
+        <div class="sheet-grid">
+          <div class="sh-head">
+            <p class="lab" data-fact>Real-Time NSE Market Monitoring on an Event-Driven Stack</p>
+            <h3 class="sheet-title" id="t-tredye" tabindex="-1">Tredye</h3>
+            <p class="sheet-one" data-fact>Roughly 800 live RSI streams, divergence alerts and MACD setups — computed as the market moves and streamed to the browser.</p>
+          </div>
+          <aside class="tb" aria-label="Title block">
+            <dl>
+              <div class="tb-row"><dt class="lab">Sheet</dt><dd class="tb-sheet">04 / 04</dd></div>
+              <div class="tb-row"><dt class="lab">Project</dt><dd data-fact>Tredye</dd></div>
+              <div class="tb-row"><dt class="lab">For</dt><dd data-fact>Voltvave Innovations</dd></div>
+              <div class="tb-row"><dt class="lab">Kind</dt><dd data-fact>Real-Time NSE Market Monitoring on an Event-Driven Stack</dd></div>
+              <div class="tb-row"><dt class="lab">Stack</dt><dd data-fact>Python, FastAPI, Apache Kafka, Redis, PostgreSQL, TA-Lib, Kite Connect, Next.js, React, TypeScript, Tailwind CSS, WebSockets, Docker, Nginx, Razorpay</dd></div>
+            </dl>
+            <a class="tb-link" href="https://www.rajatkumarr.com/projects/tredye-trading-platform" target="_blank" rel="noopener noreferrer"><span>Full case study</span><span aria-hidden="true">↗</span><span class="sr-only"> (opens in a new tab)</span></a>
+          </aside>
+          <figure class="fig">
+            <div class="fig-box"><svg class="dia dia-big" data-fact aria-hidden="true" focusable="false"></svg></div>
+            <figcaption>
+              <p class="dia-text" data-fact>Architecture of Tredye: Kite Connect to Data ingestion (WebSocket); Data ingestion to Candle builder (Kafka · ticks); Candle builder to RSI calculator (Kafka · candles); Candle builder to MACD calculator (Kafka · candles); RSI calculator to Divergence detector (Kafka · RSI); MACD calculator to MACD strategy detector (Kafka · MACD); Divergence detector and MACD strategy detector to API gateway (Kafka · alerts and setups); API gateway to Next.js dashboard (WebSocket).</p>
+              <p class="lab fig-cap">Architecture, drawn 1:1</p>
+            </figcaption>
+          </figure>
+        </div>
+        <div class="blocks">
+          <section class="blk"><h4 class="blk-h">Problem</h4><div data-fact><p class="ln">A divergence between price and RSI can form and dissolve within a quarter of an hour, and across roughly 200 stocks on four timeframes that is about 800 charts — more than anyone can watch by eye — so the watching had to move off the screen and into a system.</p></div></section>
+          <section class="blk"><h4 class="blk-h">What I built</h4><div data-fact><ul><li class="ln">A live monitoring board showing RSI across four timeframes per stock, with divergence highlighting and search.</li><li class="ln">A divergence history view, filterable by stock, timeframe, type and confidence.</li><li class="ln">A MACD strategy view showing daily market bias and the setups and triggers that follow on shorter timeframes.</li><li class="ln">Accounts and subscriptions with phone-verified sign-up, Razorpay payments, and an admin console for users, payments and feedback.</li></ul></div></section>
+          <section class="blk"><h4 class="blk-h">Key decisions</h4><div data-fact><ul><li class="ln">Aligned candles to the 9:15 IST market open rather than the Unix clock, so a 15-minute candle on Tredye matches the one on a charting terminal.</li><li class="ln">Backfilled months of history on start-up before computing indicators, and gated the detectors behind a warm-up announcement on Kafka for up to half an hour.</li><li class="ln">Consolidated candle history onto PostgreSQL instead of the dedicated time-series database the original blueprint specified, to run one fewer datastore.</li><li class="ln">Put a single FastAPI gateway in front holding one WebSocket per browser, pushing the live board from Redis every two seconds rather than on every tick.</li><li class="ln">Compiled TA-Lib once in a shared Docker build stage, with each service built as a thin target on top of it.</li></ul></div></section>
+          <section class="blk"><h4 class="blk-h">Outcome</h4><div data-fact><p class="ln">Tredye keeps roughly 800 live RSI streams current through an event-driven pipeline and surfaces the patterns worth a second look while they still matter — on a phone or at a desk, from the opening bell to the close. Each stage runs in its own container, and subscriptions, payments and an admin console are built in.</p></div></section>
+        </div>
+      </article>
+      </div>
+    </div>
+  </section>
+</main>
+
+<footer class="foot" id="contact">
+  <div class="container foot-in" data-cons="box">
+    <span class="lab">Contact</span>
+    <span class="email" id="email">rajat.kumar.r@outlook.com</span>
+    <button class="btn" id="copyBtn" type="button" hidden>Copy</button>
+    <span class="lab" id="copyMsg" aria-live="polite"></span>
+    <a href="https://github.com/rajat157" target="_blank" rel="noopener noreferrer">GitHub<span aria-hidden="true">&nbsp;↗</span><span class="sr-only"> (opens in a new tab)</span></a>
+    <a href="https://www.linkedin.com/in/rajat-kumar-r" target="_blank" rel="noopener noreferrer">LinkedIn<span aria-hidden="true">&nbsp;↗</span><span class="sr-only"> (opens in a new tab)</span></a>
+    <span class="lab place">Bangalore, India</span>
+  </div>
+</footer>
+
+<section class="inspect" id="inspect" role="dialog" aria-modal="true" hidden data-state="closed">
+  <div class="sheet">
+    <div class="sheet-top">
+      <button class="btn" id="backBtn" type="button">← Back to index</button>
+      <p class="lab" id="ins-sheetno">Sheet 00 of 04 · Esc</p>
+    </div>
+    <div id="ins-slot"></div>
+  </div>
+</section>
+
+<svg id="guides" aria-hidden="true" width="0" height="0"></svg>
+
+<script>
+/*
+ * KIT — shared JS helpers for "Drafted" and "Cut" prototypes.
+ * Classic script: paste inline (defines window.KIT). No module system, no deps.
+ * See README.md for usage.
+ */
+(function () {
+  'use strict';
+
+  var KIT = {};
+
+  // --- tempo grid (internal only, never shown on the page) ---
+  KIT.beat = 500; // ms, 120 BPM
+  KIT.t = function (n) { return n * 4 * KIT.beat; };
+
+  // --- clock / loop ---
+  KIT.clock = function () { return performance.now(); };
+
+  KIT.loop = function (fn, target) {
+    target = target || document.body;
+    var running = true, last = null, errored = false, raf;
+    var io = new IntersectionObserver(function (entries) {
+      running = entries[entries.length - 1].isIntersecting;
+      if (running) last = null;
+    });
+    io.observe(target);
+    function frame() {
+      raf = requestAnimationFrame(frame);
+      if (!running) return;
+      var now = KIT.clock();
+      if (last == null) last = now;
+      // the raw frame time, so 120/144 Hz screens step at their real rate; a non-positive dt
+      // (the first frame, or a clock that did not advance) counts as one 60 Hz frame
+      var raw = (now - last) / 1000;
+      var dt = raw > 0 ? Math.min(Math.max(raw, 0.001), 0.25) : 1 / 60;
+      last = now;
+      try {
+        fn(dt);
+      } catch (e) {
+        if (!errored) {
+          errored = true;
+          console.log('[proto] frame-error: ' + e.message);
+        }
+      }
+    }
+    raf = requestAnimationFrame(frame);
+    return function stop() { cancelAnimationFrame(raf); io.disconnect(); };
+  };
+
+  // --- reduced motion (live flag) ---
+  var reducedQuery = matchMedia('(prefers-reduced-motion: reduce)');
+  KIT.reduced = reducedQuery.matches;
+  reducedQuery.addEventListener('change', function (e) { KIT.reduced = e.matches; });
+
+  // --- spring: tiny integrator, stepped with dt from KIT.loop/KIT.clock ---
+  KIT.spring = function (from, to, opts) {
+    opts = opts || {};
+    var stiffness = opts.stiffness || 170;
+    var damping = opts.damping || 26;
+    var STEP = 1 / 240;
+    return {
+      value: from,
+      velocity: 0,
+      target: to,
+      update: function (dt) {
+        // fixed 1/240 s substeps keep the explicit integrator stable when frames are slow
+        // (KIT.loop allows dt up to 0.25 s); a non-finite state snaps to the target
+        for (var left = dt; left > 1e-9; left -= STEP) {
+          var h = Math.min(STEP, left);
+          var accel = (this.target - this.value) * stiffness - this.velocity * damping;
+          this.velocity += accel * h;
+          this.value += this.velocity * h;
+        }
+        if (!isFinite(this.value) || !isFinite(this.velocity)) { this.value = this.target; this.velocity = 0; }
+      }
+    };
+  };
+
+  // --- reveal: readable at rest, animates from a visible state ---
+  KIT.reveal = function (el, opts) {
+    el.classList.add('kit-reveal');
+    if (KIT.reduced) {
+      el.classList.add('is-in');
+      return;
+    }
+    var io = new IntersectionObserver(function (entries) {
+      var entry = entries[entries.length - 1];
+      if (entry.isIntersecting) {
+        el.classList.add('is-in');
+        io.disconnect();
+      }
+    }, opts);
+    io.observe(el);
+  };
+
+  // --- debug overlay, active only under #debug ---
+  var debugOn = location.hash === '#debug';
+  var debugEl = null;
+  function ensureDebugEl() {
+    if (debugEl) return debugEl;
+    debugEl = document.createElement('div');
+    debugEl.id = 'kit-debug';
+    debugEl.style.cssText =
+      'position:fixed;left:0;right:0;bottom:0;max-height:40vh;overflow:auto;' +
+      'background:rgba(13,15,18,0.9);color:#F6F7F8;font:12px/1.4 "Martian Mono",monospace;' +
+      'padding:8px;z-index:99999;white-space:pre-wrap;';
+    document.body.appendChild(debugEl);
+    return debugEl;
+  }
+  KIT.debug = function (line) {
+    if (!debugOn) return;
+    console.log('[proto] dbg', line);
+    ensureDebugEl().textContent += line + '\n';
+  };
+  if (debugOn) {
+    window.addEventListener('error', function (e) { KIT.debug('error: ' + e.message); });
+    window.addEventListener('unhandledrejection', function (e) {
+      var reason = e.reason && e.reason.message ? e.reason.message : e.reason;
+      KIT.debug('unhandledrejection: ' + reason);
+    });
+  }
+
+  // --- ready: logs exactly once ---
+  var readyLogged = false;
+  KIT.ready = function () {
+    if (readyLogged) return;
+    readyLogged = true;
+    console.log('[proto] ready');
+  };
+
+  // --- drafting cursor: fine pointers only ---
+  function initCursor() {
+    if (!matchMedia('(pointer: fine)').matches) return;
+    document.documentElement.classList.add('kit-cursor-on');
+    var el = document.createElement('div');
+    el.className = 'kit-cursor';
+    el.innerHTML = '<div class="kit-cursor-mark"></div><div class="kit-cursor-coords"></div>';
+    document.body.appendChild(el);
+    var coordsEl = el.querySelector('.kit-cursor-coords');
+    var sx = KIT.spring(0, 0, { stiffness: 320, damping: 28 });
+    var sy = KIT.spring(0, 0, { stiffness: 320, damping: 28 });
+    var tx = 0, ty = 0;
+
+    window.addEventListener('pointermove', function (e) {
+      tx = e.clientX;
+      ty = e.clientY;
+      sx.target = tx;
+      sy.target = ty;
+      var over = e.target.closest && e.target.closest('a, input, textarea, select, button, [contenteditable]');
+      el.style.visibility = over ? 'hidden' : 'visible';
+      coordsEl.textContent = 'x ' + String(Math.round(tx)).padStart(4, '0') +
+        ' · y ' + String(Math.round(ty)).padStart(4, '0');
+    });
+
+    KIT.loop(function (dt) {
+      if (KIT.reduced) {
+        sx.value = tx;
+        sy.value = ty;
+      } else {
+        sx.update(dt);
+        sy.update(dt);
+      }
+      el.style.transform = 'translate(' + sx.value + 'px,' + sy.value + 'px)';
+    });
+  }
+
+  if (document.body) {
+    initCursor();
+  } else {
+    document.addEventListener('DOMContentLoaded', initCursor);
+  }
+
+  window.KIT = KIT;
+})();
+</script>
+<script>
+(function () {
+  'use strict';
+
+  /* ------------------------------------------------------------------
+   * Drawing data only. Every word a reader sees (each sheet: kind, one
+   * line, title block, the four blocks, the case-study link) is static
+   * HTML in #sheets, readable without this script; factual text sits in
+   * [data-fact] containers (the copy check skips them).
+   * ------------------------------------------------------------------ */
+  var P = [
+    {
+      id: "offpriced",
+      sheet: "01",
+      name: "Offpriced",
+      nodes: {
+        public: "The public",
+        buyers: "Signed-in buyers",
+        staff: "The team working those deals",
+        editors: "Whoever edits the site",
+        app: "One application",
+        db: "One database"
+      },
+      edges: [
+        [
+          "public",
+          "app"
+        ],
+        [
+          "buyers",
+          "app"
+        ],
+        [
+          "staff",
+          "app"
+        ],
+        [
+          "editors",
+          "app"
+        ],
+        [
+          "app",
+          "db",
+          "one codebase, one database"
+        ]
+      ],
+      lay: {
+        dir: "TB",
+        layers: [
+          [
+            "public",
+            "buyers",
+            "staff",
+            "editors"
+          ],
+          [
+            "app"
+          ],
+          [
+            "db"
+          ]
+        ],
+        span: [
+          "app",
+          "db"
+        ]
+      },
+      notes: [
+        [
+          [
+            "public",
+            "buyers",
+            "staff",
+            "editors"
+          ],
+          "four audiences, one application"
+        ],
+        [
+          [
+            "public"
+          ],
+          "The Floor: lots from 57 factories, trade only"
+        ],
+        [
+          [
+            "app"
+          ],
+          "Payload CMS embedded: one deployment, one login"
+        ]
+      ]
+    },
+    {
+      id: "staffing",
+      sheet: "02",
+      name: "Staffing operations platform",
+      nodes: {
+        admin: "Admin",
+        client: "Client",
+        worker: "Worker",
+        partner: "Partner",
+        onboarding: "Onboarding",
+        core: "Shared core",
+        db: "Database — row-level security"
+      },
+      edges: [
+        [
+          "admin",
+          "core"
+        ],
+        [
+          "client",
+          "core"
+        ],
+        [
+          "worker",
+          "core"
+        ],
+        [
+          "partner",
+          "core"
+        ],
+        [
+          "onboarding",
+          "core"
+        ],
+        [
+          "core",
+          "db"
+        ]
+      ],
+      lay: {
+        dir: "LR",
+        layers: [
+          [
+            "admin",
+            "client",
+            "worker",
+            "partner",
+            "onboarding"
+          ],
+          [
+            "core"
+          ],
+          [
+            "db"
+          ]
+        ],
+        span: [
+          "core",
+          "db"
+        ],
+        walls: "db"
+      },
+      notes: [
+        [
+          [
+            "all"
+          ],
+          "927 automated tests run against all of it"
+        ],
+        [
+          [
+            "admin",
+            "client",
+            "worker",
+            "partner",
+            "onboarding"
+          ],
+          "five portals, one login"
+        ],
+        [
+          [
+            "db"
+          ],
+          "row-level security checks every read and write"
+        ]
+      ]
+    },
+    {
+      id: "lucif3r",
+      sheet: "03",
+      name: "lucif3r",
+      nodes: {
+        cms: "Control Room (Payload CMS)",
+        db: "PostgreSQL",
+        live: "Live pages"
+      },
+      edges: [
+        [
+          "cms",
+          "db",
+          "stores content"
+        ],
+        [
+          "cms",
+          "live",
+          "publish"
+        ],
+        [
+          "db",
+          "live",
+          "serves"
+        ]
+      ],
+      lay: {
+        dir: "TB",
+        layers: [
+          [
+            "cms"
+          ],
+          [
+            "db"
+          ],
+          [
+            "live"
+          ]
+        ],
+        side: [
+          [
+            "cms",
+            "live"
+          ]
+        ],
+        shift: 0.4
+      },
+      notes: [
+        [
+          [
+            "cms"
+          ],
+          "live preview, draft/publish, editable brand colours"
+        ],
+        [
+          [
+            "live"
+          ],
+          "measured in qualified enquiries, not pageviews"
+        ]
+      ]
+    },
+    {
+      id: "tredye",
+      sheet: "04",
+      name: "Tredye",
+      nodes: {
+        kite: "Kite Connect",
+        ingestion: "Data ingestion",
+        candles: "Candle builder",
+        rsi: "RSI calculator",
+        divergence: "Divergence detector",
+        macd: "MACD calculator",
+        macdstrategy: "MACD strategy detector",
+        gateway: "API gateway",
+        dashboard: "Next.js dashboard"
+      },
+      edges: [
+        [
+          "kite",
+          "ingestion",
+          "WebSocket"
+        ],
+        [
+          "ingestion",
+          "candles",
+          "Kafka · ticks"
+        ],
+        [
+          "candles",
+          "rsi",
+          "Kafka · candles"
+        ],
+        [
+          "candles",
+          "macd",
+          "Kafka · candles"
+        ],
+        [
+          "rsi",
+          "divergence",
+          "Kafka · RSI"
+        ],
+        [
+          "macd",
+          "macdstrategy",
+          "Kafka · MACD"
+        ],
+        [
+          "divergence",
+          "gateway",
+          "Kafka · alerts and setups"
+        ],
+        [
+          "macdstrategy",
+          "gateway",
+          "Kafka · alerts and setups"
+        ],
+        [
+          "gateway",
+          "dashboard",
+          "WebSocket"
+        ]
+      ],
+      lay: {
+        dir: "TB",
+        layers: [
+          [
+            "kite"
+          ],
+          [
+            "ingestion"
+          ],
+          [
+            "candles"
+          ],
+          [
+            "rsi",
+            "macd"
+          ],
+          [
+            "divergence",
+            "macdstrategy"
+          ],
+          [
+            "gateway"
+          ],
+          [
+            "dashboard"
+          ]
+        ]
+      },
+      notes: [
+        [
+          [
+            "rsi",
+            "divergence"
+          ],
+          "~800 live RSI streams: ~200 NSE stocks × 4 timeframes"
+        ],
+        [
+          [
+            "candles"
+          ],
+          "candles aligned to the 9:15 IST open"
+        ],
+        [
+          [
+            "gateway"
+          ],
+          "live board pushed from Redis every 2 s"
+        ],
+        [
+          [
+            "all"
+          ],
+          "Kafka 4.1 in KRaft mode, no ZooKeeper to operate"
+        ]
+      ]
+    }
+  ];
+
+
+  /* ------------------------------------------------------------------
+   * Tempo and pen. Every duration below comes from KIT.t().
+   * ------------------------------------------------------------------ */
+  var T = KIT.t;
+  var SPEED = 400 / T(1 / 8);          // the construction pen's one constant speed: 400 px per eighth
+  var GRID = T(1 / 16);                // phase starts land on this grid
+  function q(ms) { return Math.ceil(ms / GRID - 1e-6) * GRID; }
+  var root = document.documentElement;
+  var NS = 'http://www.w3.org/2000/svg';
+  var R = Math.round;
+  function P5(v) { return Math.round(v) + 0.5; }   // crisp 1px line coordinate
+  function $(s, r) { return (r || document).querySelector(s); }
+  function $$(s, r) { return Array.prototype.slice.call((r || document).querySelectorAll(s)); }
+  function anim() { return !KIT.reduced; }
+
+  [['--t32', 1 / 32], ['--t16', 1 / 16], ['--t8', 1 / 8], ['--t38', 3 / 8]].forEach(function (v) {
+    root.style.setProperty(v[0], T(v[1]) + 'ms');
+  });
+
+  function S(tag, a, parent) {
+    var n = document.createElementNS(NS, tag);
+    for (var k in a) n.setAttribute(k, a[k]);
+    if (parent) parent.appendChild(n);
+    return n;
+  }
+  function path(g, d, cls) { return S('path', { d: d, class: cls }, g); }
+  function txt(g, x, y, s, cls, extra) {
+    var a = { x: x, y: y, class: cls };
+    for (var k in extra || {}) a[k] = extra[k];
+    var t = S('text', a, g);
+    t.textContent = s;
+    return t;
+  }
+  var ctx = document.createElement('canvas').getContext('2d');
+  function tw(s, font, stretch) { ctx.font = font; ctx.fontStretch = stretch || 'normal'; return ctx.measureText(s).width; }
+  var MONO10 = '400 10px "Martian Mono"';
+
+  /* A drawing pass: construction pens (linear, constant speed), inks (fast, attack
+   * easing) and sets (attack snaps), each scheduled in ms on the tempo grid. The
+   * page is complete without this: play() only ever animates from the final state. */
+  function Job() { this.steps = []; this.end = 0; }
+  Job.prototype.add = function (s) { this.steps.push(s); this.end = Math.max(this.end, s.at + s.dur); return s.at + s.dur; };
+  Job.prototype.pen = function (node, at, len) {
+    len = len || node.getTotalLength();
+    return this.add({ node: node, at: at, len: len, dur: len / SPEED, ease: 'linear', kind: 'dash' });
+  };
+  Job.prototype.ink = function (node, at, len, dur) {
+    len = len || node.getTotalLength();
+    return this.add({ node: node, at: at, len: len, dur: dur || T(1 / 16), ease: 'var(--ease-attack)', kind: 'dash' });
+  };
+  Job.prototype.set = function (node, at, kind) { return this.add({ node: node, at: at, dur: T(1 / 32), ease: 'var(--ease-attack)', kind: kind || 'opacity' }); };
+  Job.prototype.call = function (fn, at) { return this.add({ fn: fn, at: at, dur: 0, kind: 'call' }); };
+  Job.prototype.play = function (done, still) {
+    var steps = this.steps, timers = [];
+    function prop(s) { return s.kind === 'fill' ? 'fillOpacity' : 'opacity'; }
+    function clean() {
+      steps.forEach(function (s) {
+        if (!s.node) return;
+        var st = s.node.style;
+        st.transition = st.strokeDasharray = st.strokeDashoffset = st.opacity = st.fillOpacity = '';
+      });
+    }
+    if (still || !anim()) {
+      steps.forEach(function (s) { if (s.kind === 'call') s.fn(); });
+      if (done) done();
+      return function () {};
+    }
+    steps.forEach(function (s) {
+      if (!s.node) return;
+      var st = s.node.style;
+      st.transition = 'none';
+      if (s.kind === 'dash') { st.strokeDasharray = s.len + ' ' + s.len; st.strokeDashoffset = s.len; }
+      else st[prop(s)] = 0;
+    });
+    document.body.getBoundingClientRect(); // commit the start state
+    steps.forEach(function (s) {
+      if (s.kind === 'call') { timers.push(setTimeout(s.fn, s.at)); return; }
+      var st = s.node.style;
+      if (s.kind === 'dash') {
+        st.transition = 'stroke-dashoffset ' + s.dur + 'ms ' + s.ease + ' ' + s.at + 'ms';
+        st.strokeDashoffset = 0;
+      } else {
+        st.transition = (s.kind === 'fill' ? 'fill-opacity ' : 'opacity ') + s.dur + 'ms ' + s.ease + ' ' + s.at + 'ms';
+        st[prop(s)] = '';
+      }
+    });
+    timers.push(setTimeout(function () { clean(); if (done) done(); }, this.end + 34));
+    return function () { timers.forEach(clearTimeout); clean(); };
+  };
+
+  /* Dimension lines: architectural 45-degree ticks and a centred value on a knockout. */
+  function dimH(g, x0, x1, y, label) {
+    var t = 3.5;
+    var p = path(g, 'M' + x0 + ' ' + y + 'H' + x1 + 'M' + (x0 - t) + ' ' + (y + t) + 'L' + (x0 + t) + ' ' + (y - t) + 'M' + (x1 - t) + ' ' + (y + t) + 'L' + (x1 + t) + ' ' + (y - t), 'c');
+    var lg = S('g', {}, g);
+    var w = tw(label, MONO10) + 8, cx = (x0 + x1) / 2;
+    S('rect', { x: R(cx - w / 2), y: R(y - 7), width: R(w), height: 14, class: 'c-knock' }, lg);
+    txt(lg, R(cx), R(y + 3.5), label, 'c-txt', { 'text-anchor': 'middle' });
+    return { p: p, lg: lg };
+  }
+  function dimV(g, x, y0, y1, label) {
+    var t = 3.5;
+    var p = path(g, 'M' + x + ' ' + y0 + 'V' + y1 + 'M' + (x - t) + ' ' + (y0 + t) + 'L' + (x + t) + ' ' + (y0 - t) + 'M' + (x - t) + ' ' + (y1 + t) + 'L' + (x + t) + ' ' + (y1 - t), 'c');
+    var cy = (y0 + y1) / 2, w = tw(label, MONO10) + 8;
+    var lg = S('g', { transform: 'rotate(-90 ' + x + ' ' + R(cy) + ')' }, g);
+    S('rect', { x: R(x - w / 2), y: R(cy - 7), width: R(w), height: 14, class: 'c-knock' }, lg);
+    txt(lg, x, R(cy + 3.5), label, 'c-txt', { 'text-anchor': 'middle' });
+    return { p: p, lg: lg };
+  }
+
+  /* ------------------------------------------------------------------
+   * HERO: the name is constructed (metrics, bearings, arcs, dimensions
+   * in real px), then inked: stroke-trace, then fill.
+   * ------------------------------------------------------------------ */
+  var nameBox = $('#name'), heroSvg = $('#nameSvg');
+  var HERO = null, hot = -1;
+
+  // Ink metrics for the condensed name. `condensed` goes in the font shorthand (Safari ignores
+  // ctx.fontStretch), and the canvas advance is checked against the rendered SVG run: if this
+  // canvas still measured a different width, horizontal ink offsets are scaled by the ratio.
+  // ponytail: a uniform ratio approximates a wider face to a few px; exact only where it is 1.
+  function heroMetrics(F, run, runW) {
+    function raw(ch) {
+      ctx.font = 'condensed 650 ' + F + 'px "Instrument Sans"';
+      if (!/Instrument Sans/.test(ctx.font)) ctx.font = '650 ' + F + 'px "Instrument Sans"';
+      if ('fontStretch' in ctx) ctx.fontStretch = 'condensed';
+      return ctx.measureText(ch);
+    }
+    var k = runW / raw(run).width;
+    if (Math.abs(k - 1) < 0.004) k = 1;
+    else KIT.debug('canvas width differs from the rendered name; ink offsets scaled by ' + k.toFixed(3));
+    function m(ch) {
+      var r = raw(ch);
+      return { l: r.actualBoundingBoxLeft * k, r: r.actualBoundingBoxRight * k, a: r.actualBoundingBoxAscent, d: r.actualBoundingBoxDescent };
+    }
+    var H = m('H'), x = m('x'), o = m('o'), j = m('j'), I = m('I');
+    return { m: m, cap: H.a, xh: x.a, os: Math.max(1, o.a - x.a), desc: j.d, stem: I.l + I.r };
+  }
+
+  // the type designer's construction for each letterform, from its measured ink box
+  function glyphArcs(g, M) {
+    var l = g.l, r = g.r, t = g.t, bt = g.bt, cx = (l + r) / 2, cy = (t + bt) / 2, rx = (r - l) / 2, ry = (bt - t) / 2, s = M.stem;
+    function ellipse(x, y, a, b) { return 'M' + (x - a) + ' ' + y + 'A' + a + ' ' + b + ' 0 1 1 ' + (x + a) + ' ' + y + 'A' + a + ' ' + b + ' 0 1 1 ' + (x - a) + ' ' + y; }
+    function ray(x0, y0, x1, y1) { return 'M' + x0 + ' ' + y0 + 'L' + (x0 + (x1 - x0) * 1.14) + ' ' + (y0 + (y1 - y0) * 1.14); }
+    switch (g.ch) {
+      case 'a': return [ellipse(cx, cy, rx, ry)];
+      case 'u': return ['M' + l + ' ' + t + 'V' + cy + 'A' + rx + ' ' + ry + ' 0 0 0 ' + r + ' ' + cy + 'V' + t];
+      case 'm': return ['M' + l + ' ' + bt + 'V' + cy + 'A' + (cx - l) / 2 + ' ' + ry + ' 0 0 1 ' + cx + ' ' + cy + 'V' + bt,
+                        'M' + cx + ' ' + cy + 'A' + (r - cx) / 2 + ' ' + ry + ' 0 0 1 ' + r + ' ' + cy + 'V' + bt];
+      case 'R': {
+        var bx = l + s, yj = t + (bt - t) * 0.55, a = (r - (r - l) * 0.04) - bx;
+        return ['M' + bx + ' ' + t + 'A' + a + ' ' + (yj - t) / 2 + ' 0 0 1 ' + bx + ' ' + yj, ray(bx + a * 0.3, yj, r, bt)];
+      }
+      case 'K': { var sx = l + s; return [ray(sx, t + (bt - t) * 0.62, r, t), ray(sx + (r - sx) * 0.2, t + (bt - t) * 0.44, r, bt)]; }
+      case 'j': { var d = s * 1.02; return [ellipse(r - d / 2, t + d / 2, d * 0.64, d * 0.64)]; }
+      case 'r': return ['M' + (l + s) + ' ' + cy + 'A' + (r - l - s) + ' ' + ry + ' 0 0 1 ' + r + ' ' + t];
+      default: return [];
+    }
+  }
+
+  function buildHero(intro) {
+    if (HERO && HERO.cancel) HERO.cancel();
+    hot = -1;
+    var W = Math.floor(nameBox.getBoundingClientRect().width);
+    if (!W) return;
+    var narrow = W < 640, lines = narrow ? ['Rajat', 'Kumar R'] : ['Rajat Kumar R'];
+    var gut = narrow ? 0 : R(Math.max(72, W * 0.07));
+    heroSvg.textContent = '';
+    var probe = S('text', { class: 'glyph', x: 0, y: 0, 'font-size': 100 }, heroSvg);
+    var nat = lines.map(function (s) { probe.textContent = s; return probe.getComputedTextLength() / 100; });
+    var DOT = 0.21; // the square full stop and its gap, in em
+    var F = Math.floor(10 * (W - gut) / Math.max.apply(null, nat.map(function (w, k) { return w + (k === lines.length - 1 ? DOT : 0); }))) / 10;
+    probe.setAttribute('font-size', F);
+    probe.textContent = lines[0];
+    var M = heroMetrics(F, lines[0], probe.getComputedTextLength());
+    var top = 44, lead = R(F * 1.06);
+    var base = lines.map(function (_, k) { return R(top + M.cap + k * lead); });
+    var Hh = base[base.length - 1] + Math.ceil(M.desc) + 34;
+    heroSvg.setAttribute('viewBox', '0 0 ' + W + ' ' + Hh);
+    heroSvg.setAttribute('width', W);
+    heroSvg.setAttribute('height', Hh);
+
+    var glyphs = [], ends = [];
+    lines.forEach(function (s, k) {
+      probe.textContent = s;
+      for (var i = 0; i < s.length; i++) {
+        if (s[i] === ' ') continue;
+        var x0 = probe.getStartPositionOfChar(i).x, x1 = probe.getEndPositionOfChar(i).x, mm = M.m(s[i]), b = base[k];
+        glyphs.push({ k: k, ch: s[i], x0: x0, x1: x1, b: b, l: x0 - mm.l, r: x0 + mm.r, t: b - mm.a, bt: b + mm.d });
+      }
+      ends.push(probe.getComputedTextLength());
+    });
+    probe.remove();
+    var last = glyphs[glyphs.length - 1], ds = R(M.stem * 1.1), dx = R(last.x1 + F * 0.05), db = base[base.length - 1];
+    glyphs.push({ k: lines.length - 1, ch: '', dot: true, x0: dx, x1: dx + ds, b: db, l: dx, r: dx + ds, t: db - ds, bt: db });
+
+    var gG = S('g', { class: 'cons' }, heroSvg), gA = S('g', {}, heroSvg), gD = S('g', {}, heroSvg), gI = S('g', {}, heroSvg);
+    var J = new Job();
+    var penEnd = W / SPEED;
+
+    lines.forEach(function (s, k) {
+      var b = base[k];
+      [[b - M.cap, 'cap'], [b - M.xh, 'x'], [b, 'base'], [b + M.desc, 'desc']].forEach(function (m) {
+        J.pen(path(gG, 'M0 ' + P5(m[0]) + 'H' + W, 'c'), 0);
+        if (!narrow) J.set(txt(gG, W - gut + 6, R(m[0]) - 4, m[1], 'c-txt'), q(penEnd));
+      });
+      [b + M.os, b - M.xh - M.os].forEach(function (y) { J.pen(path(gG, 'M0 ' + P5(y) + 'H' + W, 'c c-soft'), 0); });
+      // side bearings: one per advance boundary, dropped on the grid as the pen passes
+      var seen = {};
+      glyphs.forEach(function (g) {
+        if (g.k !== k || g.dot) return;
+        [R(g.x0), R(g.x1)].forEach(function (x) {
+          if (seen[x]) return;
+          seen[x] = 1;
+          J.pen(path(gG, 'M' + (x + 0.5) + ' ' + R(b - M.cap - 14) + 'V' + R(b + M.desc + 14), 'c c-soft'), q(x / SPEED));
+        });
+      });
+    });
+
+    // overall width and (wide screens) the vertical metric dimensions
+    var y0 = base[0] - M.cap, dy = top - 22;
+    J.pen(path(gG, 'M0.5 ' + (dy - 8) + 'V' + R(y0 - 6) + 'M' + P5(ends[0]) + ' ' + (dy - 8) + 'V' + R(y0 - 6), 'c c-soft'), GRID);
+    var wd = dimH(gG, 0.5, P5(ends[0]), dy + 0.5, String(R(ends[0])));
+    J.pen(wd.p, q(T(1 / 16)));
+    J.set(wd.lg, q(T(1 / 16) + ends[0] / SPEED));
+    if (!narrow) {
+      var b0 = base[0], xc = W - 12.5, xx = W - 30.5;
+      [dimV(gG, xc, P5(b0 - M.cap), P5(b0), String(R(M.cap))), dimV(gG, xc, P5(b0), P5(b0 + M.desc), String(R(M.desc))), dimV(gG, xx, P5(b0 - M.xh), P5(b0), String(R(M.xh)))]
+        .forEach(function (d) { J.pen(d.p, q(T(1 / 8))); J.set(d.lg, q(T(1 / 8) + M.cap / SPEED)); });
+    }
+
+    glyphs.forEach(function (g, gi) {
+      // arcs and circles: visible while construction is shown, or on hover
+      var ga = S('g', { class: 'cons', 'data-g': gi }, gA);
+      var ds2 = g.dot ? ['M' + (g.l + 0.5) + ' ' + (g.t + 0.5) + 'H' + (g.r - 0.5) + 'V' + (g.bt - 0.5) + 'H' + (g.l + 0.5) + 'Z'] : glyphArcs(g, M);
+      ds2.forEach(function (d) { J.pen(path(ga, d, 'c'), q((g.l + g.r) / 2 / SPEED) + GRID); });
+      // per-letter detail: ink box, side bearings, local metrics, advance width
+      var gd = S('g', { class: 'cd', 'data-g': gi }, gD), yC = g.b - M.cap, yD = g.b + M.desc;
+      S('rect', { x: P5(g.l), y: P5(g.t), width: R(g.r - g.l), height: R(g.bt - g.t), class: 'c c-dashed' }, gd);
+      path(gd, 'M' + P5(g.x0) + ' ' + R(yC - 18) + 'V' + R(yD + 30) + 'M' + P5(g.x1) + ' ' + R(yC - 18) + 'V' + R(yD + 30), 'c');
+      [yC, g.b - M.xh, g.b, yD].forEach(function (y) { path(gd, 'M' + R(g.x0 - 14) + ' ' + P5(y) + 'H' + R(g.x1 + 14), 'c'); });
+      var yDim = g.k < lines.length - 1 ? R(yC - 12) + 0.5 : R(yD + 22) + 0.5;
+      dimH(gd, P5(g.x0), P5(g.x1), yDim, g.dot ? ds + '×' + ds : String(R(g.x1 - g.x0)));
+    });
+
+    // ink: a fast stroke-trace of every contour, then the fill lands
+    var D = R(F * 6), tInk = q(penEnd), tFill = tInk + T(1 / 8), tDot = Math.ceil((tFill + GRID) / T(1 / 4)) * T(1 / 4);
+    glyphs.forEach(function (g) {
+      if (g.dot) { J.set(S('rect', { class: 'dot', x: g.l, y: g.t, width: ds, height: ds }, gI), tDot); return; }
+      var n = txt(gI, g.x0, g.b, g.ch, 'glyph', { 'font-size': F });
+      J.ink(n, tInk, D, T(1 / 8));
+      J.set(n, tFill, 'fill');
+    });
+
+    if (intro) {
+      sizeGuides();
+      guidesFor($('.role'), J, T(1 / 4));
+      guidesFor($('.process'), J, T(1 / 4) + GRID);
+      J.call(function () { $('.role').classList.remove('pending'); }, tFill + GRID);
+      $$('.process span').forEach(function (s, i) { J.call(function () { s.classList.remove('pending'); }, tFill + GRID * (2 + i)); });
+      J.call(finishIntro, tDot + T(1 / 2));
+    }
+    heroSvg.classList.toggle('drafting', !!intro);
+    HERO = { glyphs: glyphs, M: M, W: W, cancel: J.play(null, !intro) };
+  }
+
+  function setHot(i) {
+    if (i === hot) return;
+    hot = i;
+    $$('[data-g]', heroSvg).forEach(function (n) { n.classList.toggle('hot', +n.dataset.g === i); });
+  }
+  function heroPoint(e) {
+    if (!HERO) return;
+    var r = heroSvg.getBoundingClientRect(), s = r.width / HERO.W, x = (e.clientX - r.left) / s, y = (e.clientY - r.top) / s, hit = -1;
+    HERO.glyphs.forEach(function (g, i) {
+      if (x >= g.x0 && x < g.x1 && y >= g.b - HERO.M.cap - 20 && y <= g.b + HERO.M.desc + 34) hit = i;
+    });
+    setHot(hit);
+  }
+  heroSvg.addEventListener('pointermove', heroPoint);
+  heroSvg.addEventListener('pointerdown', heroPoint);
+  heroSvg.addEventListener('pointerleave', function (e) { if (e.pointerType !== 'touch') setHot(-1); });
+
+  function finishIntro() {
+    if (root.dataset.intro === 'done') return;
+    root.classList.remove('intro-run');
+    heroSvg.classList.remove('drafting');
+    $$('.pending').forEach(function (n) { n.classList.remove('pending'); });
+    root.dataset.intro = 'done';
+    refreshGuides(false);
+    KIT.debug('intro done');
+  }
+
+  /* ------------------------------------------------------------------
+   * GUIDES: local construction for any inked element (hover, focus, or
+   * every element at once while construction is shown).
+   * ------------------------------------------------------------------ */
+  var gl = $('#guides'), hov = null, hovCancel = null;
+  function sizeGuides() {
+    gl.setAttribute('height', 0);
+    gl.setAttribute('width', root.clientWidth);
+    gl.setAttribute('height', root.scrollHeight);
+  }
+  function baselineOf(n) {
+    var host = n.firstElementChild && getComputedStyle(n.firstElementChild).display === 'block' ? n.firstElementChild : n;
+    var p = document.createElement('i');
+    p.style.cssText = 'display:inline-block;width:0;height:0;vertical-align:baseline';
+    host.insertBefore(p, host.firstChild);
+    var y = p.getBoundingClientRect().top + scrollY;
+    p.remove();
+    return y;
+  }
+  function guidesFor(n, J, at) {
+    var r = n.getBoundingClientRect(), e = 10, g = S('g', {}, gl);
+    var x0 = P5(r.left + scrollX), x1 = P5(r.right + scrollX), y0 = P5(r.top + scrollY), y1 = P5(r.bottom + scrollY);
+    var ls = [
+      path(g, 'M' + x0 + ' ' + (y0 - e) + 'V' + (y1 + e), 'c c-soft'),
+      path(g, 'M' + x1 + ' ' + (y0 - e) + 'V' + (y1 + e), 'c c-soft'),
+      path(g, 'M' + (x0 - e) + ' ' + y0 + 'H' + (x1 + e), 'c c-soft'),
+      path(g, 'M' + (x0 - e) + ' ' + y1 + 'H' + (x1 + e), 'c c-soft')
+    ];
+    if (n.dataset.cons === 'text') { var yb = P5(baselineOf(n)); ls.push(path(g, 'M' + (x0 - e) + ' ' + yb + 'H' + (x1 + e), 'c')); }
+    var d = dimH(g, x0, x1, P5(r.top + scrollY - 9), String(R(r.width)));
+    if (J) {
+      ls.forEach(function (p) { J.pen(p, at); });
+      J.pen(d.p, at);
+      J.set(d.lg, q(at + r.width / SPEED));
+    }
+    return g;
+  }
+  function shown() { return root.dataset.construction === 'on'; }
+  function refreshGuides(animateIn) {
+    if (hovCancel) hovCancel();
+    hov = null;
+    gl.textContent = '';
+    sizeGuides();
+    if (!shown()) return;
+    var J = new Job();
+    $$('[data-cons]').forEach(function (n) { if (n.offsetParent !== null) guidesFor(n, J, 0); });
+    J.play(null, !animateIn);
+  }
+  function hoverGuides(n) {
+    if (shown() || root.dataset.intro !== 'done' || root.classList.contains('inspecting')) return;
+    if (hov && hov._n === n) return;
+    clearHover();
+    if (!n) return;
+    sizeGuides();
+    var J = new Job();
+    hov = guidesFor(n, J, 0);
+    hov._n = n;
+    hovCancel = J.play();
+  }
+  function clearHover() {
+    if (!hov) return;
+    if (hovCancel) hovCancel();
+    hov.remove();
+    hov = null;
+  }
+  document.addEventListener('pointerover', function (e) { hoverGuides(e.target.closest ? e.target.closest('[data-cons]') : null); });
+  document.addEventListener('focusin', function (e) { hoverGuides(e.target.closest ? e.target.closest('[data-cons]') : null); });
+  document.addEventListener('focusout', function (e) { if (hov && !(e.relatedTarget && hov._n.contains(e.relatedTarget))) clearHover(); });
+
+  /* ------------------------------------------------------------------
+   * ARCHITECTURE DRAWINGS: a layered layout, orthogonal connectors,
+   * drafted guides -> boxes -> connectors -> labels -> ink.
+   * ------------------------------------------------------------------ */
+  function wrap(s, maxW, font) {
+    var out = [], cur = '';
+    s.split(' ').forEach(function (w) {
+      var t = cur ? cur + ' ' + w : w;
+      if (cur && tw(t, font) > maxW) { out.push(cur); cur = w; } else cur = t;
+    });
+    out.push(cur);
+    return out;
+  }
+
+  function layout(p, W, H, fs) {
+    var L = p.lay, TB = L.dir === 'TB', pad = R(fs * 1.5), nL = L.layers.length;
+    var font = '500 ' + fs + 'px "Instrument Sans"', lh = R(fs * 1.3), px = R(fs * 0.8), py = R(fs * 0.55);
+    var span = L.span || [], N = {}, cross = TB ? W : H;
+    L.layers.forEach(function (ids, li) {
+      ids.forEach(function (id, k) {
+        var n = ids.length, isSpan = span.indexOf(id) >= 0;
+        var maxW = TB ? (isSpan ? cross - 2 * pad : Math.min(fs * 14, (cross - 2 * pad - (n - 1) * fs) / n))
+                      : Math.min(fs * 11, (W - 2 * pad - (nL - 1) * fs * 2.4) / nL);
+        var lines = wrap(p.nodes[id], maxW - 2 * px, font);
+        var lw = Math.max.apply(null, lines.map(function (s) { return tw(s, font); }));
+        // fit the slot; a single word longer than the slot's inner width keeps a 4 px margin each side
+        var w = Math.ceil(Math.max(Math.min(maxW, lw + 2 * px), lw + 8));
+        N[id] = { id: id, li: li, k: k, n: n, span: isSpan, lines: lines, w: w, h: lines.length * lh + 2 * py, lh: lh, py: py, walls: L.walls === id };
+      });
+      // one box size per layer, so a row of parts reads as one precise row
+      var reg0 = ids.filter(function (id) { return !N[id].span; }).map(function (id) { return N[id]; });
+      var mw = Math.max.apply(null, reg0.map(function (n) { return n.w; }).concat(0)), mh = Math.max.apply(null, reg0.map(function (n) { return n.h; }).concat(0));
+      reg0.forEach(function (n) { n.w = mw; n.h = mh; });
+    });
+    var all = Object.keys(N).map(function (k) { return N[k]; });
+    var reg = all.filter(function (n) { return !n.span; });
+    reg.forEach(function (n) { n.c = pad + (cross - 2 * pad) * (n.n === 1 && L.shift ? L.shift : (n.k + 0.5) / n.n); });
+    var ext0 = Math.min.apply(null, reg.map(function (n) { return n.c - (TB ? n.w : n.h) / 2; }));
+    var ext1 = Math.max.apply(null, reg.map(function (n) { return n.c + (TB ? n.w : n.h) / 2; }));
+    all.forEach(function (n) {
+      if (!n.span) return;
+      n.c = (ext0 + ext1) / 2;
+      if (TB) n.w = Math.max(n.w, ext1 - ext0); else n.h = Math.max(n.h, ext1 - ext0);
+    });
+    var sizes = L.layers.map(function (ids) { return Math.max.apply(null, ids.map(function (id) { return TB ? N[id].h : N[id].w; })); });
+    var sum = sizes.reduce(function (a, b) { return a + b; }, 0), avail = (TB ? H : W) - 2 * pad;
+    var G = Math.max(fs * (TB ? 2.4 : 2.2), Math.min(fs * 6, (avail - sum) / Math.max(1, nL - 1)));
+    var block = sum + G * (nL - 1), m = pad + Math.max(0, (avail - block) / 2);
+    L.layers.forEach(function (ids, li) { ids.forEach(function (id) { N[id].m = m + sizes[li] / 2; }); m += sizes[li] + G; });
+    all.forEach(function (n) {
+      n.cx = TB ? n.c : n.m; n.cy = TB ? n.m : n.c;
+      n.x0 = R(n.cx - n.w / 2); n.y0 = R(n.cy - n.h / 2); n.x1 = n.x0 + R(n.w); n.y1 = n.y0 + R(n.h);
+    });
+    return { N: N, all: all, TB: TB, pad: pad, cc: pad + (cross - 2 * pad) * (L.shift || 0.5), need: block + 2 * pad };
+  }
+
+  function route(p, e, Lo, fs) {
+    var A = Lo.N[e[0]], B = Lo.N[e[1]];
+    var side = (p.lay.side || []).some(function (s) { return s[0] === e[0] && s[1] === e[1]; });
+    if (side) {
+      var sx = Math.max.apply(null, Lo.all.map(function (n) { return n.x1; })) + R(fs * 2);
+      return [[A.x1, A.cy], [sx, A.cy], [sx, B.cy], [B.x1, B.cy]];
+    }
+    if (Lo.TB) {
+      var ya = A.y1, yb = B.y0, inB = A.cx > B.x0 + 6 && A.cx < B.x1 - 6, inA = B.cx > A.x0 + 6 && B.cx < A.x1 - 6;
+      if (inB || inA) { var x = inB ? A.cx : B.cx; return [[x, ya], [x, yb]]; }
+      var my = (ya + yb) / 2;
+      return [[A.cx, ya], [A.cx, my], [B.cx, my], [B.cx, yb]];
+    }
+    var xa = A.x1, xb = B.x0, inB2 = A.cy > B.y0 + 6 && A.cy < B.y1 - 6, inA2 = B.cy > A.y0 + 6 && B.cy < A.y1 - 6;
+    if (inB2 || inA2) { var y = inB2 ? A.cy : B.cy; return [[xa, y], [xb, y]]; }
+    var mx = (xa + xb) / 2;
+    return [[xa, A.cy], [mx, A.cy], [mx, B.cy], [xb, B.cy]];
+  }
+  function ptsD(pts) { return 'M' + pts.map(function (pt) { return P5(pt[0]) + ' ' + P5(pt[1]); }).join('L'); }
+  function boxD(n) { return 'M' + (n.x0 + 0.5) + ' ' + (n.y0 + 0.5) + 'H' + (n.x1 - 0.5) + 'V' + (n.y1 - 0.5) + 'H' + (n.x0 + 0.5) + 'Z'; }
+  function arrowD(pts, fs) {
+    var a = pts[pts.length - 2], b = pts[pts.length - 1], dx = Math.sign(b[0] - a[0]), dy = Math.sign(b[1] - a[1]);
+    var L = R(fs * 0.55), w = R(fs * 0.25), tx = P5(b[0]), ty = P5(b[1]);
+    return 'M' + tx + ' ' + ty + 'L' + (tx - dx * L - dy * w) + ' ' + (ty - dy * L - dx * w) + 'L' + (tx - dx * L + dy * w) + ' ' + (ty - dy * L + dx * w) + 'Z';
+  }
+  // isolation walls: hatched double lines, the drafting convention for a wall in section
+  function wallsD(n) {
+    var top = n.y0 + n.py + n.lines.length * n.lh + 10, bot = n.y1 - 8, wt = 6, c = (bot - top - 2 * wt) / 3, d = '';
+    if (c < 16) return null;
+    [top + c, top + 2 * c + wt].forEach(function (y) {
+      y = R(y);
+      d += 'M' + (n.x0 + 2) + ' ' + (y + 0.5) + 'H' + (n.x1 - 2) + 'M' + (n.x0 + 2) + ' ' + (y + wt + 0.5) + 'H' + (n.x1 - 2);
+      for (var x = n.x0 + 4; x + wt < n.x1 - 2; x += 6) d += 'M' + x + ' ' + (y + wt) + 'L' + (x + wt) + ' ' + y;
+    });
+    return d;
+  }
+  function nodeLabel(g, n, fs) {
+    var t = S('text', { class: 'd-label', 'font-size': fs, 'text-anchor': 'middle' }, g);
+    var y0 = n.walls ? n.y0 + n.py : n.cy - n.lines.length * n.lh / 2;
+    n.lines.forEach(function (s, j) {
+      var ts = S('tspan', { x: R(n.cx), y: R(y0 + j * n.lh + n.lh / 2), 'dominant-baseline': 'central' }, t);
+      ts.textContent = s;
+    });
+    return t;
+  }
+  function edgeLabels(g, p, routes, Lo, efs, W) {
+    var out = [], used = {}, bySrc = {}, byTgt = {}, font = '400 ' + efs + 'px "Martian Mono"';
+    var segsAll = [];
+    routes.forEach(function (pts) { for (var j = 1; j < pts.length; j++) segsAll.push([pts[j - 1], pts[j]]); });
+    function hits(x0, x1, y0, y1) {
+      return segsAll.some(function (s) {
+        var sx0 = Math.min(s[0][0], s[1][0]), sx1 = Math.max(s[0][0], s[1][0]), sy0 = Math.min(s[0][1], s[1][1]), sy1 = Math.max(s[0][1], s[1][1]);
+        return sx1 >= x0 && sx0 <= x1 && sy1 >= y0 && sy0 <= y1;
+      }) || Lo.all.some(function (n) { return n.x1 >= x0 && n.x0 <= x1 && n.y1 >= y0 && n.y0 <= y1; });
+    }
+    p.edges.forEach(function (e) { if (!e[2]) return; bySrc[e[0] + e[2]] = (bySrc[e[0] + e[2]] || 0) + 1; byTgt[e[1] + e[2]] = (byTgt[e[1] + e[2]] || 0) + 1; });
+    p.edges.forEach(function (e, k) {
+      if (!e[2]) return;
+      var pts = routes[k], segs = [], seg;
+      for (var j = 1; j < pts.length; j++) segs.push([pts[j - 1], pts[j]]);
+      if (bySrc[e[0] + e[2]] > 1) { if (used['s' + e[0] + e[2]]) return; used['s' + e[0] + e[2]] = 1; seg = segs[0]; }
+      else if (byTgt[e[1] + e[2]] > 1) { if (used['t' + e[1] + e[2]]) return; used['t' + e[1] + e[2]] = 1; seg = segs[segs.length - 1]; }
+      else seg = segs.length === 1 ? segs[0] : segs[1];
+      var w = tw(e[2], font) + e[2].length * efs * 0.02 + 2, a = seg[0], b = seg[1], x, y, anchor, base, knock = false;
+      if (a[0] === b[0]) {
+        y = (a[1] + b[1]) / 2; base = 'central';
+        x = a[0] + 7; anchor = 'start';
+        if (x + w > W - 8 || hits(x, x + w, y - 5, y + 5)) { x = a[0] - 7; anchor = 'end'; }
+        // neither side has room: the label breaks its own line, as dimension text does
+        if (anchor === 'end' && x - w < 8) { x = Math.min(Math.max(a[0], w / 2 + 6), W - w / 2 - 6); anchor = 'middle'; knock = true; }
+      } else { x = (a[0] + b[0]) / 2; y = a[1] - 6; anchor = 'middle'; base = 'auto'; }
+      var host = knock ? S('g', {}, g) : g;
+      if (knock) S('rect', { x: R(x - w / 2 - 3), y: R(y - efs * 0.8), width: R(w + 6), height: R(efs * 1.6), class: 'c-knock' }, host);
+      var t = txt(host, R(x), R(y), e[2], 'd-elabel', { 'font-size': efs, 'text-anchor': anchor, 'dominant-baseline': base });
+      out.push(knock ? host : t);
+    });
+    return out;
+  }
+  function list(a) { return a.length < 2 ? a[0] : a.slice(0, -1).join(', ') + ' and ' + a[a.length - 1]; }
+  function describe(p) {
+    var groups = [], idx = {};
+    p.edges.forEach(function (e) {
+      var key = e[1] + '|' + (e[2] || '');
+      if (!(key in idx)) { idx[key] = groups.length; groups.push({ to: p.nodes[e[1]], label: e[2], from: [] }); }
+      groups[idx[key]].from.push(p.nodes[e[0]]);
+    });
+    return 'Architecture of ' + p.name + ': ' + groups.map(function (g) { return list(g.from) + ' to ' + g.to + (g.label ? ' (' + g.label + ')' : ''); }).join('; ') + '.';
+  }
+
+  function drawDiagram(svg, p, o) {
+    if (svg._cancel) svg._cancel();
+    var W = Math.floor(svg.parentNode.getBoundingClientRect().width), H = o.H, fs = o.fs;
+    var Lo = layout(p, W, H, fs);
+    if (Lo.need > H) { H = Math.ceil(Lo.need); Lo = layout(p, W, H, fs); }
+    var notes = o.notes ? p.notes : [], rowH = R(fs * 2.6);
+    // fact rows under the drawing; a note wider than the drawing wraps, and its row grows
+    var nfont = '400 ' + o.nfs + 'px "Martian Mono"', nlh = R(o.nfs * 1.45), rowsN = [], ny = H;
+    function nw(s) { return tw(s, nfont) + s.length * o.nfs * 0.02 + 2; } // Martian Mono plus its .02em tracking
+    notes.forEach(function (nt) {
+      var ls = nw(nt[1]) > W - 12 ? wrap(nt[1], W - 24, nfont) : [nt[1]];
+      rowsN.push({ y: R(ny + rowH * 0.7 + (ls.length - 1) * nlh), lines: ls });
+      ny += rowH + (ls.length - 1) * nlh;
+    });
+    var HH = notes.length ? ny + R(fs * 0.6) : H;
+    svg.textContent = '';
+    svg.setAttribute('viewBox', '0 0 ' + W + ' ' + HH);
+    svg.setAttribute('width', W);
+    svg.setAttribute('height', HH);
+    svg.setAttribute('aria-label', describe(p));
+    svg.dataset.project = p.id;
+    svg.dataset.state = 'drafting';
+    svg.classList.add('drafting');
+    var gC = S('g', { class: 'cons' }, svg), gI = S('g', {}, svg), J = new Job(), N = Lo.N, TB = Lo.TB;
+
+    // 1. construction guides: registration marks, the layer axes, the centre axis
+    [[8, 8], [W - 8, 8], [8, HH - 8], [W - 8, HH - 8]].forEach(function (c) {
+      J.pen(path(gC, 'M' + (c[0] - 5) + ' ' + (c[1] + 0.5) + 'H' + (c[0] + 5) + 'M' + (c[0] + 0.5) + ' ' + (c[1] - 5) + 'V' + (c[1] + 5), 'c'), 0);
+    });
+    var axes = {};
+    Lo.all.forEach(function (n) { axes[R(n.m)] = 1; });
+    Object.keys(axes).forEach(function (m) { J.pen(path(gC, TB ? 'M0 ' + (+m + 0.5) + 'H' + W : 'M' + (+m + 0.5) + ' 0V' + H, 'c c-soft'), 0); });
+    J.pen(path(gC, TB ? 'M' + P5(Lo.cc) + ' 0V' + H : 'M0 ' + P5(Lo.cc) + 'H' + W, 'c c-soft'), 0);
+
+    // 2. boxes, layer by layer, in construction blue
+    Lo.all.forEach(function (n) { J.pen(path(gC, boxD(n), 'c'), GRID + n.li * T(1 / 32)); });
+    // 3. connectors
+    var routes = p.edges.map(function (e) { return route(p, e, Lo, fs); });
+    var tE = q(J.end);
+    routes.forEach(function (pts, k) { J.pen(path(gC, ptsD(pts), 'c'), tE + N[p.edges[k][0]].li * T(1 / 32)); });
+    var bottom = Math.max.apply(null, Lo.all.map(function (n) { return n.y1; }));
+    var ext = function (ids) {
+      var ns = ids[0] === 'all' ? Lo.all : ids.map(function (id) { return N[id]; });
+      return [Math.min.apply(null, ns.map(function (n) { return n.x0; })), Math.max.apply(null, ns.map(function (n) { return n.x1; }))];
+    };
+    notes.forEach(function (nt, k) {
+      var x = ext(nt[0]), y = rowsN[k].y;
+      J.pen(path(gC, 'M' + P5(x[0]) + ' ' + R(bottom + 6) + 'V' + (y + 6) + 'M' + P5(x[1]) + ' ' + R(bottom + 6) + 'V' + (y + 6), 'c c-soft'), tE);
+    });
+
+    // 4. plain labels
+    var tL = q(J.end);
+    Lo.all.forEach(function (n) { J.set(nodeLabel(gI, n, fs), tL); });
+    var elabels = edgeLabels(gI, p, routes, Lo, o.efs, W);
+    elabels.forEach(function (t) { J.set(t, tL); });
+
+    // 5. ink: fast and decisive
+    var tK = tL + GRID;
+    Lo.all.forEach(function (n) { J.ink(path(gI, boxD(n), 'd-box'), tK + n.li * T(1 / 32)); });
+    if (p.lay.walls) {
+      var wd = wallsD(N[p.lay.walls]);
+      if (wd) J.ink(path(gI, wd, 'd-wall'), tK + N[p.lay.walls].li * T(1 / 32) + T(1 / 32));
+    }
+    var tKE = q(J.end);
+    routes.forEach(function (pts, k) {
+      var end = J.ink(path(gI, ptsD(pts), 'd-edge'), tKE + N[p.edges[k][0]].li * T(1 / 32));
+      J.set(path(gI, arrowD(pts, fs), 'd-arrow'), end);
+    });
+    elabels.forEach(function (t) { gI.appendChild(t); }); // labels above the lines, so a knockout breaks its line
+
+    // 6. real facts as dimensions (inspect only)
+    var tN = q(J.end);
+    notes.forEach(function (nt, k) {
+      var x = ext(nt[0]), y = rowsN[k].y + 0.5, x0 = P5(x[0]), x1 = P5(x[1]), ls = rowsN[k].lines;
+      var d = path(gI, 'M' + x0 + ' ' + y + 'H' + x1 + 'M' + (x0 - 4) + ' ' + (y + 4) + 'l8 -8M' + (x1 - 4) + ' ' + (y + 4) + 'l8 -8M' + x0 + ' ' + (y - 6) + 'V' + (y + 6) + 'M' + x1 + ' ' + (y - 6) + 'V' + (y + 6), 'd-dim');
+      // value inside the span when it fits, otherwise beside it (drafting convention), always on a knockout;
+      // a wrapped note sits above its line
+      var w = Math.max.apply(null, ls.map(nw)), tx, ty = y + 4, anchor = 'start', kx;
+      if (ls.length === 1 && w + 24 < x1 - x0) { tx = (x0 + x1) / 2; anchor = 'middle'; ty = y - 6; kx = tx - w / 2; }
+      else if (ls.length === 1 && x1 + 10 + w < W - 4) { tx = x1 + 10; kx = tx; }
+      else if (ls.length === 1 && x0 - 10 - w > 4) { tx = x0 - 10; anchor = 'end'; kx = tx - w; }
+      else { tx = Math.min(Math.max((x0 + x1) / 2, w / 2 + 4), W - w / 2 - 4); anchor = 'middle'; ty = y - 6 - (ls.length - 1) * nlh; kx = tx - w / 2; }
+      var lg = S('g', {}, gI);
+      S('rect', { x: R(kx - 3), y: R(ty - o.nfs), width: R(w + 6), height: o.nfs + 5 + (ls.length - 1) * nlh, class: 'c-knock' }, lg);
+      var nt0 = S('text', { x: R(tx), y: R(ty), class: 'd-note', 'font-size': o.nfs, 'text-anchor': anchor }, lg);
+      ls.forEach(function (s, j) { var ts = S('tspan', { x: R(tx), dy: j ? nlh : 0 }, nt0); ts.textContent = s; });
+      J.ink(d, tN + k * GRID);
+      J.set(lg, tN + k * GRID + T(1 / 16));
+    });
+
+    var gen = svg._gen = (svg._gen || 0) + 1;
+    svg._cancel = J.play(function () {
+      if (svg._gen !== gen) return;
+      svg.classList.remove('drafting');
+      svg.dataset.state = 'inked';
+    }, o.still);
+  }
+
+  /* ------------------------------------------------------------------
+   * WORKS INDEX: hover / focus / tap drafts a row's architecture. A
+   * parallel rule (spring, on KIT.loop) slides to the selected row. On
+   * narrow screens the drawing sits inline, under the row that drafted it.
+   * ------------------------------------------------------------------ */
+  var rows = $$('#rows tr.prow'), panel = $('.panel'), panelSvg = $('#panelSvg'), tblWrap = $('.tbl-wrap'), rule = $('.rule');
+  var arts = P.map(function (p) { return $('#p-' + p.id); });
+  var panelHome = panel.parentNode, panelNext = panel.nextSibling, panelRow = null;
+  // The drawing goes inline under a row only where hover cannot move rows: phones, and touch
+  // screens below the side-by-side layout. With a mouse it keeps its own place (beside the table,
+  // or below the whole table at mid widths), so hovering a row never shifts the rows under it.
+  var inline = matchMedia('(max-width: 719px), (pointer: coarse) and (max-width: 1199px)'), fine = matchMedia('(pointer: fine)');
+  var sel = -1, userSel = -1, lastPointer = 'mouse', downWasSel = false; // userSel: chosen by the visitor, not by scroll
+  var ruleY = KIT.spring(0, 0, { stiffness: 260, damping: 30 });
+  KIT.loop(function (dt) {
+    if (KIT.reduced) ruleY.value = ruleY.target; else ruleY.update(dt);
+    rule.style.transform = 'translateY(' + ruleY.value.toFixed(2) + 'px)';
+  }, $('#works'));
+
+  function panelOpts(still) { return { fs: 13, efs: 10, nfs: 10, H: panelSvg.parentNode.clientHeight, notes: false, still: still }; }
+  function placeRule(snap) {
+    if (sel < 0) return;
+    ruleY.target = rows[sel].getBoundingClientRect().bottom - tblWrap.getBoundingClientRect().top;
+    if (snap || !rule.classList.contains('on')) { ruleY.value = ruleY.target; ruleY.velocity = 0; rule.classList.add('on'); }
+  }
+  // narrow screens: the drawing goes inline, directly under the selected row
+  function placePanel() {
+    if (inline.matches && sel >= 0) {
+      if (!panelRow) { panelRow = document.createElement('tr'); panelRow.className = 'panel-row'; panelRow.appendChild(document.createElement('td')); }
+      panelRow.firstChild.colSpan = $$('.idx thead th').filter(function (th) { return th.offsetParent !== null; }).length;
+      panelRow.firstChild.appendChild(panel);
+      rows[sel].after(panelRow);
+    } else if (panel.parentNode !== panelHome) {
+      panelHome.insertBefore(panel, panelNext);
+      if (panelRow) panelRow.remove();
+    }
+  }
+  function select(i) {
+    if (i === sel) return;
+    sel = i;
+    var p = P[i];
+    rows.forEach(function (r, k) { r.classList.toggle('sel', k === i); });
+    $('#panel-h').textContent = 'Sheet ' + p.sheet + ' · ' + p.name;
+    $('#panel-cap').textContent = $('.sheet-one', arts[i]).textContent;
+    $('#openBtn').textContent = 'Open sheet ' + p.sheet;
+    placePanel();
+    drawDiagram(panelSvg, p, panelOpts(false));
+    $('#panel-size').textContent = panelSvg.getAttribute('width') + ' × ' + panelSvg.getAttribute('height') + ' px';
+    placeRule(false);
+    KIT.debug('draft ' + p.id);
+  }
+  rows.forEach(function (r, i) {
+    r.addEventListener('pointerenter', function (e) { if (e.pointerType !== 'touch') { select(i); userSel = i; } });
+    r.addEventListener('pointerdown', function (e) { lastPointer = e.pointerType; downWasSel = userSel === i; });
+    r.addEventListener('focusin', function () { select(i); });
+    r.addEventListener('click', function (e) {
+      e.preventDefault(); // the row link falls back to its static sheet only without this script
+      var tap = e.detail !== 0 && lastPointer === 'touch';
+      lastPointer = 'mouse';
+      if (tap && !downWasSel) { // first tap drafts (again, if scrolling pre-drafted it) and brings it into view; second tap opens
+        if (sel === i) sel = -1;
+        select(i);
+        userSel = i;
+        // bring the whole drawing into view, keeping the row clear of the sticky header (an exact,
+        // instant scroll: a smooth scroll can be cut short when the drawing moves between rows)
+        var pr = panel.getBoundingClientRect(), rr = r.getBoundingClientRect(), head = $('.top').getBoundingClientRect().bottom + 8;
+        if (inline.matches && (pr.bottom > innerHeight || rr.top < head)) scrollBy(0, Math.min(pr.bottom - innerHeight + 12, rr.top - head));
+        return;
+      }
+      userSel = i;
+      openSheet(i);
+    });
+  });
+  // touch has no hover: a tap on a drawing shows or hides its construction
+  document.addEventListener('click', function (e) {
+    var box = e.target.closest && e.target.closest('.dia-box, .fig-box');
+    if (box) box.classList.toggle('peek');
+  });
+  $('#openBtn').addEventListener('click', function () { openSheet(sel < 0 ? 0 : sel); });
+
+  /* ------------------------------------------------------------------
+   * INSPECT: the sheet expands from its row with weight, lands, then is
+   * drafted; closing folds it back into the row.
+   * ------------------------------------------------------------------ */
+  var insp = $('#inspect'), slot = $('#ins-slot'), outside = [$('.skip'), $('.top'), $('main'), $('.foot')];
+  var cur = -1, closing = false, art = null, artNext = null, bigSvg = null, tb = null;
+  function bigOpts(still) {
+    var small = innerWidth < 720;
+    return { fs: small ? 13 : 15, efs: small ? 10 : 11, nfs: small ? 10 : 11, H: small ? 470 : 540, notes: true, still: still };
+  }
+  function rowInset(i) {
+    var r = rows[i].getBoundingClientRect();
+    return 'inset(' + R(r.top) + 'px ' + R(innerWidth - r.right) + 'px ' + R(innerHeight - r.bottom) + 'px ' + R(r.left) + 'px)';
+  }
+  function openSheet(i) {
+    if (cur >= 0) return;
+    cur = i;
+    // the static sheet itself moves into the inspect view, and back on close
+    art = arts[i];
+    artNext = art.nextSibling;
+    slot.appendChild(art);
+    bigSvg = $('.dia-big', art);
+    tb = $('.tb', art);
+    insp.setAttribute('aria-labelledby', 't-' + P[i].id);
+    $('#ins-sheetno').textContent = 'Sheet ' + P[i].sheet + ' of 04 · Esc';
+    bigSvg.textContent = '';
+    bigSvg.dataset.state = '';
+    insp.hidden = false;
+    insp.scrollTop = 0;
+    insp.dataset.state = 'opening';
+    root.classList.add('inspecting');
+    outside.forEach(function (n) { n.inert = true; });
+    clearHover();
+    tb.classList.toggle('fill-pending', anim());
+    $$('.blk', insp).forEach(function (b) { b.classList.remove('is-in', 'kit-reveal', 'pre'); });
+    if (anim()) {
+      insp.style.transition = 'none';
+      insp.style.clipPath = rowInset(i);
+      insp.getBoundingClientRect();
+      insp.style.transition = 'clip-path ' + T(3 / 8) + 'ms var(--ease-weight)';
+      insp.style.clipPath = 'inset(0px 0px 0px 0px)';
+    }
+    $('#t-' + P[i].id).focus({ preventScroll: true });
+    clearTimeout(insp._t);
+    insp._t = setTimeout(landed, anim() ? T(3 / 8) : 0);
+    KIT.debug('inspect ' + P[i].id);
+  }
+  // runs fn once el is in view (immediately under reduced motion): construction plays on scroll
+  function whenSeen(el, fn) {
+    if (!anim()) { fn(); return null; }
+    var io = new IntersectionObserver(function (es) { if (es[es.length - 1].isIntersecting) { io.disconnect(); fn(); } }, { threshold: 0.2 });
+    io.observe(el);
+    return io;
+  }
+  function landed() {
+    if (cur < 0) return;
+    insp.style.transition = insp.style.clipPath = '';
+    var o = bigOpts(false);
+    bigSvg.setAttribute('width', Math.floor(bigSvg.parentNode.getBoundingClientRect().width));
+    bigSvg.setAttribute('height', o.H);
+    insp._ios = [
+      whenSeen(tb, function () { tb.classList.remove('fill-pending'); }), // the decisive fill
+      whenSeen(bigSvg.parentNode, function () {
+        if (cur < 0) return;
+        drawDiagram(bigSvg, P[cur], o);
+        $('.fig-cap', art).textContent = 'Architecture, drawn 1:1 · ' + bigSvg.getAttribute('width') + ' × ' + bigSvg.getAttribute('height') + ' px · ' +
+          (fine.matches ? 'hover the drawing to see how it is built' : 'tap the drawing to see how it is built');
+      })
+    ];
+    $$('.blk', insp).forEach(function (b) {
+      if (anim()) b.classList.add('pre');
+      $$('.ln', b).forEach(function (ln, k) {
+        ln.style.setProperty('--i', k);
+        ln.style.setProperty('--d', R(ln.getBoundingClientRect().width / SPEED) + 'ms');
+      });
+      KIT.reveal(b, { threshold: 0.12 });
+    });
+    insp.dataset.state = 'open';
+  }
+  function closeSheet() {
+    if (cur < 0 || closing) return;
+    closing = true;
+    var i = cur;
+    clearTimeout(insp._t);
+    (insp._ios || []).forEach(function (io) { if (io) io.disconnect(); });
+    if (bigSvg._cancel) bigSvg._cancel();
+    function done() {
+      insp.hidden = true;
+      insp.style.transition = insp.style.clipPath = '';
+      artNext.parentNode.insertBefore(art, artNext); // the sheet goes home to #sheets
+      insp.dataset.state = 'closed';
+      root.classList.remove('inspecting');
+      outside.forEach(function (n) { n.inert = false; });
+      cur = -1;
+      closing = false;
+      $('.rowbtn', rows[i]).focus({ preventScroll: true });
+      KIT.debug('inspect closed');
+    }
+    if (!anim()) { done(); return; }
+    insp.style.transition = 'none';
+    insp.style.clipPath = 'inset(0px 0px 0px 0px)';
+    insp.getBoundingClientRect();
+    insp.style.transition = 'clip-path ' + T(3 / 8) + 'ms var(--ease-weight)';
+    insp.style.clipPath = rowInset(i);
+    setTimeout(done, T(3 / 8));
+  }
+  $('#backBtn').addEventListener('click', closeSheet);
+
+  /* ------------------------------------------------------------------
+   * CONSTRUCTION: one plain button shows or hides the drawing's workings.
+   * ------------------------------------------------------------------ */
+  var consBtn = $('#consBtn');
+  function setConstruction(on) {
+    if (on) root.dataset.construction = 'on'; else delete root.dataset.construction;
+    $('.tg-label', consBtn).textContent = on ? 'Hide construction' : 'Show construction';
+    refreshGuides(true);
+    KIT.debug('construction ' + (on ? 'shown' : 'hidden'));
+  }
+  consBtn.addEventListener('click', function () { setConstruction(!shown()); });
+  document.addEventListener('keydown', function (e) {
+    if (e.key === 'Escape' && cur >= 0) { e.preventDefault(); closeSheet(); }
+  });
+
+  /* ------------------------------------------------------------------
+   * Contact: selectable email with Copy.
+   * ------------------------------------------------------------------ */
+  $('#copyBtn').addEventListener('click', function () {
+    var msg = $('#copyMsg'), email = $('#email');
+    function ok() { msg.textContent = 'Copied'; setTimeout(function () { msg.textContent = ''; }, T(1)); }
+    function select() {
+      var r = document.createRange(), s = getSelection();
+      r.selectNodeContents(email);
+      s.removeAllRanges();
+      s.addRange(r);
+      msg.textContent = 'Selected · press Ctrl+C or ⌘C';
+    }
+    try { navigator.clipboard.writeText(email.textContent).then(ok, select); } catch (err) { select(); }
+  });
+
+  /* ------------------------------------------------------------------
+   * Boot: fallback-first. Without this script the page is complete: the
+   * index links to four static sheets (#sheets) holding every word and
+   * link. Only after everything above is wired does the page switch to
+   * the enhanced view: sheets open as the inspect view, the drawing tools
+   * appear. If anything above threw, the static page stays as it is.
+   * ------------------------------------------------------------------ */
+  $('#sheets').hidden = true;
+  [panel, $('.key'), $('.hint'), consBtn, $('#copyBtn')].forEach(function (n) { n.hidden = false; });
+  rows.forEach(function (r) { $('.rowbtn', r).setAttribute('aria-haspopup', 'dialog'); });
+  $('.idx caption').textContent = 'Index of works. Select a project to draft its architecture; activate it to open its sheet.';
+  root.classList.add('js');
+
+  var started = false, lastW = innerWidth, rz = null;
+  function relayout() {
+    buildHero(false);
+    if (sel >= 0) { placePanel(); drawDiagram(panelSvg, P[sel], panelOpts(true)); $('#panel-size').textContent = panelSvg.getAttribute('width') + ' × ' + panelSvg.getAttribute('height') + ' px'; placeRule(true); }
+    if (cur >= 0 && bigSvg && bigSvg.dataset.state === 'inked') drawDiagram(bigSvg, P[cur], bigOpts(true));
+    refreshGuides(false);
+  }
+  function start() {
+    if (started) return;
+    started = true;
+    try {
+      buildHero(anim());
+    } catch (err) {
+      console.log('[proto] hero-error: ' + err.message);
+      finishIntro();
+    }
+    if (!anim()) finishIntro();
+    requestAnimationFrame(function () { KIT.ready(); });
+    setTimeout(function () { KIT.ready(); }, T(1 / 4)); // fallback where rAF never runs (ready logs once)
+    setTimeout(finishIntro, T(4)); // safety net: never leave the intro state on
+    var io = new IntersectionObserver(function (es) {
+      if (es[es.length - 1].isIntersecting && sel < 0) { select(0); io.disconnect(); }
+    }, { threshold: 0.25 });
+    io.observe($('.works-grid'));
+    KIT.reveal($('.sec-head'));
+    KIT.debug('boot · pen ' + SPEED.toFixed(2) + ' px/ms · grid ' + GRID + ' ms');
+  }
+  if (anim()) {
+    root.classList.add('intro-run');
+    $('.role').classList.add('pending');
+    $$('.process span').forEach(function (s) { s.classList.add('pending'); });
+  }
+  Promise.race([document.fonts.ready, new Promise(function (r) { setTimeout(r, T(1)); })]).then(start, start);
+  document.fonts.addEventListener('loadingdone', function () { if (started && root.dataset.intro === 'done') relayout(); });
+  addEventListener('resize', function () {
+    clearTimeout(rz);
+    rz = setTimeout(function () { if (innerWidth === lastW) return; lastW = innerWidth; relayout(); }, T(1 / 8));
+  });
+})();
+</script>

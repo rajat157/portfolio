@@ -4,11 +4,11 @@ slug: staffing-operations-platform
 description: "Five portals, one login, and every company's data walled off inside the database itself."
 technologies:
   - Next.js
+  - Drizzle ORM
+  - PostgreSQL
   - React
   - TypeScript
   - Turborepo
-  - Drizzle ORM
-  - PostgreSQL
   - Better Auth
   - CASL
   - Row-Level Security

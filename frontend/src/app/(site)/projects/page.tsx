@@ -1,133 +1,72 @@
 import { Metadata } from "next";
-import { cmsProjects, cmsCategories, getMediaURL } from "@/lib/cms";
-import { Project as StrapiProject } from "@/lib/cms/types";
-import { Reveal } from "@/components/animations/reveal";
-import { ProjectsClient } from "./projects-client";
+import Link from "next/link";
+import { cmsProjects } from "@/lib/cms";
+import { FALLBACK_EARLIER, FALLBACK_SHEETS, type FallbackEarlierProject, type FallbackSheet } from "@/lib/cms/fallback";
+import { Project } from "@/lib/cms/types";
+import type { Drawing } from "@/lib/drawing";
+import { WorksIndex, type SheetRow } from "@/components/works-index";
+import { stackCell } from "@/lib/sheet-format";
 
 // Regenerate at most hourly — keeps ISR cadence fixed even if data fetches skip the cache
 export const revalidate = 3600;
 
 export const metadata: Metadata = {
-  title: "Projects | Rajat Kumar R",
-  description: "A collection of projects I have worked on, ranging from web applications to backend systems and DevOps tools.",
+  title: "Projects",
+  description: "Four sheets, each drawn 1:1 from the real architecture, plus the earlier work.",
 };
 
-// Default fallback projects when API is unavailable
-const defaultProjects = [
-  {
-    id: "1",
-    slug: "staffing-operations-platform",
-    title: "Staffing Operations Platform — Five Portals on One System",
-    description: "Five portals, one login, and every company's data walled off inside the database itself. Admin, client, worker, partner and onboarding, over one permission model and one workflow engine.",
-    technologies: ["Next.js", "React", "TypeScript", "Turborepo", "Drizzle ORM", "PostgreSQL", "Better Auth", "CASL", "Row-Level Security", "State Machines"],
-    category: "Web Dev",
-  },
-  {
-    id: "2",
-    slug: "b2b-wholesale-platform",
-    title: "B2B Wholesale Platform — Buyer Portal, CRM & CMS in One App",
-    description: "One app for buyers, staff and editors — with a site the owner updates by talking to an AI. Public storefront, buyer portal, internal operations app and admin CMS in one codebase.",
-    technologies: ["Next.js", "React", "TypeScript", "Payload CMS", "PostgreSQL", "Cloudflare R2", "Resend", "Vercel", "Progressive Web Apps", "Web Push", "Model Context Protocol"],
-    category: "Web Dev",
-  },
-  {
-    id: "9",
-    slug: "esports-talent-portfolio",
-    title: "Esports Talent Portfolio — Broadcast-Style Motion & a Custom Control Room",
-    description: "A booking site that feels like a live broadcast — kept current by the talent, not a developer.",
-    technologies: ["Next.js", "React", "TypeScript", "Payload CMS", "PostgreSQL", "Tailwind CSS", "Lenis", "Vercel Blob", "Resend", "Cloudflare Turnstile", "Vitest", "Playwright", "Vercel"],
-    category: "Web Dev",
-  },
-  {
-    id: "3",
-    slug: "tredye-trading-platform",
-    title: "Tredye Trading Platform",
-    description: "Real-time trading platform built with Next.js 16, Docker, Redis, Kafka, and PostgreSQL. Features live market data, order management, and portfolio tracking.",
-    technologies: ["Next.js", "Docker", "Redis", "Kafka", "PostgreSQL"],
-    category: "Web Dev",
-    imageUrl: "/images/covers/tredye-trading-platform.svg",
-  },
-  {
-    id: "4",
-    slug: "labbuild-2",
-    title: "Labbuild 2.0",
-    description: "High-performance lab infrastructure system achieving 90% faster performance. Rebuilt from ground up with modern Python stack.",
-    technologies: ["Python", "Flask", "FastAPI", "MongoDB"],
-    category: "Backend",
-    imageUrl: "/images/covers/labbuild-2.svg",
-  },
-  {
-    id: "5",
-    slug: "supercomputer-dashboard",
-    title: "Supercomputer Dashboard",
-    description: "Django dashboard for monitoring SahasraT supercomputer at IISc with 33,000 cores. Real-time job tracking and resource monitoring.",
-    technologies: ["Django", "Python", "Linux", "HPC", "SLURM"],
-    category: "DevOps",
-    imageUrl: "/images/covers/supercomputer-dashboard.svg",
-  },
-  {
-    id: "6",
-    slug: "labbuild-dashboard",
-    title: "Labbuild Dashboard",
-    description: "Internal monitoring dashboard for Labbuild infrastructure. Real-time metrics, user sessions, and system health monitoring.",
-    technologies: ["Flask", "MongoDB", "Chart.js", "Bootstrap"],
-    category: "Backend",
-    imageUrl: "/images/covers/labbuild-dashboard.svg",
-  },
-  {
-    id: "7",
-    slug: "operation-schedules",
-    title: "Operation Schedules",
-    description: "Automated workflow scheduling system for batch operations. Handles complex dependencies and parallel execution.",
-    technologies: ["FastAPI", "Celery", "Redis", "PostgreSQL"],
-    category: "Backend",
-    imageUrl: "/images/covers/operation-schedules.svg",
-  },
-  {
-    id: "8",
-    slug: "pro-fit-club-dashboard",
-    title: "Pro Fit Club Dashboard",
-    description: "Fitness club management dashboard with member tracking, class scheduling, and revenue analytics.",
-    technologies: ["React", "Node.js", "MongoDB", "Tailwind CSS"],
-    category: "Web Dev",
-    imageUrl: "/images/covers/pro-fit-club-dashboard.svg",
-  },
-];
+// decisions-taken-by-default #3: the index's "For"/"Kind" text is the part
+// before " — " in the sheet field (the full text stays in the sheet's title block).
+function shortText(s: string | null | undefined): string {
+  return (s ?? "").split(" — ")[0];
+}
 
-const defaultCategories = ["All", "Web Dev", "Backend", "DevOps"];
-
-// Transform Strapi 5 project data to the format expected by UI components (flat structure)
-function transformProject(strapiProject: StrapiProject) {
-  // Defensive check for valid project structure
-  if (!strapiProject || !strapiProject.id) {
-    return null;
-  }
-
+function toSheetRow(p: Project, i: number, total: number): SheetRow {
   return {
-    id: strapiProject.id?.toString() || "",
-    slug: strapiProject.slug || "",
-    title: strapiProject.title || "Untitled",
-    description: strapiProject.description || "",
-    technologies: strapiProject.technologies || [],
-    category: strapiProject.category?.name || "Uncategorized",
-    imageUrl: strapiProject.cover_image ? getMediaURL(strapiProject.cover_image.url) : null,
+    slug: p.slug,
+    shortTitle: p.sheet?.short_title || p.title,
+    forText: shortText(p.sheet?.client),
+    kindText: shortText(p.sheet?.kind),
+    technologies: p.technologies ?? [],
+    drawing: p.drawing as Drawing,
+    oneLiner: p.description,
+    sheetNo: i + 1,
+    total,
   };
 }
 
-// Extract unique categories from projects (Strapi 5 flat format)
-function extractCategories(projects: StrapiProject[]): string[] {
-  const categorySet = new Set<string>();
-
-  projects.forEach((project) => {
-    if (project && project.category?.name) {
-      categorySet.add(project.category.name);
-    }
-  });
-
-  return Array.from(categorySet).sort();
+function toSheetRowFromFallback(s: FallbackSheet, i: number, total: number): SheetRow {
+  return {
+    slug: s.slug,
+    shortTitle: s.sheet.short_title || s.title,
+    forText: shortText(s.sheet.client),
+    kindText: shortText(s.sheet.kind),
+    technologies: s.technologies,
+    drawing: s.drawing as Drawing,
+    oneLiner: s.description,
+    sheetNo: i + 1,
+    total,
+  };
 }
 
-async function getProjects() {
+type EarlierRow = { slug: string; title: string; year: string; category: string; technologies: string[] };
+
+function toEarlierRow(p: Project): EarlierRow {
+  const dateStr = p.start_date ?? p.end_date ?? p.createdAt;
+  return {
+    slug: p.slug,
+    title: p.title,
+    year: dateStr ? String(new Date(dateStr).getFullYear()) : "—",
+    category: p.category?.name ?? "",
+    technologies: p.technologies ?? [],
+  };
+}
+
+function toEarlierRowFromFallback(p: FallbackEarlierProject): EarlierRow {
+  return { slug: p.slug, title: p.title, year: "—", category: p.category, technologies: p.technologies };
+}
+
+async function getProjects(): Promise<Project[]> {
   try {
     return await cmsProjects();
   } catch (error) {
@@ -136,65 +75,69 @@ async function getProjects() {
   }
 }
 
-async function getCategories() {
-  try {
-    return await cmsCategories("project");
-  } catch (error) {
-    console.error("Failed to fetch categories:", error);
-    return [];
-  }
-}
-
 export default async function ProjectsPage() {
-  const [strapiProjects, strapiCategories] = await Promise.all([
-    getProjects(),
-    getCategories(),
-  ]);
+  const projects = await getProjects();
+  const featuredDocs = projects.filter((p) => p.featured && p.sheet && p.drawing);
+  // everything that isn't drawn as a sheet, so a featured project missing its sheet or drawing still lists
+  const earlierDocs = projects.filter((p) => !featuredDocs.includes(p));
 
-  // Transform projects for UI (filter out null results)
-  const transformedProjects = strapiProjects
-    .map(transformProject)
-    .filter((p): p is NonNullable<typeof p> => p !== null);
+  const sheets: SheetRow[] =
+    featuredDocs.length > 0
+      ? featuredDocs.map((p, i) => toSheetRow(p, i, featuredDocs.length))
+      : FALLBACK_SHEETS.map((s, i) => toSheetRowFromFallback(s, i, FALLBACK_SHEETS.length));
 
-  // Use transformed projects or fallback to defaults
-  const projects = transformedProjects.length > 0 ? transformedProjects : defaultProjects;
-
-  // Get category names, either from dedicated categories endpoint or from projects (Strapi 5 flat format)
-  let categoryNames: string[];
-  if (strapiCategories.length > 0) {
-    categoryNames = strapiCategories
-      .filter((cat) => cat && cat.name)
-      .map((cat) => cat.name);
-  } else if (strapiProjects.length > 0) {
-    // Fallback: extract categories from projects
-    categoryNames = extractCategories(strapiProjects);
-  } else {
-    // Use default categories when no API data
-    categoryNames = [];
-  }
-
-  // Add "All" as the first option, or use defaults
-  const categories = categoryNames.length > 0 ? ["All", ...categoryNames] : defaultCategories;
+  const earlier: EarlierRow[] =
+    projects.length > 0 ? earlierDocs.map(toEarlierRow) : FALLBACK_EARLIER.map(toEarlierRowFromFallback);
 
   return (
     <>
-      {/* Hero Section */}
-      <section className="pt-32 pb-16 px-4">
-        <div className="container mx-auto">
-          <Reveal direction="up" duration={0.6}>
-            <h1 className="text-display font-bold mb-6">Projects</h1>
-          </Reveal>
-          <Reveal direction="up" delay={0.1} duration={0.6}>
-            <p className="text-xl text-muted-foreground max-w-2xl">
-              A collection of projects I have worked on, ranging from web applications
-              to backend systems and DevOps tools.
-            </p>
-          </Reveal>
+      <section className="works" id="works" aria-labelledby="works-h">
+        <div className="container gv">
+          <div className="sec-head">
+            <h1 id="works-h" className="t-h2" data-cons="text">
+              Index of works
+            </h1>
+            <p className="lab">{sheets.length} sheets · each drawing is the real architecture</p>
+          </div>
+          <WorksIndex sheets={sheets} />
         </div>
       </section>
 
-      {/* Client component for filtering and grid */}
-      <ProjectsClient projects={projects} categories={categories} />
+      <section id="earlier" aria-labelledby="earlier-h">
+        <div className="container gv">
+          <div className="sec-head">
+            <h2 id="earlier-h" className="t-h2" data-cons="text">
+              Earlier works
+            </h2>
+            <p className="lab">{earlier.length} projects</p>
+          </div>
+          <table className="idx">
+            <caption className="sr-only">Earlier works. Each project links to its page.</caption>
+            <thead>
+              <tr>
+                <th scope="col">Year</th>
+                <th scope="col">Project</th>
+                <th scope="col" className="k">Kind</th>
+                <th scope="col" className="st">Stack</th>
+              </tr>
+            </thead>
+            <tbody>
+              {earlier.map((p) => (
+                <tr className="prow" key={p.slug}>
+                  <td className="sh">{p.year}</td>
+                  <th scope="row">
+                    <Link className="rowbtn" href={`/projects/${p.slug}`}>
+                      {p.title}
+                    </Link>
+                  </th>
+                  <td className="k" data-fact>{p.category}</td>
+                  <td className="st" data-fact>{stackCell(p.technologies)}</td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      </section>
     </>
   );
 }

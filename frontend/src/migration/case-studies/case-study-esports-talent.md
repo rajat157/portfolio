@@ -4,14 +4,14 @@ slug: esports-talent-portfolio
 live_url: https://lucif3r.1v1clutch.com
 description: "A booking site that feels like a live broadcast — kept current by the talent, not a developer."
 technologies:
+  - Payload CMS
+  - Lenis
+  - Vercel Blob
   - Next.js
   - React
   - TypeScript
-  - Payload CMS
   - PostgreSQL
   - Tailwind CSS
-  - Lenis
-  - Vercel Blob
   - Resend
   - Cloudflare Turnstile
   - Vitest

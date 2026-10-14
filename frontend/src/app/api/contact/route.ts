@@ -153,15 +153,66 @@ function escapeHtml(text: string): string {
   return text.replace(/[&<>"']/g, (char) => htmlEntities[char]);
 }
 
-export async function POST(request: NextRequest) {
-  try {
-    const body = await request.json();
+// D28 refined: a form POST (native, no JS) answers with a 303 to
+// `<path>#sent`/`<path>#send-error` instead of `?sent=1`, so the page never
+// reads searchParams and stays static (ISR). The referer is used only when
+// its origin matches the request's own -- otherwise the target is
+// `/contact` -- so this can never become an open redirect.
+function redirectTarget(request: NextRequest, hash: "#sent" | "#send-error"): URL {
+  const origin = request.nextUrl.origin;
+  const referer = request.headers.get("referer");
+  let path = "/contact";
+  if (referer) {
+    try {
+      const refUrl = new URL(referer);
+      if (refUrl.origin === origin) path = refUrl.pathname;
+    } catch {
+      // malformed referer header -- fall back to /contact
+    }
+  }
+  return new URL(`${path}${hash}`, origin);
+}
 
-    // Validate the request body
+async function readBody(request: NextRequest, isForm: boolean): Promise<Record<string, unknown>> {
+  if (!isForm) return request.json();
+  const form = await request.formData();
+  const data: Record<string, unknown> = {};
+  form.forEach((value, key) => {
+    data[key] = typeof value === "string" ? value : "";
+  });
+  return data;
+}
+
+export async function POST(request: NextRequest) {
+  const contentType = request.headers.get("content-type") || "";
+  const isForm = !contentType.includes("application/json");
+
+  // A form post needs no CORS preflight, so another site could auto-submit one through its visitors' browsers
+  // and spend the Resend quota. Browsers send Origin on every POST; refuse one that isn't this site's.
+  const origin = request.headers.get("origin");
+  if (isForm && origin && origin !== request.nextUrl.origin) {
+    return NextResponse.redirect(redirectTarget(request, "#send-error"), 303);
+  }
+
+  try {
+    const body = await readBody(request, isForm);
+
+    // A filled honeypot `website` field is only ever set by a bot -- answer
+    // with the normal success response and send nothing (D28).
+    if (typeof body.website === "string" && body.website !== "") {
+      if (isForm) return NextResponse.redirect(redirectTarget(request, "#sent"), 303);
+      return NextResponse.json(
+        { success: true, message: "Message sent successfully! I will get back to you soon." },
+        { status: 200 }
+      );
+    }
+
+    // Validate the request body (zod stays the trust boundary)
     const validationResult = contactSchema.safeParse(body);
 
     if (!validationResult.success) {
       const errors = validationResult.error.flatten().fieldErrors;
+      if (isForm) return NextResponse.redirect(redirectTarget(request, "#send-error"), 303);
       return NextResponse.json(
         {
           error: "Validation failed",
@@ -197,10 +248,10 @@ export async function POST(request: NextRequest) {
 
       if (sendError) {
         console.error("Resend email error:", sendError);
+        if (isForm) return NextResponse.redirect(redirectTarget(request, "#send-error"), 303);
         return NextResponse.json(
           {
-            error:
-              "Failed to send message. Please try again or contact directly via email.",
+            error: "Failed to send message. Please try again.",
           },
           { status: 500 }
         );
@@ -213,6 +264,7 @@ export async function POST(request: NextRequest) {
       );
     }
 
+    if (isForm) return NextResponse.redirect(redirectTarget(request, "#sent"), 303);
     return NextResponse.json(
       {
         success: true,
@@ -222,6 +274,7 @@ export async function POST(request: NextRequest) {
     );
   } catch (error) {
     console.error("Contact form error:", error);
+    if (isForm) return NextResponse.redirect(redirectTarget(request, "#send-error"), 303);
 
     return NextResponse.json(
       {

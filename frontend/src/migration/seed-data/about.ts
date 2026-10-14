@@ -46,8 +46,8 @@ export const aboutData: AboutSeed = {
   name: "Rajat Kumar R",
   headline: "Software Architect & Developer",
   bio_short:
-    "Experienced Software Architect with 8+ years building high-performance systems. From managing India's fastest supercomputer (SahasraT at IISc) to architecting real-time trading platforms, I bring deep expertise in Python, cloud infrastructure, and modern web technologies. Passionate about leveraging AI tools like Claude and Gemini to accelerate development.",
-  bio_full: `I'm a Software Architect and Developer based in Bangalore, India, with over 8 years of experience building systems that scale.
+    "Experienced Software Architect with 10+ years building high-performance systems. From managing India's fastest supercomputer (SahasraT at IISc) to architecting real-time trading platforms, I bring deep expertise in Python, cloud infrastructure, and modern web technologies. Passionate about leveraging AI tools like Claude and Gemini to accelerate development.",
+  bio_full: `I'm a Software Architect and Developer based in Bangalore, India, with over 10 years of experience building systems that scale.
 
 My journey in tech has taken me through diverse domains - from managing SahasraT, India's fastest supercomputer at IISc with 33,000 cores, to building real-time trading platforms and high-performance lab infrastructure systems.
 

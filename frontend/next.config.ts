@@ -23,21 +23,6 @@ const nextConfig: NextConfig = {
     remotePatterns: [
       {
         protocol: "https",
-        hostname: "cdn.simpleicons.org",
-        pathname: "/**",
-      },
-      {
-        protocol: "https",
-        hostname: "api.iconify.design",
-        pathname: "/**",
-      },
-      {
-        protocol: "https",
-        hostname: "res.cloudinary.com",
-        pathname: "/**",
-      },
-      {
-        protocol: "https",
         hostname: "*.public.blob.vercel-storage.com",
         pathname: "/**",
       },

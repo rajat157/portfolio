@@ -1,23 +1,6 @@
 import type { Metadata } from "next";
-import Link from "next/link";
-import { Reveal } from "@/components/animations/reveal";
-import { ExperienceTimeline } from "@/components/about/experience-timeline";
-import { SkillsGrid } from "@/components/about/skills-grid";
-import {
-  MapPin,
-  Mail,
-  Download,
-  ArrowRight,
-  GraduationCap,
-  Camera,
-  Music,
-  Film,
-  Gamepad2,
-  ChefHat,
-} from "lucide-react";
-import { Button } from "@/components/ui/button";
 import { cmsAbout } from "@/lib/cms";
-import type { About } from "@/lib/cms/types";
+import type { About, Education, Experience, Skill } from "@/lib/cms/types";
 
 // Regenerate at most hourly — keeps ISR cadence fixed even if data fetches skip the cache
 export const revalidate = 3600;
@@ -25,15 +8,16 @@ export const revalidate = 3600;
 export const metadata: Metadata = {
   title: "About",
   description:
-    "Learn more about Rajat Kumar R - Software Architect with 8+ years of experience building high-performance systems.",
+    "Learn more about Rajat - Software Architect with 10+ years of experience building high-performance systems.",
 };
 
-// Default fallback data when API returns empty
+// Default fallback data when the CMS returns empty (CLAUDE.md: "Pages keep
+// hardcoded fallback content... preserve this pattern"). Ported from the old
+// about/page.tsx, experience-timeline.tsx and skills-grid.tsx fallbacks.
 const defaultAboutData = {
-  name: "Rajat Kumar R",
   headline: "Software Architect & Developer",
   bio_short:
-    "Experienced Software Architect with 8+ years building high-performance systems. From managing India's fastest supercomputer (SahasraT at IISc) to architecting real-time trading platforms, I bring deep expertise in Python, cloud infrastructure, and modern web technologies. Passionate about leveraging AI tools like Claude and Gemini to accelerate development.",
+    "Experienced Software Architect with 10+ years building high-performance systems. From managing India's fastest supercomputer (SahasraT at IISc) to architecting real-time trading platforms, I bring deep expertise in Python, cloud infrastructure, and modern web technologies. Passionate about leveraging AI tools like Claude and Gemini to accelerate development.",
   location: "Bangalore, India",
   education: [
     {
@@ -45,8 +29,152 @@ const defaultAboutData = {
       end_date: "2016-01-01",
       description: null,
     },
-  ],
+  ] as Education[],
 };
+
+const FALLBACK_EXPERIENCE: Experience[] = [
+  {
+    id: 1,
+    company: "Independent",
+    position: "Freelance Software Architect & Developer",
+    description:
+      "Building full-stack web platforms for clients end to end — B2B commerce and CRM, multi-portal operations software and motion-led brand sites — with Next.js, Payload CMS and PostgreSQL.",
+    start_date: "2026-02-01",
+    end_date: null,
+    is_current: true,
+    location: null,
+    company_url: null,
+  },
+  {
+    id: 2,
+    company: "Voltvave Innovations",
+    position: "Freelance Software Architect & Developer",
+    description:
+      'Built "Tredye", a real-time market-monitoring platform for NSE stocks: Python services on Kafka, Redis and PostgreSQL, with a Next.js dashboard. Built the event-driven data pipeline, alerts and backtesting.',
+    start_date: "2025-11-01",
+    end_date: "2026-01-31",
+    is_current: false,
+    location: null,
+    company_url: null,
+  },
+  {
+    id: 3,
+    company: "Red Education",
+    position: "Team Lead, Senior Python Support Engineer",
+    description:
+      "Engineered Labbuild 2.0 achieving 90% faster performance. Built Flask/MongoDB dashboard for monitoring. Developed FastAPI APIs for internal services.",
+    start_date: "2024-02-01",
+    end_date: "2025-08-31",
+    is_current: false,
+    location: null,
+    company_url: null,
+  },
+  {
+    id: 4,
+    company: "Freelancer",
+    position: "Technical Consultant",
+    description: "Developed Django/PostgreSQL/Svelte dashboard solutions. Conducted AI tools research and implementation.",
+    start_date: "2023-11-01",
+    end_date: "2024-01-31",
+    is_current: false,
+    location: null,
+    company_url: null,
+  },
+  {
+    id: 5,
+    company: "Offpriced Canada Inc.",
+    position: "Senior Developer",
+    description: "Led team of 6 developers. Built and maintained e-commerce platform. Implemented Python automation solutions.",
+    start_date: "2022-07-01",
+    end_date: "2023-10-31",
+    is_current: false,
+    location: null,
+    company_url: null,
+  },
+  {
+    id: 6,
+    company: "HCL Technologies",
+    position: "Lead Engineer SQA",
+    description: "Worked with Palo Alto Networks. Developed Pytest automation framework. Managed Kubernetes clusters.",
+    start_date: "2021-10-01",
+    end_date: "2022-06-30",
+    is_current: false,
+    location: null,
+    company_url: null,
+  },
+  {
+    id: 7,
+    company: "SERC, IISc",
+    position: "System Engineer",
+    description:
+      "Managed SahasraT supercomputer (33,000 cores) - India's fastest supercomputer. Built Django dashboard for system monitoring.",
+    start_date: "2019-07-01",
+    end_date: "2021-09-30",
+    is_current: false,
+    location: null,
+    company_url: null,
+  },
+  {
+    id: 8,
+    company: "TEKsystems/HPE",
+    position: "Network Support Engineer",
+    description: "Provided AT&T L1 support. Managed Aruba networking infrastructure.",
+    start_date: "2017-06-01",
+    end_date: "2019-06-30",
+    is_current: false,
+    location: null,
+    company_url: null,
+  },
+];
+
+// Group names/order from the old skills-grid.tsx:61 categoryDisplayMap (icons dropped, D-summary 6).
+const CATEGORY_LABEL: Record<string, string> = {
+  frontend: "Frontend",
+  backend: "Backend",
+  devops: "DevOps & Cloud",
+  design: "Design",
+  other: "Other",
+};
+
+type SkillGroup = { label: string; items: string[] };
+
+function groupSkills(skills: Skill[]): SkillGroup[] {
+  const order: string[] = [];
+  const byCategory = new Map<string, string[]>();
+  for (const s of skills) {
+    const category = s.category || "other";
+    if (!byCategory.has(category)) {
+      byCategory.set(category, []);
+      order.push(category);
+    }
+    byCategory.get(category)!.push(s.name);
+  }
+  return order.map((category) => ({ label: CATEGORY_LABEL[category] ?? category, items: byCategory.get(category)! }));
+}
+
+// Ported from skills-grid.tsx's defaultSkillCategories (icons dropped).
+const FALLBACK_SKILL_GROUPS: SkillGroup[] = [
+  { label: "Languages & Frameworks", items: ["Python", "Django", "Flask", "FastAPI", "Node.js", "ReactJS", "Next.js", "Svelte"] },
+  { label: "Databases", items: ["PostgreSQL", "MongoDB", "Redis"] },
+  { label: "DevOps & Cloud", items: ["Docker", "Kubernetes", "AWS", "GCP", "Azure", "OCI", "Jenkins", "Nginx"] },
+  { label: "Testing", items: ["Pytest", "Selenium", "Automated Testing"] },
+  { label: "Tools", items: ["Git", "Jira", "Confluence", "Kafka"] },
+];
+
+const BEYOND_CODE = ["Photography & Videography", "Music Production", "Video Editing", "FPS Gaming", "Culinary Arts"];
+
+function expRange(e: Experience): string {
+  const start = new Date(e.start_date).getFullYear();
+  if (e.is_current || !e.end_date) return `${start}–now`;
+  return `${start}–${new Date(e.end_date).getFullYear()}`;
+}
+
+function eduRange(e: Education): string {
+  const start = e.start_date ? new Date(e.start_date).getFullYear() : null;
+  if (!start) return "—";
+  if (!e.end_date) return `${start}–now`;
+  return `${start}–${new Date(e.end_date).getFullYear()}`;
+}
 
 async function getAboutData(): Promise<About | null> {
   try {
@@ -60,238 +188,166 @@ async function getAboutData(): Promise<About | null> {
 export default async function AboutPage() {
   const aboutData = await getAboutData();
 
-  // Use API data or fallback to defaults (Strapi 5 flat response format - no attributes wrapper)
-  const name = aboutData?.name || defaultAboutData.name;
   const headline = aboutData?.headline || defaultAboutData.headline;
   const bio = aboutData?.bio_short || defaultAboutData.bio_short;
   const location = aboutData?.location || defaultAboutData.location;
-  const skills = aboutData?.skills;
-  const experience = aboutData?.experience;
-  const education = aboutData?.education || defaultAboutData.education;
-  const resumeUrl = aboutData?.resume_url || "/resume.pdf";
+  const resumeUrl = aboutData?.resume_url; // no fallback: public/ has no résumé to point at
+  const experience = aboutData?.experience?.length ? aboutData.experience : FALLBACK_EXPERIENCE;
+  const education = aboutData?.education?.length ? aboutData.education : defaultAboutData.education;
+  const skillGroups = aboutData?.skills?.length ? groupSkills(aboutData.skills) : FALLBACK_SKILL_GROUPS;
+
   return (
-    <>
-      {/* Hero Section */}
-      <section className="py-24 px-4">
-        <div className="container mx-auto max-w-4xl">
-          <Reveal>
-            <p className="text-muted-foreground text-lg mb-4">About Me</p>
-          </Reveal>
+    <div className="sheet">
+      <div className="sheet-grid">
+        <div className="sh-head">
+          <p className="lab">
+            About · <span data-fact>{location}</span>
+          </p>
+          {/* D25: "Rajat" everywhere — never the full name */}
+          <h1 className="sheet-title">Rajat</h1>
+          <p className="sheet-one" data-fact>
+            {headline}
+          </p>
+        </div>
 
-          <Reveal delay={0.1}>
-            <h1 className="text-display font-bold tracking-tight mb-4">
-              {name}
-            </h1>
-          </Reveal>
-
-          <Reveal delay={0.2}>
-            <p className="text-heading text-muted-foreground mb-6">
-              {headline}
-            </p>
-          </Reveal>
-
-          <Reveal delay={0.3}>
-            <div className="flex flex-wrap gap-4 text-sm text-muted-foreground mb-8">
-              <span className="flex items-center gap-2">
-                <MapPin className="w-4 h-4" />
-                {location}
-              </span>
-              <span className="flex items-center gap-2">
-                <Mail className="w-4 h-4" />
-                <a
-                  href="mailto:rajat.kumar.r@outlook.com"
-                  className="hover:text-foreground transition-colors"
-                >
-                  rajat.kumar.r@outlook.com
-                </a>
-              </span>
+        <aside className="tb" aria-label="Title block">
+          <dl>
+            <div className="tb-row">
+              <dt className="lab">Role</dt>
+              <dd data-fact>{headline}</dd>
             </div>
-          </Reveal>
-        </div>
-      </section>
-
-      {/* Bio Section */}
-      <section className="py-16 px-4 bg-muted/30">
-        <div className="container mx-auto max-w-4xl">
-          <Reveal>
-            <h2 className="text-heading font-bold mb-8">Who I Am</h2>
-          </Reveal>
-
-          <Reveal delay={0.1}>
-            <div className="prose prose-lg dark:prose-invert max-w-none">
-              <p className="text-lg text-muted-foreground leading-relaxed">
-                {bio}
-              </p>
+            <div className="tb-row">
+              <dt className="lab">Based</dt>
+              <dd data-fact>{location}</dd>
             </div>
-          </Reveal>
-        </div>
-      </section>
+            <div className="tb-row">
+              <dt className="lab">Experience</dt>
+              <dd data-fact>10+ years</dd>
+            </div>
+          </dl>
+          {resumeUrl && (
+            <a className="tb-link" href={resumeUrl} target="_blank" rel="noopener noreferrer">
+              <span>Résumé</span>
+              <span aria-hidden="true">↗</span>
+              <span className="sr-only"> (opens in a new tab)</span>
+            </a>
+          )}
+        </aside>
+      </div>
 
-      {/* Experience Timeline Section */}
-      <section className="py-24 px-4">
-        <div className="container mx-auto max-w-6xl">
-          <Reveal>
-            <h2 className="text-heading font-bold mb-4 text-center">
-              Work Experience
-            </h2>
-          </Reveal>
-
-          <Reveal delay={0.1}>
-            <p className="text-muted-foreground text-center mb-16 max-w-2xl mx-auto">
-              A journey through 8+ years of building systems, leading teams, and
-              solving complex technical challenges.
-            </p>
-          </Reveal>
-
-          <ExperienceTimeline experiences={experience} />
-        </div>
-      </section>
-
-      {/* Skills Section */}
-      <section className="py-24 px-4 bg-muted/30">
-        <div className="container mx-auto max-w-6xl">
-          <Reveal>
-            <h2 className="text-heading font-bold mb-4 text-center">
-              Skills & Technologies
-            </h2>
-          </Reveal>
-
-          <Reveal delay={0.1}>
-            <p className="text-muted-foreground text-center mb-16 max-w-2xl mx-auto">
-              Technologies and tools I work with to build scalable, performant
-              applications.
-            </p>
-          </Reveal>
-
-          <SkillsGrid skills={skills} />
-        </div>
-      </section>
-
-      {/* Education Section */}
-      <section className="py-24 px-4">
-        <div className="container mx-auto max-w-4xl">
-          <Reveal>
-            <h2 className="text-heading font-bold mb-12 text-center">
-              Education
-            </h2>
-          </Reveal>
-
-          <div className="space-y-6">
-            {education.map((edu, index) => (
-              <Reveal key={edu.id ?? index} delay={index * 0.1}>
-                <div className="bg-card border border-border rounded-xl p-8 flex items-start gap-6">
-                  <div className="p-3 bg-muted rounded-lg">
-                    <GraduationCap className="w-8 h-8" />
-                  </div>
-                  <div>
-                    <h3 className="text-xl font-bold">{edu.degree}</h3>
-                    <p className="text-primary font-medium mt-1">
-                      {edu.institution}
-                    </p>
-                    <p className="text-muted-foreground mt-2">
-                      Class of {edu.end_date ? new Date(edu.end_date).getFullYear() : "Present"}
-                    </p>
-                    {edu.description && (
-                      <p className="text-muted-foreground mt-2 text-sm">{edu.description}</p>
-                    )}
-                  </div>
-                </div>
-              </Reveal>
-            ))}
+      <div className="blocks">
+        <div className="blk">
+          <h4 className="blk-h">Bio</h4>
+          <div data-fact>
+            <p className="ln">{bio}</p>
           </div>
         </div>
-      </section>
+      </div>
 
-      {/* Interests Section */}
-      <section className="py-24 px-4 bg-muted/30">
-        <div className="container mx-auto max-w-4xl">
-          <Reveal>
-            <h2 className="text-heading font-bold mb-4 text-center">
-              Beyond Code
-            </h2>
-          </Reveal>
-
-          <Reveal delay={0.1}>
-            <p className="text-muted-foreground text-center mb-12">
-              When I&apos;m not building software, you&apos;ll find me exploring
-              these creative pursuits.
-            </p>
-          </Reveal>
-
-          <div className="grid grid-cols-2 md:grid-cols-5 gap-6">
-            {[
-              {
-                icon: Camera,
-                label: "Photography & Videography",
-              },
-              {
-                icon: Music,
-                label: "Music Production",
-              },
-              {
-                icon: Film,
-                label: "Video Editing",
-              },
-              {
-                icon: Gamepad2,
-                label: "FPS Gaming",
-              },
-              {
-                icon: ChefHat,
-                label: "Culinary Arts",
-              },
-            ].map((interest, index) => (
-              <Reveal key={interest.label} delay={index * 0.1}>
-                <div className="bg-card border border-border rounded-xl p-6 text-center hover:shadow-lg transition-shadow">
-                  <interest.icon className="w-8 h-8 mx-auto mb-3 text-muted-foreground" />
-                  <p className="text-sm font-medium">{interest.label}</p>
-                </div>
-              </Reveal>
+      <section aria-labelledby="exp-h">
+        <div className="sec-head">
+          <h2 id="exp-h" className="t-h2" data-cons="text">
+            Experience
+          </h2>
+          <p className="lab">{experience.length} roles</p>
+        </div>
+        <table className="idx">
+          <caption className="sr-only">Work experience, most recent first.</caption>
+          <thead>
+            <tr>
+              <th scope="col">Years</th>
+              <th scope="col">Role</th>
+              <th scope="col" className="k">Organisation</th>
+              <th scope="col" className="st">Where</th>
+            </tr>
+          </thead>
+          <tbody>
+            {experience.map((e) => (
+              <tr className="prow" key={e.id}>
+                <td className="sh">{expRange(e)}</td>
+                <th scope="row">
+                  <span className="rowbtn">{e.position}</span>
+                  {e.description && (
+                    <p className="row-sub" data-fact>
+                      {e.description}
+                    </p>
+                  )}
+                </th>
+                <td className="k" data-fact>
+                  {e.company_url ? (
+                    <a href={e.company_url} target="_blank" rel="noopener noreferrer">
+                      {e.company}
+                      <span aria-hidden="true"> ↗</span>
+                      <span className="sr-only"> (opens in a new tab)</span>
+                    </a>
+                  ) : (
+                    e.company
+                  )}
+                </td>
+                <td className="st" data-fact>
+                  {e.location || "—"}
+                </td>
+              </tr>
             ))}
-          </div>
-        </div>
+          </tbody>
+        </table>
       </section>
 
-      {/* Call to Action Section */}
-      <section className="py-24 px-4">
-        <div className="container mx-auto max-w-2xl text-center">
-          <Reveal>
-            <h2 className="text-heading font-bold mb-4">
-              Let&apos;s Work Together
-            </h2>
-          </Reveal>
-
-          <Reveal delay={0.1}>
-            <p className="text-muted-foreground mb-8">
-              I&apos;m always interested in hearing about new projects and
-              opportunities. Whether you have a question or just want to say hi,
-              feel free to reach out.
-            </p>
-          </Reveal>
-
-          <Reveal delay={0.2}>
-            <div className="flex flex-col sm:flex-row gap-4 justify-center">
-              <Button asChild size="lg" className="rounded-full">
-                <Link href="/contact">
-                  Get in Touch
-                  <ArrowRight className="w-4 h-4 ml-2" />
-                </Link>
-              </Button>
-              <Button
-                asChild
-                variant="outline"
-                size="lg"
-                className="rounded-full"
-              >
-                <a href={resumeUrl} target="_blank" rel="noopener noreferrer">
-                  <Download className="w-4 h-4 mr-2" />
-                  Download Resume
-                </a>
-              </Button>
+      <section aria-labelledby="skills-h">
+        <div className="sec-head">
+          <h2 id="skills-h" className="t-h2" data-cons="text">
+            Skills
+          </h2>
+        </div>
+        <div className="blocks">
+          {skillGroups.map((g) => (
+            <div className="blk" key={g.label}>
+              <h4 className="blk-h">{g.label}</h4>
+              <p data-fact>{g.items.join(" · ")}</p>
             </div>
-          </Reveal>
+          ))}
         </div>
       </section>
-    </>
+
+      <section aria-labelledby="edu-h">
+        <div className="sec-head">
+          <h2 id="edu-h" className="t-h2" data-cons="text">
+            Education
+          </h2>
+        </div>
+        <table className="idx">
+          <caption className="sr-only">Education.</caption>
+          <thead>
+            <tr>
+              <th scope="col">Years</th>
+              <th scope="col">Degree</th>
+              <th scope="col" className="k">Institution</th>
+            </tr>
+          </thead>
+          <tbody>
+            {education.map((e) => (
+              <tr className="prow" key={e.id}>
+                <td className="sh">{eduRange(e)}</td>
+                <th scope="row">
+                  <span className="rowbtn">{e.degree}</span>
+                </th>
+                <td className="k" data-fact>
+                  {e.institution}
+                </td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </section>
+
+      <section aria-labelledby="beyond-h">
+        <div className="sec-head">
+          <h2 id="beyond-h" className="t-h2" data-cons="text">
+            Beyond code
+          </h2>
+        </div>
+        <p data-fact>{BEYOND_CODE.join(" · ")}</p>
+      </section>
+    </div>
   );
 }
