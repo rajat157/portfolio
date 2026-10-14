@@ -9,6 +9,7 @@ import Link from "next/link";
 import { ContactForm } from "@/components/contact-form";
 import { NameMark } from "@/components/home/name-mark";
 import { Pick } from "@/components/home/pick";
+import { Splash } from "@/components/home/splash";
 import { Stage } from "@/components/home/stage";
 import { HOME, mapProjectsDesc } from "@/content/home";
 import { cmsProjects } from "@/lib/cms";
@@ -70,6 +71,7 @@ export default async function HomePage() {
   return (
     <>
       <div className="exp" id="exp" data-step="0">
+        <Splash />
         <div
           className="exp-pin kit-registration"
           tabIndex={0}
@@ -84,15 +86,6 @@ export default async function HomePage() {
             <NameMark />
           </div>
           <div className="lockx" aria-hidden="true" />
-          {/* shown only while the boot script's html[data-boot] is up (the first load, until the stage takes over) */}
-          <div className="boot-ro" aria-hidden="true">
-            <div className="container">
-              <p className="lab">Loading the drawing</p>
-              <span className="boot-bar">
-                <i />
-              </span>
-            </div>
-          </div>
           <div className="exp-ui">
             <div className="container">
               <div className="meta">

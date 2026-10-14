@@ -86,7 +86,7 @@ export function Stage({ problems, leads }: { problems: readonly { problem: strin
       unboot();
       return;
     }
-    if (!location.hash) root.dataset.boot = "";
+    if (!location.hash && !root.hasAttribute("data-boot")) root.dataset.boot = ""; // keep the boot script's "splash"
     const cap = window.setTimeout(unboot, 8000); // a slow start shows the plain page rather than an endless splash
 
     let disposed = false;
@@ -594,6 +594,7 @@ export function Stage({ problems, leads }: { problems: readonly { problem: strin
       let th = 0;
       let ph = 0;
       let introAt: number | null = null;
+      let skipIntro = false; // set at gl-ready when the loading sheet covered the page (see there)
       let intro = 1; // 1 → 0 over the hand-off
       const driftTh = (now: number) => 16 + 6 * Math.sin(now / 2600);
       const driftPh = (now: number) => -7 + 3 * Math.sin(now / 3700);
@@ -795,14 +796,15 @@ export function Stage({ problems, leads }: { problems: readonly { problem: strin
       function update(now: number, dt: number) {
         const sT = scrollTarget();
         if (sT > 0.012 && mode !== "locked" && !tween) lineUp(true);
-        if (introAt === null) introAt = now;
-        intro = 1 - weight(seg(now - introAt, 150, 1150));
+        // the hand-off starts once nothing covers the page; after the loading sheet there is none (skipIntro)
+        if (introAt === null && !root.hasAttribute("data-boot")) introAt = skipIntro ? now - 2000 : now;
+        intro = introAt === null ? 1 : 1 - weight(seg(now - introAt, 150, 1150));
         if (intro > 0) dirty = true;
 
-        // breathers: every 7.6 s the drift eases nearly into the view for ~2 s, and the hero line changes
-        // as that pause begins, so the eye that follows the motion lands on the words
+        // breathers: every 7.6 s the drift eases halfway toward the view for ~2 s (not into it: what lines up is
+        // the visitor's to find), and the hero line changes as that pause begins, so the eye lands on the words
         let breath = 0;
-        if (step === 0 && leads.length && now - introAt > 1400) {
+        if (introAt !== null && step === 0 && leads.length && now - introAt > 1400) {
           const since = now - introAt - 1400;
           const u = (since % 7600) / 7600;
           breath = u > 0.62 && u < 0.92 ? Math.sin((Math.PI * (u - 0.62)) / 0.3) ** 2 : 0;
@@ -831,8 +833,8 @@ export function Stage({ problems, leads }: { problems: readonly { problem: strin
           if (u >= 1) lock(now);
         } else if (mode !== "locked") {
           if (input === "drift") {
-            thT = driftTh(now) * (1 - intro) * (1 - 0.8 * breath);
-            phT = driftPh(now) * (1 - intro) * (1 - 0.8 * breath);
+            thT = driftTh(now) * (1 - intro) * (1 - 0.5 * breath);
+            phT = driftPh(now) * (1 - intro) * (1 - 0.5 * breath);
           } else if (input === "mouse") {
             thT = clamp((px - 0.36) * 80, -55, 55);
             phT = clamp(-(py - 0.58) * 46, -30, 30);
@@ -1109,22 +1111,8 @@ export function Stage({ problems, leads }: { problems: readonly { problem: strin
       // capped: a context lost mid-compile never reports ready, and the teardown below only exists once boot returns
       await Promise.race([renderer.compileAsync(scene, camera), new Promise((r) => setTimeout(r, 3000))]);
       faceTex.forEach((t) => renderer.initTexture(t));
-      exp.classList.add("gl-ready");
-      // the stage has the name now: the rest of the page fades in. A #fragment asked for was pushed down by the
-      // stage's scroll runway just now, so go back to it.
-      clearTimeout(cap);
-      unboot();
-      if (location.hash) document.getElementById(location.hash.slice(1))?.scrollIntoView();
-      alignBtn.hidden = false;
-      hud.hidden = false;
-      // "Move across the pieces to find the view" (CSS picks the fine/coarse line and hides it once aligned)
-      const hintEl = exp.querySelector<HTMLElement>(".hook-copy .hint");
-      if (hintEl) hintEl.hidden = false;
-      if (leads.length) showLead(0);
-      layout();
-      raf = requestAnimationFrame(frameLoop);
 
-      return () => {
+      const cleanup = () => {
         cancelAnimationFrame(raf);
         clearTimeout(rz);
         window.removeEventListener("resize", onResize);
@@ -1146,6 +1134,44 @@ export function Stage({ problems, leads }: { problems: readonly { problem: strin
         renderer.forceContextLoss(); // browsers cap live WebGL contexts; free this one on navigation
         canvas.remove();
       };
+      // unmounted while it compiled (or React's dev double mount): the page belongs to whichever stage is mounted now
+      if (disposed) return cleanup;
+
+      exp.classList.add("gl-ready");
+      // The stage is up, so the loading sheet lifts (a first visit's a beat later; that visit is then remembered).
+      // A #fragment asked for was pushed down by the stage's scroll runway just now, so go back to it.
+      clearTimeout(cap);
+      const lift = () => {
+        unboot();
+        if (location.hash) document.getElementById(location.hash.slice(1))?.scrollIntoView();
+      };
+      // Under the loading sheet the static name was never seen, so there is nothing to hand off from: start with the
+      // pieces already scattered, and what they spell stays for the visitor to line up.
+      skipIntro = root.hasAttribute("data-boot");
+      if (root.dataset.boot === "splash") {
+        // a first visit holds the sheet a beat (from its first paint), so it reads as a splash rather than a flash
+        const shown = performance.getEntriesByName("first-contentful-paint")[0]?.startTime ?? 0;
+        setTimeout(
+          () => {
+            try {
+              localStorage.setItem("seen", "1");
+            } catch {
+              // storage blocked: the next visit is a first visit again
+            }
+            lift();
+          },
+          Math.max(0, shown + 1200 - performance.now())
+        );
+      } else lift();
+      alignBtn.hidden = false;
+      hud.hidden = false;
+      // "Move across the pieces to find the view" (CSS picks the fine/coarse line and hides it once aligned)
+      const hintEl = exp.querySelector<HTMLElement>(".hook-copy .hint");
+      if (hintEl) hintEl.hidden = false;
+      if (leads.length) showLead(0);
+      layout();
+      raf = requestAnimationFrame(frameLoop);
+      return cleanup;
     }
 
     // At hydration, not on `load`: the server-rendered name is already painted (it is the LCP), and waiting for

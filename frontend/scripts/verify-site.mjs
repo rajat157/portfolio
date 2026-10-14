@@ -161,6 +161,8 @@ async function checkRoute(page, routePath, contextName) {
 async function checkConstruction(page, touch) {
   const out = [];
   const check = (ok, msg) => out.push({ ok: !!ok, msg });
+  // on the home, a first visit's splash covers the page for a moment: hover and tap only once it has lifted
+  await page.waitForFunction(() => !document.documentElement.hasAttribute("data-boot"), null, { timeout: 12000 }).catch(() => {});
 
   const btn = page.locator("#consBtn");
   const bb = await btn.boundingBox();
@@ -660,7 +662,7 @@ async function checkStageLock(browser) {
   });
   await page.goto(BASE_URL + "/", { waitUntil: "load" });
   await page
-    .waitForFunction(() => document.getElementById("exp")?.classList.contains("gl-ready"), null, { timeout: 8000 })
+    .waitForFunction(() => document.getElementById("exp")?.classList.contains("gl-ready") && !document.documentElement.hasAttribute("data-boot"), null, { timeout: 10000 })
     .catch(() => {});
   await page.locator(".exp-pin").focus();
   await page.keyboard.press("Enter");
@@ -683,7 +685,7 @@ async function checkStageTouch(browser) {
   const page = await ctx.newPage();
   await page.goto(BASE_URL + "/", { waitUntil: "load" });
   await page
-    .waitForFunction(() => document.getElementById("exp")?.classList.contains("gl-ready"), null, { timeout: 8000 })
+    .waitForFunction(() => document.getElementById("exp")?.classList.contains("gl-ready") && !document.documentElement.hasAttribute("data-boot"), null, { timeout: 10000 })
     .catch(() => {});
   const before = await page.evaluate(() => document.getElementById("hudRow1")?.textContent ?? "");
   const box = await page.locator(".exp-canvas").boundingBox();
@@ -721,7 +723,7 @@ async function checkStageScrollStep(browser) {
   const page = await ctx.newPage();
   await page.goto(BASE_URL + "/", { waitUntil: "load" });
   await page
-    .waitForFunction(() => document.getElementById("exp")?.classList.contains("gl-ready"), null, { timeout: 8000 })
+    .waitForFunction(() => document.getElementById("exp")?.classList.contains("gl-ready") && !document.documentElement.hasAttribute("data-boot"), null, { timeout: 10000 })
     .catch(() => {});
 
   for (const [frac, want] of [[0.2, "1"], [0.5, "2"], [0.85, "3"]]) {
@@ -764,7 +766,7 @@ async function checkHomeOverflow390(browser) {
   // once the stage is up the hero line is its callout (.d3-callout p), and .lead is visually hidden (1px wide, kept
   // for screen readers): checked as the callout, not as an overflowing 1px box
   await page
-    .waitForFunction(() => document.getElementById("exp")?.classList.contains("gl-ready"), null, { timeout: 8000 })
+    .waitForFunction(() => document.getElementById("exp")?.classList.contains("gl-ready") && !document.documentElement.hasAttribute("data-boot"), null, { timeout: 10000 })
     .catch(() => {});
   const overflowing = await page.evaluate(() => {
     const sels = ".cap-t,.lead,.d3-callout p,.node-t,.blk-h,.way-t,.end-t";
@@ -777,26 +779,39 @@ async function checkHomeOverflow390(browser) {
   return out;
 }
 
-// The first load of the home shows the name alone (html[data-boot]) until the stage is up, then everything; never
-// under reduced motion, nor when a #fragment is asked for (the page goes straight there).
+// The home opens on its loading sheet (html[data-boot]: "splash" on a first visit, "" later) until the stage is up,
+// never showing the name; the stage then starts scattered. Not under reduced motion, nor when a #fragment is asked
+// for (the page goes straight there).
 async function checkSplash(browser) {
   const out = [];
   const check = (ok, msg) => out.push({ ok: !!ok, msg });
   const ctx = await browser.newContext({ viewport: { width: 1440, height: 900 } });
   const page = await ctx.newPage();
+  const lifted = () =>
+    page
+      .waitForFunction(() => document.getElementById("exp")?.classList.contains("gl-ready") && !document.documentElement.hasAttribute("data-boot"), null, { timeout: 12000 })
+      .then(() => true, () => false);
   await page.goto(BASE_URL + "/", { waitUntil: "commit" });
-  await page.waitForSelector(".fallback-name img", { state: "attached" });
-  const early = await page.evaluate(() => ({
-    boot: document.documentElement.hasAttribute("data-boot"),
-    ui: getComputedStyle(document.querySelector(".exp-ui")).visibility,
-    ready: !!document.getElementById("exp")?.classList.contains("gl-ready"),
-  }));
-  check(early.ready || (early.boot && early.ui === "hidden"), `until the stage is up only the name shows (boot ${early.boot}, ui ${early.ui})`);
-  const ready = await page
-    .waitForFunction(() => document.getElementById("exp")?.classList.contains("gl-ready"), null, { timeout: 10000 })
-    .then(() => true, () => false);
-  const after = await page.evaluate(() => document.documentElement.hasAttribute("data-boot"));
-  check(ready && !after, "once the stage is up, the splash is gone");
+  await page.waitForSelector(".splash", { state: "attached" });
+  const sheet = () =>
+    page.evaluate(() => ({
+      boot: document.documentElement.dataset.boot,
+      splash: getComputedStyle(document.querySelector(".splash")).visibility,
+      ready: !!document.getElementById("exp")?.classList.contains("gl-ready"),
+    }));
+  const first = await sheet();
+  check(first.boot === "splash" && first.splash === "visible", `a first visit opens on the loading sheet (boot "${first.boot}", sheet ${first.splash})`);
+  check(await lifted(), "the sheet lifts once the stage is up");
+  check(await page.evaluate(() => localStorage.getItem("seen") === "1"), "the visit is remembered");
+  // the stage starts scattered: no lined-up name gives away what the pieces spell
+  await page.waitForTimeout(200);
+  const off = await page.evaluate(() => parseFloat((document.getElementById("hudRow2")?.textContent ?? "").replace(/[^0-9.]/g, "")) || 0);
+  check(off > 5, `after the sheet the pieces start scattered (Off ${off}°)`);
+  await page.reload({ waitUntil: "commit" });
+  await page.waitForSelector(".splash", { state: "attached" });
+  const again = await sheet();
+  check(again.ready || (again.boot === "" && again.splash === "visible"), `a later visit gets the sheet too, without the first visit's hold (boot "${again.boot}")`);
+  check(await lifted(), "which lifts once the stage is up");
   await ctx.close();
   for (const [label, opts, path] of [
     ["reduced motion", { reducedMotion: "reduce" }, "/"],
@@ -823,7 +838,7 @@ async function checkPick(browser) {
   const page = await ctx.newPage();
   await page.route("**/api/contact**", (r) => r.abort());
   await page.goto(BASE_URL + "/", { waitUntil: "load" });
-  await page.waitForFunction(() => document.getElementById("exp")?.classList.contains("gl-ready"), null, { timeout: 10000 }).catch(() => {});
+  await page.waitForFunction(() => document.getElementById("exp")?.classList.contains("gl-ready") && !document.documentElement.hasAttribute("data-boot"), null, { timeout: 10000 }).catch(() => {});
   check(await page.evaluate(() => document.getElementById("build")?.classList.contains("pinned")), "the picker pins");
   const toStop = (i) =>
     page.evaluate((i) => {
@@ -945,7 +960,7 @@ async function checkHomePerf(browser) {
   check(lcp.inNameMark, "the LCP element is the NameMark SVG");
 
   await page
-    .waitForFunction(() => document.getElementById("exp")?.classList.contains("gl-ready"), null, { timeout: 8000 })
+    .waitForFunction(() => document.getElementById("exp")?.classList.contains("gl-ready") && !document.documentElement.hasAttribute("data-boot"), null, { timeout: 10000 })
     .catch(() => {});
   const scrub = (dy) =>
     page.evaluate(
