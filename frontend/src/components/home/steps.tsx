@@ -1,22 +1,36 @@
 "use client";
 
-// "What's slowing you down?" (pick.tsx), enhanced. A brief button ticks its need in the contact brief. And when
-// motion is on and the window is tall enough, the section pins (CSS: .pick.pinned) and scrolling steps through its
-// stops one at a time; the index follows the scroll, and clicking it jumps to that stop. Otherwise the server's
-// index over stacked stops stays as it is (its links are plain #anchors).
+// A home section told in stops ("Who I am" in who.tsx, "What's slowing you down?" in pick.tsx). The server renders
+// an index of #anchor links (.steps-i) over stacked stops (.steps-stop), which is the whole section with no JS or
+// under reduced motion. With motion on and a tall enough window, the section pins (CSS: .steps.pinned) and scrolling
+// steps through its stops one at a time; the index follows, a click on it jumps there, and numbers in a stop
+// ([data-count]) count up as it opens. A brief button ([data-need]) ticks that need in the contact brief.
 
 import { useEffect } from "react";
 import { reducedMotion } from "@/lib/motion";
 import { tick } from "@/lib/sound";
 
-export function PickScroll() {
+// every number in an element's text counts up from 0 ("10+", "24–48"), over the stop's draw-in
+function countUp(el: HTMLElement) {
+  const final = (el.dataset.count ||= el.textContent ?? "");
+  const t0 = performance.now();
+  const frame = (now: number) => {
+    const u = Math.min(1, (now - t0) / 900);
+    const e = 1 - (1 - u) ** 3;
+    el.textContent = final.replace(/\d+/g, (m) => String(Math.round(Number(m) * e)));
+    if (u < 1) requestAnimationFrame(frame);
+  };
+  requestAnimationFrame(frame);
+}
+
+export function Steps({ id }: { id: string }) {
   useEffect(() => {
-    const sec = document.getElementById("build");
-    const pin = sec?.querySelector<HTMLElement>(".pick-pin");
+    const sec = document.getElementById(id);
+    const pin = sec?.querySelector<HTMLElement>(".steps-pin");
     if (!sec || !pin) return;
-    const chips = Array.from(sec.querySelectorAll<HTMLAnchorElement>(".pick-chip"));
-    const stops = Array.from(sec.querySelectorAll<HTMLElement>(".pick-p"));
-    const no = sec.querySelector<HTMLElement>(".pick-no");
+    const chips = Array.from(sec.querySelectorAll<HTMLAnchorElement>(".steps-i"));
+    const stops = Array.from(sec.querySelectorAll<HTMLElement>(".steps-stop"));
+    const no = sec.querySelector<HTMLElement>(".steps-no");
     const n = stops.length;
     let cur = -1;
     let pinned = false;
@@ -35,6 +49,7 @@ export function PickScroll() {
       });
       chips.forEach((c, k) => (k === i ? c.setAttribute("aria-current", "step") : c.removeAttribute("aria-current")));
       if (no) no.textContent = String(i + 1).padStart(2, "0");
+      stops[i].querySelectorAll<HTMLElement>("[data-count]").forEach(countUp);
       if (!first) tick();
     }
 
@@ -54,7 +69,7 @@ export function PickScroll() {
       const top = sec!.getBoundingClientRect().top + scrollY - topH() + ((i + 0.5) / n) * run();
       scrollTo({ top, behavior: "auto" });
       set(i);
-      stops[i].querySelector<HTMLElement>(".pick-fix")?.focus({ preventScroll: true });
+      stops[i].querySelector<HTMLElement>("[tabindex='-1']")?.focus({ preventScroll: true });
     }
 
     function mode() {
@@ -82,7 +97,7 @@ export function PickScroll() {
         if (radio && !radio.checked) radio.click();
         return;
       }
-      const chip = t.closest<HTMLAnchorElement>(".pick-chip");
+      const chip = t.closest<HTMLAnchorElement>(".steps-i");
       if (chip && pinned) {
         e.preventDefault();
         jump(chips.indexOf(chip));
@@ -103,7 +118,7 @@ export function PickScroll() {
       removeEventListener("scroll", onScroll);
       removeEventListener("resize", onResize);
     };
-  }, []);
+  }, [id]);
 
   return null;
 }

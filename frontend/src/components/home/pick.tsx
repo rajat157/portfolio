@@ -4,7 +4,7 @@
 // section with no JS or under reduced motion; PickScroll pins it and steps through the stops as you scroll.
 import Link from "next/link";
 import { HOME } from "@/content/home";
-import { PickScroll } from "@/components/home/pick-scroll";
+import { Steps } from "@/components/home/steps";
 
 // one drafting-stroke icon per offering (24-unit boxes, like the stage's), drawn on as its stop opens
 const OFFER_ICONS: Record<string, string> = {
@@ -20,7 +20,7 @@ function Offer({ title }: { title: string }) {
   const offer = HOME.build.offerings.find((o) => o.title === title);
   return (
     <div className="pick-build">
-      <svg className="pick-ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="square" aria-hidden="true">
+      <svg className="steps-ico pick-ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="square" aria-hidden="true">
         <path pathLength={1} d={OFFER_ICONS[title] ?? ""} />
       </svg>
       <div>
@@ -38,33 +38,33 @@ export function Pick() {
   const stops = [...HOME.problems.map((p) => p.problem), P.more.chip];
 
   return (
-    <section className="sect pick" id="build" aria-labelledby="pick-h" style={{ "--n": stops.length } as React.CSSProperties}>
-      <div className="pick-pin">
-        <div className="container gv pick-grid">
-          <div className="pick-side">
+    <section className="sect steps pick" id="build" aria-labelledby="pick-h" style={{ "--n": stops.length } as React.CSSProperties}>
+      <div className="steps-pin">
+        <div className="container gv steps-grid">
+          <div className="steps-side">
             <p className="lab">{P.lab}</p>
             <h2 id="pick-h" className="t-h2" data-cons="text">
               {P.title}
             </h2>
-            <ol className="pick-list">
+            <ol className="steps-list">
               {stops.map((s, i) => (
                 <li key={s}>
-                  <a className="pick-chip" href={`#pick-${i + 1}`}>
+                  <a className="steps-i" href={`#pick-${i + 1}`}>
                     <span className="num">{two(i)}</span>
-                    <span className="pick-chip-t">{s}</span>
+                    <span className="steps-i-t">{s}</span>
                   </a>
                 </li>
               ))}
             </ol>
-            <p className="hand pick-note">{P.note}</p>
-            <p className="lab pick-count" aria-hidden="true">
-              <span className="num pick-no">01</span> / {two(stops.length - 1)}
+            <p className="hand steps-note">{P.note}</p>
+            <p className="lab steps-count" aria-hidden="true">
+              <span className="num steps-no">01</span> / {two(stops.length - 1)}
             </p>
           </div>
 
-          <div className="pick-panels">
+          <div className="steps-stops">
             {HOME.problems.map((p, i) => (
-              <article className="pick-p" id={`pick-${i + 1}`} key={p.problem} aria-labelledby={`pick-${i + 1}-h`}>
+              <article className="steps-stop" id={`pick-${i + 1}`} key={p.problem} aria-labelledby={`pick-${i + 1}-h`}>
                 <div>
                   <p className="lab">{P.fixLab}</p>
                   <p className="pick-prob">
@@ -99,7 +99,7 @@ export function Pick() {
                 </div>
               </article>
             ))}
-            <article className="pick-p pick-p-more" id={`pick-${stops.length}`} aria-labelledby={`pick-${stops.length}-h`}>
+            <article className="steps-stop pick-more-stop" id={`pick-${stops.length}`} aria-labelledby={`pick-${stops.length}-h`}>
               <div>
                 <p className="lab">{P.more.lab}</p>
                 <h3 className="pick-fix" id={`pick-${stops.length}-h`} tabIndex={-1}>
@@ -121,7 +121,7 @@ export function Pick() {
           </div>
         </div>
       </div>
-      <PickScroll />
+      <Steps id="build" />
     </section>
   );
 }
