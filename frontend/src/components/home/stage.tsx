@@ -377,13 +377,24 @@ export function Stage({ problems, leads }: { problems: readonly { problem: strin
       };
       const faceTex: InstanceType<typeof THREE.CanvasTexture>[] = [];
       // A block's face: a drafting icon (drawn on as `p` goes 0 → 1), its text beside it, and in the corner the
-      // part number (problem side) or an orange done-mark (fix side). Repainted only while `p` moves.
+      // part number (problem side) or an orange done-mark (fix side).
       type Face = { c: HTMLCanvasElement; x: CanvasRenderingContext2D; t: InstanceType<typeof THREE.CanvasTexture>; text: string; ink: boolean; icon: Path2D; num: string; p: number };
-      const paint = (f: Face, p: number) => {
-        f.p = p;
+      const strokeIcon = (x: CanvasRenderingContext2D, f: Face, ox: number, oy: number) => {
+        if (f.p <= 0) return;
+        x.save();
+        x.translate(ox * CPX, oy * CPX);
+        x.scale(CPX, CPX);
+        x.strokeStyle = f.ink ? "#0D0F12" : "#2448FF";
+        x.lineWidth = 1.5;
+        x.lineCap = "square";
+        x.setLineDash([160, 160]);
+        x.lineDashOffset = 160 * (1 - f.p);
+        x.stroke(f.icon);
+        x.restore();
+      };
+      const paint = (f: Face) => {
         const { c, x } = f;
         const col = f.ink ? "#0D0F12" : "#2448FF";
-        x.setLineDash([]);
         x.fillStyle = "#F6F7F8";
         x.fillRect(0, 0, c.width, c.height);
         x.strokeStyle = col;
@@ -399,17 +410,7 @@ export function Stage({ problems, leads }: { problems: readonly { problem: strin
           x.textBaseline = "top";
           x.fillText(f.num, c.width - 7 * CPX, 6 * CPX);
         }
-        x.save();
-        x.translate(12 * CPX, (THd / 2 - 12) * CPX);
-        x.scale(CPX, CPX);
-        x.strokeStyle = col;
-        x.lineWidth = 1.5;
-        x.lineCap = "square";
-        x.setLineDash([160, 160]);
-        x.lineDashOffset = 160 * (1 - p);
-        if (p > 0) x.stroke(f.icon);
-        x.restore();
-        x.setLineDash([]);
+        strokeIcon(x, f, 12, THd / 2 - 12);
         x.fillStyle = col;
         x.font = cardFont;
         x.textAlign = "left";
@@ -419,6 +420,22 @@ export function Stage({ problems, leads }: { problems: readonly { problem: strin
         lines.forEach((l, k) => x.fillText(l, 46 * CPX, c.height / 2 + (k - (lines.length - 1) / 2) * lh));
         f.t.needsUpdate = true;
       };
+      // A draw-on step repaints only the icon's box (units) on a small canvas and copies it into that region of the
+      // face's texture: re-uploading whole faces (with mipmaps) while scrolling cost frames.
+      const IB = { x: 11, y: THd / 2 - 13, s: 26 };
+      const ibCan = document.createElement("canvas");
+      ibCan.width = ibCan.height = IB.s * CPX;
+      const ibX = ibCan.getContext("2d")!;
+      const ibSrc = new THREE.Texture(ibCan); // never rendered: copyTextureToTexture uploads its canvas straight into a face
+      const ibAt = new THREE.Vector2(IB.x * CPX, (THd - IB.y - IB.s) * CPX); // texture rows run bottom-up (flipY)
+      const drawOn = (f: Face, p: number) => {
+        f.p = p;
+        ibX.fillStyle = "#F6F7F8";
+        ibX.fillRect(0, 0, ibCan.width, ibCan.height);
+        strokeIcon(ibX, f, 12 - IB.x, THd / 2 - 12 - IB.y);
+        f.x.drawImage(ibCan, IB.x * CPX, IB.y * CPX); // keep the face canvas whole: a restored context re-uploads it
+        renderer.copyTextureToTexture(ibSrc, f.t, null, ibAt);
+      };
       const face = (text: string, ink: boolean, icon: string, num: string): Face => {
         const c = document.createElement("canvas");
         c.width = TWd * CPX;
@@ -427,8 +444,8 @@ export function Stage({ problems, leads }: { problems: readonly { problem: strin
         t.colorSpace = THREE.SRGBColorSpace;
         t.anisotropy = Math.min(8, renderer.capabilities.getMaxAnisotropy());
         faceTex.push(t);
-        const f: Face = { c, x: c.getContext("2d")!, t, text, ink, icon: new Path2D(icon), num, p: -1 };
-        paint(f, 0);
+        const f: Face = { c, x: c.getContext("2d")!, t, text, ink, icon: new Path2D(icon), num, p: 0 };
+        paint(f);
         return f;
       };
       type Shard = {
@@ -957,6 +974,7 @@ export function Stage({ problems, leads }: { problems: readonly { problem: strin
           s.edge.visible = edgeMat.opacity > 0;
           edgeMat.color.lerpColors(BLUE, INK, seg(lf, 0.4, 0.6));
         });
+        let steps = 2; // icon draw-on steps this frame
         cards.forEach((cd) => {
           const solved = local(flipU, cd.last, n) > 0.5;
           if (solved !== cd.solved) {
@@ -968,7 +986,11 @@ export function Stage({ problems, leads }: { problems: readonly { problem: strin
             [cd.frontFace, seg(local(appear, cd.last, n), 0.35, 1)],
             [cd.backFace, seg(local(flipU, cd.last, n), 0.55, 1)],
           ];
-          for (const [f, p] of pairs) if (p !== f.p && (Math.abs(p - f.p) >= 0.04 || p === 0 || p === 1)) paint(f, p);
+          for (const [f, p] of pairs)
+            if (p !== f.p && (Math.abs(p - f.p) >= 0.04 || p === 0 || p === 1)) {
+              if (steps-- > 0) drawOn(f, p);
+              else more = true; // the rest wait a frame: each step re-mips a face texture
+            }
           // hovered/tapped: corner marks and a peek at the other side of the block
           const hv = cd.hv;
           cd.marks.visible = hv > 0.001;
