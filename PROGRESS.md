@@ -2,15 +2,18 @@
 
 ## Resume
 
-- IN PROGRESS (2026-10-15): Rajat picked board **Sections A** for both "Who I am" and "What I build", with relevant
-  icons. Branch `feat/chapters` @ 9b5edd6 (pushed when the PR opens):
-  - `components/home/chapters.tsx` (one pinned section, 6 stops, a rail of chapter ticks) replaces who.tsx and the
-    picker (pick.tsx; recoverable from 3051ed1). New drawings for the ways and the offerings.
-  - Scroll snapping was tried and DROPPED: WebKit never let the scroll leave the last stop, and Chrome passed stops.
-  - Status line made cwd-proof; handoff at 90% (CLAUDE.md, context-guard).
-  - Next: full matrix (running in D:\Projects\portfolio-verify, port 3005) → PR (body in the session scratchpad,
-    pr10.md) → merge after the Vercel preview passes → live check → remove the verify worktree (junction first).
-- Before this (2026-10-14): all done, master = 3051ed1 (PRs #1–#9 live).
+- ALL DONE (2026-10-15). Nothing in progress. master = ec2f227 (PRs #1–#10 live). This Resume is a local commit on
+  master, not pushed (a docs-only push rebuilds production); it rides along with the next PR.
+- #10 (Rajat: "option A for who I am and what I do, but use relevant icons"): `components/home/chapters.tsx` is one
+  pinned section of 6 stops (3 ways, in numbers, offerings ×2) under a rail of chapter ticks, with new drawings. It
+  replaces who.tsx and the picker (pick.tsx and its copy; recoverable from 3051ed1). Matrix 1586/0; live OK.
+  - Scroll snapping (board A's "can't skip") was tried and DROPPED: WebKit never let a wheel scroll leave the last
+    stop (a trap), and Chrome passed stops on long scrolls. Don't retry root snapping on the pinned section.
+  - The status line is now cwd-proof, and the context handoff is at 90% (Rajat's rule).
+- Still open for Rajat (unanswered, 2026-10-15): the "trading platforms" / "high-frequency trading" wording in the
+  About bio and blog post 1 (vs the Tredye "monitoring" rule), the About bio's SahasraT/IISc opener, and the optional
+  polish: the 404's nested <html> (move to global-not-found), the static hero's no-op tab stop, the
+  outputFileTracingRoot/turbopack.root build warning, and trimming the stale tracker below this Resume.
 - Shipped this session:
   - #7: "Who I am" as scroll-stepped stops (Sections A) on the shared `components/home/steps.tsx` engine. A stepped
     section pins only when its index and tallest stop fit the pinned box (it measures the pinned layout).
