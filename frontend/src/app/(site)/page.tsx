@@ -81,16 +81,11 @@ export default async function HomePage() {
     <>
       <div className="exp" id="exp" data-step="0">
         <Splash />
-        <div
-          className="exp-pin kit-registration"
-          tabIndex={0}
-          role="group"
-          aria-roledescription="interactive drawing"
-          aria-label="Rajat, cut into pieces at different depths. Use the arrow keys to turn the view until the pieces line up, or press Enter to line them up."
-        >
+        <div className="exp-pin kit-registration">
           {/* Stage (client) creates the <canvas> itself, only once WebGL is
               confirmed available -- so no-JS, reduced-motion and no-WebGL
-              contexts never have one in the DOM at all. */}
+              contexts never have one in the DOM at all. It also makes this
+              box a keyboard stop only then: still, there is nothing to turn. */}
           <div className="fallback-name" aria-hidden="true">
             <NameMark />
           </div>

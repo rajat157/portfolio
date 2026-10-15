@@ -1111,7 +1111,15 @@ export function Stage({ problems, leads }: { problems: readonly { problem: strin
       await Promise.race([renderer.compileAsync(scene, camera), new Promise((r) => setTimeout(r, 3000))]);
       faceTex.forEach((t) => renderer.initTexture(t));
 
+      // a keyboard stop only while there is something to turn: page.tsx renders the still box without one
+      const PIN_ATTRS: [string, string][] = [
+        ["tabindex", "0"],
+        ["role", "group"],
+        ["aria-roledescription", "interactive drawing"],
+        ["aria-label", "Rajat, cut into pieces at different depths. Use the arrow keys to turn the view until the pieces line up, or press Enter to line them up."],
+      ];
       const cleanup = () => {
+        PIN_ATTRS.forEach(([k]) => pin.removeAttribute(k));
         cancelAnimationFrame(raf);
         clearTimeout(rz);
         window.removeEventListener("resize", onResize);
@@ -1137,6 +1145,7 @@ export function Stage({ problems, leads }: { problems: readonly { problem: strin
       if (disposed) return cleanup;
 
       exp.classList.add("gl-ready");
+      PIN_ATTRS.forEach(([k, v]) => pin.setAttribute(k, v));
       // The stage is up, so the loading sheet lifts (a first visit's a beat later; that visit is then remembered).
       // A #fragment asked for was pushed down by the stage's scroll runway just now, so go back to it.
       clearTimeout(cap);
