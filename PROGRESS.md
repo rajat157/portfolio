@@ -2,67 +2,63 @@
 
 ## Resume
 
-- NEXT (2026-10-15). Rajat PICKED OPTION A, the "sheet set", for "Where to next" (options artifact:
-  https://claude.ai/artifact/MeDaNXXTgmeD4JisstsFRS). Design source: `design/drafted/where-to-next-sheet-set.html` (the
-  working three.js prototype; its brief is `where-to-next-brief.md`). Port it into the home on a new branch:
-  1. `components/home/sheet-map.tsx`, a client island inside `#map`:
-     - lazy three.js (dynamic import as in stage.tsx), started only when `#map` nears the viewport and disposed when far
-       away;
-     - render on demand, DPR ≤ 2, ~30 draw calls.
-  2. Keep the server's four plain nodes as the fallback (no JS, no WebGL, reduced motion). The island upgrades them:
-     the same real links become the labels anchored to the sheets. Tab focuses, Enter warps, Esc goes back.
-  3. The warp is the 1.25s dive, then `router.push(href)`. Contact dives, then scrolls to `#contact`. Reduced motion
-     skips the dive.
-  4. Fix the prototype's phone flaw: the dive briefly shows empty ground above the sheet. Keep tap to select → Go.
-  5. Harness:
-     - the 3D map comes up;
-     - hover or focus shows the label;
-     - Enter lands on /projects;
-     - Esc goes back;
-     - the no-WebGL list and reduced motion;
-     - the 60fps gate still holds with both canvases on the page.
-     Then the full matrix → PR → merge → live check.
-- Smooth scroll + snapping (DRAFT PR #11, `proto/smooth-snap`, preview
-  https://portfolio-git-proto-smooth-snap-rajats-projects-6181289d.vercel.app). Rajat: "still needs a bit of work".
-  - Ask him what feels off (snap strength or speed, which stops, the trackpad feel), then iterate on that branch.
-  - It must also pass the perf gate: hero scrub p95 was 29.6ms against 25ms (Lenis's rAF plus resnapping).
-  - Keep it a draft until he says it feels right. Its builder worktree is `.claude/worktrees/agent-a8e74a64a20092fa7`
-    (remove it when done; check for a media junction first).
-- Before that: all done. master = ec2f227 (PRs #1–#10 live). This Resume is a local commit on master, not pushed
-  (a docs-only push rebuilds production); it rides along with the next PR.
-- #10 (Rajat: "option A for who I am and what I do, but use relevant icons"): `components/home/chapters.tsx` is one
-  pinned section of 6 stops (3 ways, in numbers, offerings ×2) under a rail of chapter ticks, with new drawings. It
-  replaces who.tsx and the picker (pick.tsx and its copy; recoverable from 3051ed1). Matrix 1586/0; live OK.
-  - Scroll snapping (board A's "can't skip") was tried and DROPPED: WebKit never let a wheel scroll leave the last
-    stop (a trap), and Chrome passed stops on long scrolls. Don't retry root snapping on the pinned section.
-  - The status line is now cwd-proof, and the context handoff is at 90% (Rajat's rule).
-- Still open for Rajat (unanswered, 2026-10-15): the "trading platforms" / "high-frequency trading" wording in the
-  About bio and blog post 1 (vs the Tredye "monitoring" rule), the About bio's SahasraT/IISc opener, and the optional
-  polish: the 404's nested <html> (move to global-not-found), the static hero's no-op tab stop, the
-  outputFileTracingRoot/turbopack.root build warning, and trimming the stale tracker below this Resume.
-- Shipped this session:
-  - #7: "Who I am" as scroll-stepped stops (Sections A) on the shared `components/home/steps.tsx` engine. A stepped
-    section pins only when its index and tallest stop fit the pinned box (it measures the pinned layout).
-  - #8: widescreen. `--page-w` (1280 → 1920, with 120px margins from a 1520 window) on `.container`/`.sheet`. Type in
-    rem, with a root that grows from 16px at 1680 to 20px at 2560. Brief chips at most 3 across. Map nodes: Nav
-    drawings that redraw on hover, plus registration corners.
-  - #9 (Rajat's answers: fonts "do what's best", Strapi "remove", copy "confirm", SSL "yes"):
-    - Fonts are self-hosted: `src/lib/fonts.ts` uses next/font/local with the exact files next/font/google served, the
-      same unicode-range and the same Fallback faces; screenshots match master pixel for pixel. Turbopack gotcha: it
-      ignores a `font-family` given in `declarations`, so each face is named after its const.
-    - `payload.config.ts` rewrites sslmode prefer/require/verify-ca to verify-full. Same TLS check; the pg warning is
-      gone from the build logs.
-    - The Strapi export script and notes are removed, and the dead Strapi keys are gone from `.env.local`.
-    - The home copy is confirmed.
-  - Harness: `home who`, `home steps fit`, `wide`, a `wide-2560x1080` context. Last matrix: 1600/0.
-- Ops: the Vercel runtime errors list is empty. If a production build ever fails transiently, redeploy it with the
-  Vercel MCP `create_deployment` (deploymentId = the failed one, target production).
-- Unconfirmed (dashboards I can't reach): whether the Render service `portfolio-strapi` and the old Strapi Neon project
-  still exist. Deleting them is safe now that the export is dropped.
-- Verify worktree removed. To recreate it: `git worktree add --detach D:\Projects\portfolio-verify <sha>`; give it a
-  credential-free `frontend\.env.local` (PAYLOAD_SECRET, DATABASE_URI, NEXT_PUBLIC_SITE_URL only); `npm ci`;
-  `cmd /c mklink /J frontend\media D:\Projects\portfolio\frontend\media`; `next build` + `next start -p 3005`. Unlink
-  the junction (`cmd /c rmdir`) BEFORE `git worktree remove --force`.
+- NEXT: waiting on Rajat. Nothing else is in progress (master = 4a15fcb, PRs #1–#10 and #12 live).
+  - Smooth scroll + snapping, DRAFT PR #11 (`proto/smooth-snap`; preview
+    https://portfolio-git-proto-smooth-snap-rajats-projects-6181289d.vercel.app). Rajat: "still needs a bit of work".
+    Ask what feels off (snap strength or speed, which stops, the trackpad feel), then iterate on that branch.
+    - It must also pass the perf gate: the hero scrub p95 was 29.6ms against 25ms (Lenis's rAF plus resnapping).
+    - Keep it a draft until he says it feels right. Its builder worktree is
+      `.claude/worktrees/agent-a8e74a64a20092fa7` (remove it when done; check for a media junction first).
+  - Still open (unanswered since 2026-10-15):
+    - the "trading platforms" / "high-frequency trading" wording in the About bio and blog post 1 (vs the Tredye
+      "monitoring" rule);
+    - the About bio's SahasraT/IISc opener;
+    - optional polish: the 404's nested <html> (move to global-not-found), the static hero's no-op tab stop, the
+      outputFileTracingRoot/turbopack.root build warning, and trimming the stale tracker below this Resume.
+  - This Resume is a local commit on master, not pushed (a docs-only push rebuilds production). It rides along with
+    the next PR.
+- Shipped 2026-10-15: #12, "Where to next" as a sheet set (Rajat's option A; design/drafted/where-to-next-sheet-set.html).
+  - `components/home/sheet-map.tsx` turns `#map`'s four plain links into labels pinned over four 3D drawing sheets.
+    - Point or Tab to mark a sheet out; click or Enter dives in (1.25s), then `router.push`. Contact dives, then lands on
+      the brief. Esc in the dive goes back. Phones tap to choose, then Go.
+    - No JS, no WebGL and reduced motion keep the plain nodes. three loads only once #map is within 1.5 screens, and
+      the scene is disposed 4 screens away. One `sync()` settles both observers: either can report first, which once
+      left the map down for good.
+  - Fixed from the prototype:
+    - The phone dive showed empty plane above the sheet. Now the approach keeps the layout's pitch, the sheet tilts to
+      meet the camera, the paper covers the frame, and the fog is pushed back.
+    - The fit reserves a marked-out label's measured height under the heading. The real section is 61–102px shorter
+      than the review frame.
+    - An invisible hit area above each sheet. A marked-out label rises with its sheet, and the pointer fell into the
+      gap and unmarked it (the prototype has the same bug).
+    - Colour management stays on, since the stage shares `three`.
+  - Harness:
+    - `home sheet map`: 16 checks.
+    - `home perf` gains a scrub into the live map with both canvases up: p95 17–19ms on the Vega 8.
+    - Matrix 1602/1. The 1 was the existing hero scrub at p95 31.0ms under load; three reruns alone gave
+      21.3/23.5/20.9.
+    - Home JS: +23.2KB over /about (budget 35).
+    - Live (dpl_AtQAgsw7BKSo4hjPwMoA1iig8R5k): all 16 checks pass on www; no runtime errors.
+  - Gotchas:
+    - SwiftShader (the matrix) draws the map at ~300ms a frame against 16.7ms on the GPU, so CSS transitions there lag
+      by seconds. Map checks wait on conditions, never fixed sleeps.
+    - An IntersectionObserver delivers already-queued entries after `disconnect()`, so guard on unmount.
+- Earlier (all live): #7 "Who I am" stops on `steps.tsx`; #8 widescreen (`--page-w`, rem type); #9 self-hosted fonts,
+  sslmode=verify-full, Strapi export dropped; #10 `chapters.tsx` (one pinned section, 6 stops).
+  - Root scroll snapping on the pinned section was tried and DROPPED: WebKit trapped the wheel on the last stop.
+  - The context handoff is at 90% (Rajat's rule), read from the status line cache.
+- Ops:
+  - The Vercel runtime errors list is empty. If a production build ever fails transiently, redeploy it with the Vercel
+    MCP `create_deployment` (deploymentId = the failed one, target production).
+  - Unconfirmed (dashboards I can't reach): whether the Render service `portfolio-strapi` and the old Strapi Neon
+    project still exist. Deleting them is safe.
+- Verify worktree removed. To recreate it:
+  - `git worktree add --detach D:\Projects\portfolio-verify <sha>`;
+  - give it a credential-free `frontend\.env.local` (PAYLOAD_SECRET, DATABASE_URI, NEXT_PUBLIC_SITE_URL only);
+  - `npm ci` (about 9 min);
+  - `cmd /c mklink /J frontend\media D:\Projects\portfolio\frontend\media`;
+  - `next build` + `next start -p 3005`.
+  - Unlink the junction (`cmd /c rmdir`) BEFORE `git worktree remove --force`.
 - Reprompt (when there is new work): `Continue the portfolio work from PROGRESS.md "Resume". Keep going till finished; merge each PR once verified.`
 
 ---
