@@ -2,21 +2,47 @@
 
 ## Resume
 
-- NEXT: waiting on Rajat. Nothing else is in progress (master = 4a15fcb, PRs #1–#10 and #12 live).
+- NEXT: waiting on Rajat. Nothing is in progress (master = 91d3f10; PRs #1–#10 and #12–#14 are live).
   - Smooth scroll + snapping, DRAFT PR #11 (`proto/smooth-snap`; preview
-    https://portfolio-git-proto-smooth-snap-rajats-projects-6181289d.vercel.app). Rajat: "still needs a bit of work".
-    Ask what feels off (snap strength or speed, which stops, the trackpad feel), then iterate on that branch.
-    - It must also pass the perf gate: the hero scrub p95 was 29.6ms against 25ms (Lenis's rAF plus resnapping).
-    - Keep it a draft until he says it feels right. Its builder worktree is
-      `.claude/worktrees/agent-a8e74a64a20092fa7` (remove it when done; check for a media junction first).
-  - Still open (unanswered since 2026-10-15):
-    - the "trading platforms" / "high-frequency trading" wording in the About bio and blog post 1 (vs the Tredye
-      "monitoring" rule);
-    - the About bio's SahasraT/IISc opener;
-    - optional polish: the 404's nested <html> (move to global-not-found), the static hero's no-op tab stop, the
-      outputFileTracingRoot/turbopack.root build warning, and trimming the stale tracker below this Resume.
+    https://portfolio-git-proto-smooth-snap-rajats-projects-6181289d.vercel.app). PARKED by Rajat (2026-10-15): "I'll
+    review and then let you know". His feedback so far: "too slow / floaty" and "wrong stops" (which ones, unsaid).
+    - Found, not yet changed:
+      - Lenis's default `lerp: 0.1` overrides the `duration: 0.75` that was passed; together with Snap's 500ms debounce
+        and its own lerp glide, that is the float.
+      - The hero snap points 0.17 and 0.79 of the runway land mid-animation. Step 1 animates 0.04–0.26 and step 3
+        0.62–0.88, so the settled points are about 0.28, 0.45 and 0.92.
+      - Proximity at 20% of the viewport, on chapter stops 50vh apart, pulls any small scroll back to the stop it left.
+    - Ready when he says go:
+      - lerp ~0.2;
+      - snap debounce ~150ms, then a 0.45s attack-eased snap;
+      - hero stops [0, 0.28, 0.45, 0.92];
+      - direction-aware detents in the chapters (a deliberate scroll moves on, a nudge returns).
+    - Merge master into the branch first (it predates #12–#14). It must pass the perf gate: hero p95 ≤ 25ms (it was
+      29.6). Keep it a draft until he says it feels right.
+    - Its builder worktree is `.claude/worktrees/agent-a8e74a64a20092fa7` (remove it when done; check for a media
+      junction first).
+  - Optional, not done (he gave no preference):
+    - the outputFileTracingRoot/turbopack.root build warning. Changing the tracing root changes what is bundled into
+      the functions, and that has broken production here before.
+    - trimming the old tracker below this Resume.
+  - Left as is, invisible: production `site_settings.site_description` still says "…trading platforms" and
+    "Rajat Kumar R". It is rendered nowhere; the seed is fixed.
   - This Resume is a local commit on master, not pushed (a docs-only push rebuilds production). It rides along with
     the next PR.
+- Shipped 2026-10-15 (later), all verified live:
+  - #13 copy (Rajat's answers):
+    - the About bio leads with the work (his Draft A);
+    - post 1 says real-time market monitoring, not trading (title, excerpt, "market data" tag, ten phrase swaps; the
+      URL kept).
+    - Production was changed by a guarded one-off script: dry run, exact single matches, a backup in the gitignored
+      `frontend/scripts/backups/monitoring-copy-*.json`. The script isn't committed; the backup is the record.
+    - The seeds and fallbacks match. The legacy Tredye seed no longer describes an order book, P&L or stop-loss (the
+      repo is public).
+    - Process note: the challenger pass for production-data changes was skipped; the live fields were checked after.
+  - #14 polish:
+    - `src/app/global-not-found.tsx` (experimental.globalNotFound) makes the 404 one document, where it had two
+      `<html>`;
+    - the hero box is a tab stop only while the stage runs. Matrix 1603/0.
 - Shipped 2026-10-15: #12, "Where to next" as a sheet set (Rajat's option A; design/drafted/where-to-next-sheet-set.html).
   - `components/home/sheet-map.tsx` turns `#map`'s four plain links into labels pinned over four 3D drawing sheets.
     - Point or Tab to mark a sheet out; click or Enter dives in (1.25s), then `router.push`. Contact dives, then lands on
