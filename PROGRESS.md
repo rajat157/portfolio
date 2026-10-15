@@ -2,22 +2,32 @@
 
 ## Resume
 
-- WAITING ON RAJAT (2026-10-15): two review items; nothing to merge until he decides.
-  1. "Where to next" as a 3D world you warp into: https://claude.ai/artifact/MeDaNXXTgmeD4JisstsFRS (an A/B/C switcher
-     over three working three.js prototypes; the sources are in the old session scratchpad `wtn/`, and the artifact keeps
-     them under a/ b/ c/):
-     - A: sheet set, dive into a drawing;
-     - B: site model, fly through a door;
-     - C: warp field, portals among the shards.
-     After his pick: port it into `components/home` (lazy three.js like the stage, the plain-link fallback, the
-     harness).
-  2. Lenis smooth scroll + snapping: DRAFT PR #11 (`proto/smooth-snap`), preview
-     https://portfolio-git-proto-smooth-snap-rajats-projects-6181289d.vercel.app.
-     - Snaps at the hero steps, the six chapter stops, #map and #contact. No WebKit trap.
-     - Its `--routes /` run was 188/1. The FAIL is home perf: scrub p95 29.6ms against a 25ms gate.
-     - If he keeps it: fix the perf, rebase and merge. If not: close it.
-     - The builder's worktree is `.claude/worktrees/agent-a8e74a64a20092fa7`; remove it after his decision (check for a
-       media junction first).
+- NEXT (2026-10-15). Rajat PICKED OPTION A, the "sheet set", for "Where to next" (options artifact:
+  https://claude.ai/artifact/MeDaNXXTgmeD4JisstsFRS). Design source: `design/drafted/where-to-next-sheet-set.html` (the
+  working three.js prototype; its brief is `where-to-next-brief.md`). Port it into the home on a new branch:
+  1. `components/home/sheet-map.tsx`, a client island inside `#map`:
+     - lazy three.js (dynamic import as in stage.tsx), started only when `#map` nears the viewport and disposed when far
+       away;
+     - render on demand, DPR ≤ 2, ~30 draw calls.
+  2. Keep the server's four plain nodes as the fallback (no JS, no WebGL, reduced motion). The island upgrades them:
+     the same real links become the labels anchored to the sheets. Tab focuses, Enter warps, Esc goes back.
+  3. The warp is the 1.25s dive, then `router.push(href)`. Contact dives, then scrolls to `#contact`. Reduced motion
+     skips the dive.
+  4. Fix the prototype's phone flaw: the dive briefly shows empty ground above the sheet. Keep tap to select → Go.
+  5. Harness:
+     - the 3D map comes up;
+     - hover or focus shows the label;
+     - Enter lands on /projects;
+     - Esc goes back;
+     - the no-WebGL list and reduced motion;
+     - the 60fps gate still holds with both canvases on the page.
+     Then the full matrix → PR → merge → live check.
+- Smooth scroll + snapping (DRAFT PR #11, `proto/smooth-snap`, preview
+  https://portfolio-git-proto-smooth-snap-rajats-projects-6181289d.vercel.app). Rajat: "still needs a bit of work".
+  - Ask him what feels off (snap strength or speed, which stops, the trackpad feel), then iterate on that branch.
+  - It must also pass the perf gate: hero scrub p95 was 29.6ms against 25ms (Lenis's rAF plus resnapping).
+  - Keep it a draft until he says it feels right. Its builder worktree is `.claude/worktrees/agent-a8e74a64a20092fa7`
+    (remove it when done; check for a media junction first).
 - Before that: all done. master = ec2f227 (PRs #1–#10 live). This Resume is a local commit on master, not pushed
   (a docs-only push rebuilds production); it rides along with the next PR.
 - #10 (Rajat: "option A for who I am and what I do, but use relevant icons"): `components/home/chapters.tsx` is one
