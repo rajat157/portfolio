@@ -33,7 +33,7 @@ import * as NameOutline from "@/lib/name-outline";
 import { tick, thunk } from "@/lib/sound";
 import { reducedMotion } from "@/lib/motion";
 
-function hasWebGL(): boolean {
+export function hasWebGL(): boolean {
   try {
     const gl = (document.createElement("canvas").getContext("webgl") || document.createElement("canvas").getContext("experimental-webgl")) as WebGLRenderingContext | null;
     gl?.getExtension("WEBGL_lose_context")?.loseContext(); // a probe only: don't hold a context slot

@@ -2,15 +2,44 @@
 
 ## Resume
 
-- IN PROGRESS (2026-10-15): Rajat picked board **Sections A** for both "Who I am" and "What I build", with relevant
-  icons. Branch `feat/chapters` @ 9b5edd6 (pushed when the PR opens):
-  - `components/home/chapters.tsx` (one pinned section, 6 stops, a rail of chapter ticks) replaces who.tsx and the
-    picker (pick.tsx; recoverable from 3051ed1). New drawings for the ways and the offerings.
-  - Scroll snapping was tried and DROPPED: WebKit never let the scroll leave the last stop, and Chrome passed stops.
-  - Status line made cwd-proof; handoff at 90% (CLAUDE.md, context-guard).
-  - Next: full matrix (running in D:\Projects\portfolio-verify, port 3005) → PR (body in the session scratchpad,
-    pr10.md) → merge after the Vercel preview passes → live check → remove the verify worktree (junction first).
-- Before this (2026-10-14): all done, master = 3051ed1 (PRs #1–#9 live).
+- NEXT (2026-10-15). Rajat PICKED OPTION A, the "sheet set", for "Where to next" (options artifact:
+  https://claude.ai/artifact/MeDaNXXTgmeD4JisstsFRS). Design source: `design/drafted/where-to-next-sheet-set.html` (the
+  working three.js prototype; its brief is `where-to-next-brief.md`). Port it into the home on a new branch:
+  1. `components/home/sheet-map.tsx`, a client island inside `#map`:
+     - lazy three.js (dynamic import as in stage.tsx), started only when `#map` nears the viewport and disposed when far
+       away;
+     - render on demand, DPR ≤ 2, ~30 draw calls.
+  2. Keep the server's four plain nodes as the fallback (no JS, no WebGL, reduced motion). The island upgrades them:
+     the same real links become the labels anchored to the sheets. Tab focuses, Enter warps, Esc goes back.
+  3. The warp is the 1.25s dive, then `router.push(href)`. Contact dives, then scrolls to `#contact`. Reduced motion
+     skips the dive.
+  4. Fix the prototype's phone flaw: the dive briefly shows empty ground above the sheet. Keep tap to select → Go.
+  5. Harness:
+     - the 3D map comes up;
+     - hover or focus shows the label;
+     - Enter lands on /projects;
+     - Esc goes back;
+     - the no-WebGL list and reduced motion;
+     - the 60fps gate still holds with both canvases on the page.
+     Then the full matrix → PR → merge → live check.
+- Smooth scroll + snapping (DRAFT PR #11, `proto/smooth-snap`, preview
+  https://portfolio-git-proto-smooth-snap-rajats-projects-6181289d.vercel.app). Rajat: "still needs a bit of work".
+  - Ask him what feels off (snap strength or speed, which stops, the trackpad feel), then iterate on that branch.
+  - It must also pass the perf gate: hero scrub p95 was 29.6ms against 25ms (Lenis's rAF plus resnapping).
+  - Keep it a draft until he says it feels right. Its builder worktree is `.claude/worktrees/agent-a8e74a64a20092fa7`
+    (remove it when done; check for a media junction first).
+- Before that: all done. master = ec2f227 (PRs #1–#10 live). This Resume is a local commit on master, not pushed
+  (a docs-only push rebuilds production); it rides along with the next PR.
+- #10 (Rajat: "option A for who I am and what I do, but use relevant icons"): `components/home/chapters.tsx` is one
+  pinned section of 6 stops (3 ways, in numbers, offerings ×2) under a rail of chapter ticks, with new drawings. It
+  replaces who.tsx and the picker (pick.tsx and its copy; recoverable from 3051ed1). Matrix 1586/0; live OK.
+  - Scroll snapping (board A's "can't skip") was tried and DROPPED: WebKit never let a wheel scroll leave the last
+    stop (a trap), and Chrome passed stops on long scrolls. Don't retry root snapping on the pinned section.
+  - The status line is now cwd-proof, and the context handoff is at 90% (Rajat's rule).
+- Still open for Rajat (unanswered, 2026-10-15): the "trading platforms" / "high-frequency trading" wording in the
+  About bio and blog post 1 (vs the Tredye "monitoring" rule), the About bio's SahasraT/IISc opener, and the optional
+  polish: the 404's nested <html> (move to global-not-found), the static hero's no-op tab stop, the
+  outputFileTracingRoot/turbopack.root build warning, and trimming the stale tracker below this Resume.
 - Shipped this session:
   - #7: "Who I am" as scroll-stepped stops (Sections A) on the shared `components/home/steps.tsx` engine. A stepped
     section pins only when its index and tallest stop fit the pinned box (it measures the pinned layout).
