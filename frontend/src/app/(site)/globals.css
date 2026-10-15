@@ -536,6 +536,63 @@ a.btn { display: inline-flex; align-items: center; text-decoration: none; }
   .map-nodes li::after { left: 21px; top: calc(50% - 4px); border-top: 4.5px solid transparent; border-bottom: 4.5px solid transparent; border-left: 8px solid var(--hairline); border-right: 0; }
   .map-nodes li:hover::after, .map-nodes li:focus-within::after { border-left-color: var(--ink-c); border-top-color: transparent; }
 }
+/* a node's line and CTA: plain here, folded away by the sheet map until its sheet is marked out */
+.node-more, .node-more > span { display: contents; }
+
+/* ======================= where to next, as a sheet set (components/home/sheet-map.tsx; canvas board "Where to next" A) =======================
+   With WebGL and motion, #map is four drawing sheets on a drafting plane, drawn on a canvas under the section's own
+   heading, and its four links are the labels pinned above the sheets (moved every frame). */
+#map.map-3d { position: relative; isolation: isolate; box-sizing: border-box; height: calc(100svh - var(--top-h)); min-height: 520px; padding-block: 40px 0; overflow: clip; touch-action: pan-y pinch-zoom; -webkit-user-select: none; user-select: none; }
+.map-canvas { position: absolute; inset: 0; z-index: 0; display: block; width: 100%; height: 100%; cursor: grab; }
+.map-3d.dragging .map-canvas { cursor: grabbing; }
+.map-3d.over .map-canvas { cursor: pointer; }
+.map-3d .sec-head { position: relative; z-index: 2; pointer-events: none; }
+.map-3d .map-root, .map-3d .map-nodes > li, .map-layer > * { position: absolute; left: 0; top: 0; will-change: transform; }
+.map-layer { position: absolute; inset: 0; z-index: 3; pointer-events: none; }
+/* a sheet's link sits on its top edge and grows upward when the sheet is marked out */
+.map-3d .map-nodes > li { z-index: 3; display: block; padding: 0; translate: -2px -100%; pointer-events: none; }
+.map-3d .map-nodes > li::before, .map-3d .map-nodes > li::after, .map-3d .node::before { content: none; }
+.map-3d .node, .map-3d .node:hover, .map-3d .node:focus-visible { pointer-events: auto; display: grid; justify-items: start; gap: 6px; max-width: 17.5rem; padding: 4px 8px 8px 2px; border: 0; background: none; }
+/* marked out, a link comes in front of its neighbours on a knockout, like a note over the drawing */
+.map-3d .map-nodes > li.is-hot { z-index: 4; }
+.map-3d .is-hot .node { background: var(--lab); }
+.map-3d .node-ico { display: none; }
+.map-3d .node-top .lab { transition: color var(--t16) var(--ease-attack); }
+.map-3d .is-hot .node-top .lab { color: var(--ink-c); }
+.map-3d .node-t { font-size: clamp(1.35rem, 1rem + .9vw, 1.75rem); }
+.map-3d .node-more { display: grid; grid-template-rows: 0fr; opacity: 0; transition: grid-template-rows var(--t8) var(--ease-attack), opacity 160ms var(--ease-attack); }
+.map-3d .node-more > span { display: grid; min-height: 0; overflow: hidden; justify-items: start; gap: 8px; }
+.map-3d .is-hot .node-more { grid-template-rows: 1fr; opacity: 1; }
+.map-3d .node-d { padding-top: 2px; max-width: 30ch; line-height: 1.4; }
+.map-3d .node-go { margin: 0; padding: 0; }
+/* the detail callout at each sheet's foot, where the leader from "you are here" lands */
+.map-co { translate: -50% -50%; box-sizing: border-box; width: 30px; height: 30px; display: grid; place-items: center; border: 1px solid var(--blue); border-radius: 50%; background: var(--lab); color: var(--blue); font: 800 .75rem/1 var(--f-count); letter-spacing: .02em; font-variant-numeric: tabular-nums; transition: background-color var(--t16) var(--ease-attack), color var(--t16) var(--ease-attack); }
+.map-co.is-hot { background: var(--blue); color: var(--panel); }
+/* the dimension line's readout: the sheet's size on screen, in px */
+.map-dim { translate: -50% -50%; padding: 1px 5px; background: var(--lab); color: var(--blue); font: 500 .625rem/1.4 var(--font-mono), ui-monospace, monospace; letter-spacing: .06em; text-transform: uppercase; white-space: nowrap; font-variant-numeric: tabular-nums; opacity: 0; }
+/* "you are here": the note beside the orange square on the plane */
+.map-3d .map-root { z-index: 3; display: grid; gap: 0; justify-items: start; translate: 16px -10px; margin: 0; padding: 0; border: 0; pointer-events: none; }
+.map-3d .map-root .here { display: none; }
+.map-3d .map-root .lab { color: var(--ink-c); white-space: nowrap; }
+.map-3d .map-root .hand { margin: 2px 0 0; font-size: 1.5rem; white-space: nowrap; }
+.map-3d.map-narrow .map-root { translate: -50% 12px; justify-items: center; }
+.map-3d.map-narrow .map-root .hand { font-size: 1.3rem; transform-origin: 50% 50%; }
+.map-hint { position: absolute; z-index: 3; right: max(24px, calc((100% - var(--page-w)) / 2)); bottom: 22px; margin: 0; pointer-events: none; }
+/* phones: the links are compact; a tapped sheet's details and its Go button dock at the foot */
+.map-pick { display: none; }
+.map-3d.map-narrow .map-hint { display: none; }
+.map-3d.map-narrow .map-pick { position: absolute; z-index: 4; left: 16px; right: 16px; bottom: 16px; display: grid; grid-template-columns: minmax(0, 1fr) auto; align-items: end; gap: 6px 14px; padding: 12px 12px 12px 14px; background: var(--panel); border: 1px solid var(--hairline); transition: border-color var(--t16) var(--ease-attack); }
+.map-pick > p { grid-column: 1; }
+.map-pick.has { border-color: var(--ink-c); }
+.map-pick-t { font: 700 1.5rem/1 var(--f-display); font-stretch: 75%; }
+.map-pick-l { font-size: .875rem; line-height: 1.4; color: var(--sub-c); }
+.map-pick-go { grid-column: 2; grid-row: 1 / span 3; }
+.map-pick:not(.has) .map-pick-sel, .map-pick.has .map-pick-hint { display: none; }
+.map-3d.map-narrow .node-more { display: none; }
+.map-3d.map-narrow .node { max-width: 44vw; gap: 2px; padding: 3px 6px 4px 3px; background: var(--lab); }
+.map-3d.map-narrow .node-t { font-size: 1.05rem; }
+.map-3d.map-narrow .map-co { width: 24px; height: 24px; font-size: .6875rem; }
+
 .end { margin-top: 72px; border-top: 1px solid var(--ink-c); }
 .end-t { margin: 0; padding-top: 44px; max-width: 18ch; font-family: var(--f-display); font-size: clamp(2.2rem, 1.4rem + 3.4vw, 4.4rem); line-height: .98; text-wrap: balance; }
 /* his voice: handwritten notes, like pencil over the drawing */

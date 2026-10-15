@@ -1,14 +1,15 @@
 // The home experience (BUILD-PLAN.md §0, "P3b — Home experience"): the
 // shard-cut name stage, the scroll story, "Who I am" / "What I build" (Chapters),
 // "Where to next" and the close contact brief. Server-rendered
-// (this file) plus client islands: Stage (three.js, lazy), Steps and
-// ContactForm (progressive enhancement; posts natively without JS).
+// (this file) plus client islands: Stage and SheetMap (three.js, lazy), Steps
+// and ContactForm (progressive enhancement; posts natively without JS).
 // Everything here is readable with no JS, no WebGL and reduced motion.
 import type { Metadata } from "next";
 import Link from "next/link";
 import { ContactForm } from "@/components/contact-form";
 import { Chapters } from "@/components/home/chapters";
 import { NameMark } from "@/components/home/name-mark";
+import { SheetMap } from "@/components/home/sheet-map";
 import { SmoothScroll } from "@/components/home/smooth-scroll";
 import { Splash } from "@/components/home/splash";
 import { Stage } from "@/components/home/stage";
@@ -82,16 +83,11 @@ export default async function HomePage() {
       <SmoothScroll />
       <div className="exp" id="exp" data-step="0">
         <Splash />
-        <div
-          className="exp-pin kit-registration"
-          tabIndex={0}
-          role="group"
-          aria-roledescription="interactive drawing"
-          aria-label="Rajat, cut into pieces at different depths. Use the arrow keys to turn the view until the pieces line up, or press Enter to line them up."
-        >
+        <div className="exp-pin kit-registration">
           {/* Stage (client) creates the <canvas> itself, only once WebGL is
               confirmed available -- so no-JS, reduced-motion and no-WebGL
-              contexts never have one in the DOM at all. */}
+              contexts never have one in the DOM at all. It also makes this
+              box a keyboard stop only then: still, there is nothing to turn. */}
           <div className="fallback-name" aria-hidden="true">
             <NameMark />
           </div>
@@ -199,10 +195,15 @@ export default async function HomePage() {
                       </svg>
                     </span>
                     <span className="node-t">{node.title}</span>
-                    <span className="node-d">{desc}</span>
-                    <span className="node-go lab">
-                      {node.cta}
-                      <span aria-hidden="true">{node.cta === "Write" ? " ↓" : " →"}</span>
+                    {/* the sheet map (SheetMap) folds these away until its sheet is marked out */}
+                    <span className="node-more">
+                      <span>
+                        <span className="node-d">{desc}</span>
+                        <span className="node-go lab">
+                          {node.cta}
+                          <span aria-hidden="true">{node.cta === "Write" ? " ↓" : " →"}</span>
+                        </span>
+                      </span>
                     </span>
                   </Link>
                 </li>
@@ -210,6 +211,7 @@ export default async function HomePage() {
             })}
           </ul>
         </div>
+        <SheetMap />
       </section>
 
       <section className="foot end" id="contact">

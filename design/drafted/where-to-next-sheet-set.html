@@ -1,0 +1,1251 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Where to next: the sheet set</title>
+<link rel="icon" href="data:,">
+<meta name="description" content="Option A for Where to next: the site map as four drawing sheets standing on a drafting plane. Point at one to mark it out; pick it to dive in.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Caveat:wght@600&family=Doto:wght@800&family=Instrument+Sans:wdth,wght@75..100,400..700&family=Martian+Mono:wdth,wght@75..112.5,400..600&display=swap">
+<script>document.documentElement.classList.add("js");</script>
+<script type="importmap">
+{ "imports": {
+  "three": "https://cdn.jsdelivr.net/npm/three@0.169.0/build/three.module.js",
+  "three/addons/": "https://cdn.jsdelivr.net/npm/three@0.169.0/examples/jsm/"
+} }
+</script>
+<style>
+/* ---------- Drafted tokens (light only) ---------- */
+:root {
+  color-scheme: light;
+  --lab: #E7E9EC; --panel: #F6F7F8; --ink: #0D0F12; --graphite: #4F5560; --hairline: #C3C7CE;
+  --orange: #FF4D12; --blue: #2448FF;
+  --ease: cubic-bezier(.2, 0, 0, 1);
+  --f-sans: "Instrument Sans", "Instrument Sans Fallback", Arial, sans-serif;
+  --f-mono: "Martian Mono", "Martian Mono Fallback", ui-monospace, Consolas, monospace;
+  --f-hand: "Caveat", "Caveat Fallback", "Segoe Print", "Bradley Hand", cursive;
+  --f-count: "Doto", "Doto Fallback", "Martian Mono", ui-monospace, monospace;
+}
+/* each family's fallback is Arial matched to its metrics (the site's src/lib/fonts.ts values) */
+@font-face { font-family: "Instrument Sans Fallback"; src: local("Arial"); ascent-override: 94.42%; descent-override: 24.33%; line-gap-override: 0%; size-adjust: 102.74%; }
+@font-face { font-family: "Martian Mono Fallback"; src: local("Arial"); ascent-override: 63.69%; descent-override: 12.74%; line-gap-override: 0%; size-adjust: 157.02%; }
+@font-face { font-family: "Caveat Fallback"; src: local("Arial"); ascent-override: 124.77%; descent-override: 38.99%; line-gap-override: 0%; size-adjust: 76.94%; }
+@font-face { font-family: "Doto Fallback"; src: local("Arial"); ascent-override: 70.59%; descent-override: 18.58%; line-gap-override: 0%; size-adjust: 134.59%; }
+
+html, body { background: var(--lab); color: var(--ink); }
+body { margin: 0; font: 400 1rem/1.5 var(--f-sans); }
+p, h2, h3, figure, dl, dd { margin: 0; }
+.container { max-width: 1280px; margin: 0 auto; padding: 0 24px; }
+@media (max-width: 640px) { .container { padding: 0 16px; } }
+.lab { font: 500 .6875rem/1.5 var(--f-mono); font-stretch: 87.5%; letter-spacing: .08em; text-transform: uppercase; color: var(--graphite); font-variant-numeric: tabular-nums; }
+.num { font-family: var(--f-count); font-weight: 800; font-stretch: 100%; letter-spacing: .02em; font-variant-numeric: tabular-nums; }
+.lab .num { font-size: 1.3em; letter-spacing: 0; }
+.t-h2 { font: 700 clamp(2.2rem, 1.6rem + 2.4vw, 3.6rem)/.95 var(--f-sans); font-stretch: 75%; }
+.hand { font: 600 clamp(1.4rem, 1.1rem + 1vw, 1.9rem)/1.1 var(--f-hand); color: var(--graphite); transform: rotate(-2.5deg); transform-origin: 0 50%; }
+.sec-head { display: flex; flex-wrap: wrap; align-items: baseline; justify-content: space-between; gap: 8px 24px; padding-top: 14px; border-top: 1px solid var(--ink); }
+.btn { display: inline-flex; align-items: center; white-space: nowrap; font: 400 .6875rem/1 var(--f-mono); letter-spacing: .06em; text-transform: uppercase; min-height: 44px; min-width: 44px; padding: 0 14px; background: transparent; color: var(--ink); border: 1px solid var(--ink); border-radius: 0; cursor: pointer; text-decoration: none; transition: background 62ms var(--ease), color 62ms var(--ease); }
+.btn:hover { background: var(--ink); color: var(--lab); }
+.btn-ink { background: var(--ink); color: var(--lab); }
+.btn-ink:hover { background: var(--blue); border-color: var(--blue); }
+:focus-visible { outline: 2px solid var(--blue); outline-offset: 2px; }
+.sr-only { position: absolute; width: 1px; height: 1px; margin: -1px; padding: 0; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; border: 0; }
+[hidden] { display: none !important; }
+
+/* ---------- the plain site map: no JS, no WebGL (the site's own nodes) ---------- */
+.wtn { position: relative; isolation: isolate; }
+.wtn-head { position: relative; z-index: 2; padding-top: 40px; }
+.map-root { display: flex; align-items: center; gap: 10px; margin-top: 32px; padding-bottom: 14px; border-bottom: 1px solid var(--ink); }
+.here { width: 14px; height: 14px; flex: none; background: var(--orange); }
+.map-root .hand { margin-left: auto; }
+.wtn-list { list-style: none; margin: 0; padding: 24px 0 72px; display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 16px; }
+.node { display: flex; flex-direction: column; gap: 8px; height: 100%; box-sizing: border-box; padding: 16px; border: 1px solid var(--hairline); color: var(--ink); text-decoration: none; transition: border-color 125ms var(--ease), background 125ms var(--ease); }
+.node:hover, .node:focus-visible { border-color: var(--ink); background: var(--panel); }
+.node-t { font: 700 clamp(1.6rem, 1.25rem + 1vw, 2.2rem)/1 var(--f-sans); font-stretch: 75%; }
+.node-d { font-size: .9375rem; line-height: 1.45; color: var(--graphite); }
+.node-go { margin-top: auto; padding-top: 8px; color: var(--blue); }
+@media (max-width: 959px) { .wtn-list { grid-template-columns: 1fr; } }
+
+/* ---------- the drawing: a canvas under a layer of real buttons pinned to the sheets ---------- */
+.js .wtn:not(.no-gl) { height: 100svh; min-height: 600px; max-height: 1100px; overflow: hidden; touch-action: pan-y; -webkit-user-select: none; user-select: none; }
+.js .wtn:not(.no-gl) .wtn-head { pointer-events: none; }
+.js .wtn:not(.no-gl) .wtn-list, .js .wtn:not(.no-gl):not(.gl) .map-root { display: none; }
+.wtn-canvas { position: absolute; inset: 0; z-index: 0; display: block; width: 100%; height: 100%; cursor: grab; }
+.wtn.dragging .wtn-canvas { cursor: grabbing; }
+.wtn.over .wtn-canvas { cursor: pointer; }
+.wtn.no-gl .wtn-canvas, .wtn:not(.gl) .layer, .wtn:not(.gl) .hint { display: none; }
+.layer { position: absolute; inset: 0; z-index: 3; pointer-events: none; }
+.layer > * { position: absolute; left: 0; top: 0; will-change: transform; }
+
+/* a sheet's label sits on its top edge and grows upward when the sheet is marked out */
+.dest { translate: -2px -100%; }
+.dest-btn { pointer-events: auto; display: grid; justify-items: start; gap: 6px; max-width: 17.5rem; margin: 0; padding: 4px 8px 8px 2px; border: 0; border-radius: 0; background: none; color: var(--ink); font: inherit; text-align: left; cursor: pointer; }
+.dest-btn:focus-visible { outline-offset: 3px; }
+.dest .lab { transition: color 125ms var(--ease); }
+.dest.is-hot .dest-btn > .lab { color: var(--ink); }
+.dest-t { font: 700 clamp(1.35rem, 1rem + .9vw, 1.75rem)/1 var(--f-sans); font-stretch: 75%; }
+.dest-more { display: grid; grid-template-rows: 0fr; opacity: 0; transition: grid-template-rows 250ms var(--ease), opacity 160ms var(--ease); }
+.dest-more > span { min-height: 0; overflow: hidden; display: grid; justify-items: start; gap: 8px; }
+.dest.is-hot .dest-more { grid-template-rows: 1fr; opacity: 1; }
+.dest-l { display: block; padding-top: 2px; max-width: 30ch; font-size: .9375rem; line-height: 1.4; color: var(--graphite); }
+.dest-cta { color: var(--blue); }
+
+/* the detail callout at each sheet's foot, where the leader from "you are here" lands */
+.co { translate: -50% -50%; box-sizing: border-box; width: 30px; height: 30px; display: grid; place-items: center; border: 1px solid var(--blue); border-radius: 50%; background: var(--lab); color: var(--blue); font: 800 .75rem/1 var(--f-count); letter-spacing: .02em; font-variant-numeric: tabular-nums; transition: background-color 125ms var(--ease), color 125ms var(--ease); }
+.co.is-hot { background: var(--blue); color: var(--panel); }
+/* the dimension line's readout: the sheet's size on screen, in px */
+.dim { translate: -50% -50%; padding: 1px 5px; background: var(--lab); color: var(--blue); font: 500 .625rem/1.4 var(--f-mono); letter-spacing: .06em; text-transform: uppercase; white-space: nowrap; font-variant-numeric: tabular-nums; opacity: 0; }
+/* "you are here": the label beside the orange square on the plane */
+.wtn.gl .map-root { display: grid; gap: 0; justify-items: start; translate: 16px -10px; margin: 0; padding: 0; border: 0; }
+.wtn.gl .map-root .here { display: none; }
+.wtn.gl .map-root .lab { color: var(--ink); white-space: nowrap; }
+.wtn.gl .map-root .hand { margin: 2px 0 0; font-size: 1.5rem; white-space: nowrap; }
+.wtn.gl.narrow .map-root { translate: -50% 12px; justify-items: center; }
+.wtn.gl.narrow .map-root .hand { font-size: 1.3rem; transform-origin: 50% 50%; }
+
+.hint { position: absolute; z-index: 3; right: max(24px, calc((100% - 1280px) / 2)); bottom: 22px; margin: 0; pointer-events: none; }
+.hint .coarse { display: none; }
+@media (pointer: coarse) { .hint .fine { display: none; } .hint .coarse { display: inline; } }
+.wtn.narrow .hint { display: none; }
+
+/* phones: the labels are compact; a tapped sheet's details and its Go button dock at the foot */
+.pick { display: none; }
+.wtn.gl.narrow .pick { position: absolute; z-index: 4; left: 16px; right: 16px; bottom: 16px; display: grid; grid-template-columns: minmax(0, 1fr) auto; align-items: end; gap: 6px 14px; padding: 12px 12px 12px 14px; background: var(--panel); border: 1px solid var(--hairline); transition: border-color 125ms var(--ease); }
+.pick > p { grid-column: 1; }
+.pick.has { border-color: var(--ink); }
+.pick-t { font: 700 1.5rem/1 var(--f-sans); font-stretch: 75%; }
+.pick-l { font-size: .875rem; line-height: 1.4; color: var(--graphite); }
+.pick-go { grid-column: 2; grid-row: 1 / span 3; }
+.pick:not(.has) .pick-sel, .pick.has .pick-hint { display: none; }
+.wtn.narrow .dest-more { display: none; }
+.wtn.narrow .dest-btn { max-width: 44vw; gap: 2px; padding: 3px 6px 4px 3px; background: var(--lab); }
+.wtn.narrow .dest-t { font-size: 1.05rem; }
+.wtn.narrow .co { width: 24px; height: 24px; font-size: .6875rem; }
+
+/* ---------- the arrival: the sheet, full frame ---------- */
+.arrival { position: absolute; inset: 0; z-index: 6; background: var(--panel); clip-path: inset(0px 0px 0px 0px); transition: clip-path 340ms var(--ease); -webkit-user-select: text; user-select: text; touch-action: auto; }
+.arr-frame { position: absolute; top: 10px; right: 10px; bottom: 10px; left: 10px; border: 1px solid var(--hairline); pointer-events: none; transition: top 340ms var(--ease), right 340ms var(--ease), bottom 340ms var(--ease), left 340ms var(--ease); }
+.arr-scroll { position: absolute; inset: 0; overflow-y: auto; overscroll-behavior: contain; }
+.arr-in { padding-top: 28px; padding-bottom: 40px; }
+.arr-top { display: flex; align-items: center; justify-content: space-between; gap: 12px; min-height: 60px; border-bottom: 1px solid var(--ink); }
+.arr-grid { display: grid; grid-template-columns: repeat(12, minmax(0, 1fr)); gap: 24px 16px; margin-top: 28px; align-items: start; }
+.arr-head { grid-column: 1 / span 8; }
+.arr-t { margin: 8px 0 0; font: 700 clamp(2.5rem, 1.6rem + 3.6vw, 4.75rem)/.98 var(--f-sans); font-stretch: 75%; text-wrap: balance; }
+.arr-t:focus { outline: none; }
+.arr-note { margin-top: 12px; color: var(--blue); }
+.tb { grid-column: 9 / span 4; grid-row: 1 / span 2; border: 1px solid var(--ink); background: var(--lab); }
+.tb-row { display: grid; grid-template-columns: 6.6em minmax(0, 1fr); border-bottom: 1px solid var(--hairline); }
+.tb dt { padding: 11px 12px; border-right: 1px solid var(--hairline); }
+.tb dd { padding: 10px 12px; font-size: .875rem; line-height: 1.45; }
+.tb dd.tb-sheet { position: relative; isolation: isolate; padding: 14px 12px; font: 700 2.125rem/1 var(--f-sans); font-stretch: 75%; }
+.tb-sheet::before { content: ""; position: absolute; inset: 0; z-index: -1; background: var(--orange); transform: scaleX(0); transform-origin: 0 50%; transition: transform 250ms var(--ease); }
+.arrival.is-in .tb-sheet::before { transform: none; transition-delay: 420ms; }
+.tb dd.tb-title { font: 700 1.5rem/1.05 var(--f-sans); font-stretch: 75%; }
+.tb dd.mono { font: 500 .8125rem/1.45 var(--f-mono); }
+.tb-link { display: flex; align-items: center; justify-content: space-between; min-height: 52px; padding: 0 12px; font-weight: 600; color: var(--ink); text-decoration: none; transition: background 62ms var(--ease), color 62ms var(--ease); }
+.tb-link:hover { background: var(--ink); color: var(--lab); }
+.arr-fig { grid-column: 1 / span 8; padding-top: 12px; border-top: 1px solid var(--ink); }
+.arr-fig figcaption { margin-top: 8px; }
+.arr-fig svg { display: block; width: 100%; height: min(44vh, 400px); overflow: visible; }
+.arr-fig path { fill: none; stroke: var(--blue); stroke-width: var(--sw, 1); stroke-dasharray: 1 1; stroke-dashoffset: 1; }
+.arrival.is-in .arr-fig path { animation: draw var(--b) linear var(--a) forwards; }
+@keyframes draw { to { stroke-dashoffset: 0; } }
+.arrival .rv { opacity: 0; transform: translateY(10px); transition: opacity 120ms var(--ease); }
+.arrival.is-in .rv { opacity: 1; transform: none; transition: opacity 320ms var(--ease) var(--d, 0ms), transform 480ms var(--ease) var(--d, 0ms); }
+.arr-top .fine { display: none; }
+@media (pointer: fine) { .arr-top .fine { display: inline; } }
+@media (max-width: 959px) {
+  .arr-head, .tb, .arr-fig { grid-column: 1 / -1; grid-row: auto; }
+  .arr-fig svg { height: min(30vh, 260px); }
+}
+
+/* the brief, further down the real page (a stub here, so Contact has somewhere to land) */
+.end { border-top: 1px solid var(--ink); padding: 44px 0 72px; }
+.end-t { margin: 10px 0 0; max-width: 18ch; font: 700 clamp(2.2rem, 1.4rem + 3.4vw, 4.4rem)/.98 var(--f-sans); font-stretch: 75%; text-wrap: balance; }
+.end .hand { margin-top: 14px; }
+
+@media (prefers-reduced-motion: reduce) {
+  .dest-more, .dest .lab, .co, .pick, .node, .btn, .tb-link { transition: none; }
+  .arrival, .arr-frame { transition: none; }
+  .arrival { opacity: 0; }
+  .arrival.is-in { opacity: 1; transition: opacity 150ms linear; }
+  .arrival .rv, .arrival.is-in .rv { opacity: 1; transform: none; transition: none; }
+  .arr-fig path { stroke-dashoffset: 0; }
+  .arrival.is-in .arr-fig path { animation: none; }
+  .tb-sheet::before, .arrival.is-in .tb-sheet::before { transform: none; transition: none; }
+}
+</style>
+</head>
+<body>
+
+<section class="wtn" id="map" aria-labelledby="map-h">
+  <div class="wtn-head container">
+    <div class="sec-head">
+      <h2 class="t-h2" id="map-h">Where to next</h2>
+      <p class="lab">Site map · 4 destinations</p>
+    </div>
+    <div class="map-root" id="root">
+      <span class="here" aria-hidden="true"></span>
+      <span class="lab">You are here · Home</span>
+      <span class="hand">start anywhere</span>
+    </div>
+    <!-- the plain map (no JS, no WebGL), and the one place the copy lives: the 3D view reads it from here -->
+    <ul class="wtn-list">
+      <li><a class="node" href="https://www.rajatkumarr.com/projects" target="_blank" rel="noopener" data-num="01" data-heading="Projects" data-path="/projects" data-cta="Open"><span class="lab"><span class="num">01</span> · Projects</span><span class="node-t">The work, drawn</span><span class="node-d">4 case studies, each with its real architecture, and 8 earlier projects.</span><span class="node-go lab">Open →</span></a></li>
+      <li><a class="node" href="https://www.rajatkumarr.com/blog" target="_blank" rel="noopener" data-num="02" data-heading="Blog" data-path="/blog" data-cta="Open"><span class="lab"><span class="num">02</span> · Blog</span><span class="node-t">Notes</span><span class="node-d">Writing on architecture, building with AI and running large systems.</span><span class="node-go lab">Open →</span></a></li>
+      <li><a class="node" href="https://www.rajatkumarr.com/about" target="_blank" rel="noopener" data-num="03" data-heading="About" data-path="/about" data-cta="Open"><span class="lab"><span class="num">03</span> · About</span><span class="node-t">The long version</span><span class="node-d">10+ years of experience, the skills behind it and a résumé.</span><span class="node-go lab">Open →</span></a></li>
+      <li><a class="node" href="#contact" data-num="04" data-heading="Contact" data-path="#contact" data-cta="Write"><span class="lab"><span class="num">04</span> · Contact</span><span class="node-t">Start a conversation</span><span class="node-d">Tell me what’s slowing your business down. I usually reply within 24–48 hours.</span><span class="node-go lab">Write ↓</span></a></li>
+    </ul>
+  </div>
+
+  <div class="layer" id="layer"></div>
+  <p class="lab hint" aria-hidden="true"><span class="fine">Point at a sheet · drag to look around</span><span class="coarse">Tap a sheet · drag sideways to look around</span></p>
+
+  <div class="pick" aria-live="polite">
+    <p class="lab pick-hint">Tap a sheet to choose · drag sideways to look around</p>
+    <p class="lab pick-sel pick-lab"></p>
+    <p class="pick-sel pick-t"></p>
+    <p class="pick-sel pick-l"></p>
+    <button type="button" class="btn btn-ink pick-sel pick-go">Go →</button>
+  </div>
+
+  <div class="arrival" role="region" aria-label="Destination sheet" hidden>
+    <div class="arr-frame" aria-hidden="true"></div>
+    <div class="arr-scroll">
+      <div class="container arr-in">
+        <div class="arr-top rv" style="--d: 120ms">
+          <button type="button" class="btn arr-back">← Back to the map</button>
+          <p class="lab arr-no">Sheet <span class="num">01</span> of 04<span class="fine"> · Esc</span></p>
+        </div>
+        <div class="arr-grid">
+          <div class="arr-head rv" style="--d: 180ms">
+            <p class="lab arr-lab"></p>
+            <h3 class="arr-t" tabindex="-1"></h3>
+            <p class="hand arr-note" hidden>this one lands on the brief below</p>
+          </div>
+          <div class="tb rv" style="--d: 240ms">
+            <dl>
+              <div class="tb-row"><dt class="lab">Sheet</dt><dd class="tb-sheet"><span class="arr-sn">01</span> / 04</dd></div>
+              <div class="tb-row"><dt class="lab">Title</dt><dd class="tb-title arr-tt"></dd></div>
+              <div class="tb-row"><dt class="lab">Line</dt><dd class="arr-tl"></dd></div>
+              <div class="tb-row"><dt class="lab">Goes to</dt><dd class="mono arr-go"></dd></div>
+            </dl>
+            <a class="tb-link" href="https://www.rajatkumarr.com/" target="_blank" rel="noopener">Open the real page <span aria-hidden="true">↗</span></a>
+          </div>
+          <figure class="arr-fig rv" style="--d: 300ms">
+            <div class="arr-svg"></div>
+            <figcaption class="lab arr-cap"></figcaption>
+          </figure>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section class="end" id="contact" aria-labelledby="end-h">
+  <div class="container">
+    <p class="lab">The brief</p>
+    <h2 class="end-t" id="end-h">Tell me what’s slowing your business down.</h2>
+    <p class="hand">a few lines is enough to start</p>
+  </div>
+</section>
+
+<script>
+  // three.js never arrived (offline, blocked CDN): show the plain map
+  setTimeout(function () { var s = document.getElementById("map"); if (s && !s.classList.contains("gl")) s.classList.add("no-gl"); }, 6000);
+</script>
+<script type="module">
+import * as THREE from "three";
+import { LineSegments2 } from "three/addons/lines/LineSegments2.js";
+import { LineSegmentsGeometry } from "three/addons/lines/LineSegmentsGeometry.js";
+import { LineMaterial } from "three/addons/lines/LineMaterial.js";
+
+// Flat drafting colours: the hex is what reaches the screen (no sRGB round trip, no tone mapping).
+THREE.ColorManagement.enabled = false;
+
+const sec = document.getElementById("map");
+const head = sec.querySelector(".wtn-head");
+const root = document.getElementById("root");
+const layer = document.getElementById("layer");
+const hint = sec.querySelector(".hint");
+const pick = sec.querySelector(".pick");
+const arrival = sec.querySelector(".arrival");
+const arrFrame = arrival.querySelector(".arr-frame");
+const reduced = matchMedia("(prefers-reduced-motion: reduce)").matches;
+
+// the copy, read from the plain map
+const DESTS = [...sec.querySelectorAll(".wtn-list .node")].map((a) => ({
+  num: a.dataset.num, heading: a.dataset.heading, path: a.dataset.path, cta: a.dataset.cta,
+  title: a.querySelector(".node-t").textContent.trim(), line: a.querySelector(".node-d").textContent.trim(),
+}));
+const N = DESTS.length;
+const two = (n) => String(n).padStart(2, "0");
+
+const plain = (why) => {
+  sec.classList.remove("gl", "narrow");
+  sec.classList.add("no-gl");
+  head.insertBefore(root, head.querySelector(".wtn-list")); // back in the plain header row
+  console.info("[where-to-next] plain map: " + why);
+};
+
+/* ---------- easing (the site's cubic-bezier(.2,0,0,1)) and small maths ---------- */
+const bez = (x1, y1, x2, y2) => {
+  const bx = (u) => 3 * (1 - u) * (1 - u) * u * x1 + 3 * (1 - u) * u * u * x2 + u * u * u;
+  const by = (u) => 3 * (1 - u) * (1 - u) * u * y1 + 3 * (1 - u) * u * u * y2 + u * u * u;
+  const dx = (u) => 3 * (1 - u) * (1 - u) * x1 + 6 * (1 - u) * u * (x2 - x1) + 3 * u * u * (1 - x2);
+  return (t) => {
+    if (t <= 0) return 0;
+    if (t >= 1) return 1;
+    let u = t;
+    for (let i = 0; i < 8; i++) {
+      const d = dx(u);
+      if (Math.abs(d) < 1e-6) break;
+      u = Math.min(1, Math.max(0, u - (bx(u) - t) / d));
+    }
+    return by(u);
+  };
+};
+const attack = bez(0.2, 0, 0, 1);
+const clamp = (v, a, b) => Math.min(b, Math.max(a, v));
+const seg = (v, a, b) => clamp((v - a) / (b - a), 0, 1);
+const smooth = (x) => x * x * (3 - 2 * x);
+const DEG = Math.PI / 180;
+
+/* ---------- a sheet, in sheet units (y up): a √2 landscape sheet, its title block bottom right ---------- */
+const U = 0.01; // world units per sheet unit: a sheet is 3.2 × 2.26
+const SW = 320, SH = 226.3, BX = SW / 2, BY = SH / 2;
+const TB = { x0: 40, x1: 148, y0: -BY + 12, y1: -BY + 48, cell: 32 };
+const FOOT = 0.1;  // sheets stand this far above the plane
+const LIFT = 0.24; // a marked-out sheet lifts by this much
+const DRAW_MS = 1000;
+
+// strokes: a stroke is a list of segments [x0, y0, x1, y1], drawn in order (the pen lifts between strokes)
+const poly = (...p) => p.slice(1).map((q, k) => [p[k][0], p[k][1], q[0], q[1]]);
+const box = (x0, y0, x1, y1) => poly([x0, y0], [x1, y0], [x1, y1], [x0, y1], [x0, y0]);
+const ln = (x0, y0, x1, y1) => [[x0, y0, x1, y1]];
+const bold = (x, y, w, n = 3, g = 1.9) => Array.from({ length: n }, (_, k) => [x, y - k * g, x + w, y - k * g]); // a heading's weight
+const dash = (x, y, w, on = 2.4, off = 1.6) => { const s = []; for (let u = 0; u < w - 0.1; u += on + off) s.push([x + u, y, x + Math.min(w, u + on), y]); return s; }; // mono text
+const vdash = (x, y0, y1, on = 2.4, off = 1.8) => { const s = []; for (let v = y0; v > y1 + 0.1; v -= on + off) s.push([x, v, x, Math.max(y1, v - on)]); return s; };
+const arrowDown = (x, y0, y1) => [...ln(x, y0, x, y1), ...poly([x - 2.6, y1 + 4.6], [x, y1], [x + 2.6, y1 + 4.6])];
+
+// each sheet's miniature of its page, in blue ink
+const MINI = [
+  // 01 Projects: a system's parts over one application and one database, like the case-study drawings
+  () => {
+    const S = [], bw = 54, gap = 11, x0 = -(4 * bw + 3 * gap) / 2, top = 88, bh = 28;
+    const cx = (k) => x0 + k * (bw + gap) + bw / 2;
+    for (let k = 0; k < 4; k++) S.push(box(x0 + k * (bw + gap), top - bh, x0 + k * (bw + gap) + bw, top));
+    for (let k = 0; k < 4; k++) S.push(arrowDown(cx(k), top - bh, 32));
+    S.push(box(x0, 16, -x0, 32));
+    S.push(arrowDown(0, 16, -26));
+    S.push(box(x0, -42, -x0, -26));
+    [[30], [36, 22], [40, 30], [38, 26]].forEach((ws, k) => ws.forEach((w, j) => {
+      const y = top - bh / 2 + (ws.length > 1 ? (j ? -3.6 : 3.6) : 0);
+      S.push(ln(cx(k) - w / 2, y, cx(k) + w / 2, y));
+    }));
+    S.push(ln(-24, 24, 24, 24));
+    S.push(dash(6, -5, 78));
+    S.push(ln(-20, -34, 20, -34));
+    return S;
+  },
+  // 02 Blog: a heading over lines of text
+  () => {
+    const S = [], x = -128;
+    S.push(bold(x, 90, 70, 5, 2.1));
+    S.push(dash(x, 72, 96));
+    S.push(ln(x, 64, 128, 64));
+    [256, 244, 250, 150].forEach((w, k) => S.push(ln(x, 52 - k * 8, x + w, 52 - k * 8)));
+    S.push(bold(x, 14, 112, 3, 1.9));
+    [256, 232, 248, 252, 118].forEach((w, k) => S.push(ln(x, 2 - k * 8, x + w, 2 - k * 8)));
+    [150, 132].forEach((w, k) => S.push(ln(x, -46 - k * 8, x + w, -46 - k * 8)));
+    return S;
+  },
+  // 03 About: a timeline beside a title block, the skills under it
+  () => {
+    const S = [];
+    S.push(bold(-128, 92, 62, 6, 2.1));
+    S.push(dash(-128, 74, 120));
+    S.push(ln(-116, 60, -116, -60));
+    [48, 20, -8, -36].forEach((y, k) => {
+      S.push(box(-118.6, y - 2.6, -113.4, y + 2.6));
+      S.push(dash(-136, y + 0.5, 14, 2, 1.4));
+      S.push(bold(-104, y + 2, [92, 78, 96, 70][k], 2, 1.8));
+      S.push(ln(-104, y - 7, -104 + [124, 104, 118, 92][k], y - 7));
+    });
+    const x0 = 34, x1 = 136, y1 = 92, rh = 15;
+    S.push(box(x0, y1 - 4 * rh, x1, y1));
+    for (let r = 1; r < 4; r++) S.push(ln(x0, y1 - r * rh, x1, y1 - r * rh));
+    S.push(ln(x0 + 26, y1 - 3 * rh, x0 + 26, y1));
+    [52, 40, 24].forEach((w, r) => {
+      const y = y1 - r * rh - rh / 2;
+      S.push(dash(x0 + 5, y, 16, 2, 1.3));
+      S.push(ln(x0 + 32, y, x0 + 32 + w, y));
+    });
+    const ry = y1 - 3.5 * rh;
+    S.push(bold(x0 + 6, ry + 1.8, 32, 2, 1.8));
+    S.push(poly([x1 - 13, ry - 4], [x1 - 6, ry + 3]));
+    S.push(poly([x1 - 11.5, ry + 3], [x1 - 6, ry + 3], [x1 - 6, ry - 2.5]));
+    for (let r = 0; r < 2; r++) for (let c = 0; c < 3; c++) {
+      const bx = x0 + c * 35, by = 12 - r * 16;
+      S.push(box(bx, by - 11, bx + 32, by));
+      S.push(ln(bx + 5, by - 5.5, bx + 5 + [18, 22, 14, 20, 16, 21][r * 3 + c], by - 5.5));
+    }
+    return S;
+  },
+  // 04 Contact: the routed brief, a square per row down its left margin, Rajat's row at the foot
+  () => {
+    const S = [], x0 = -132, x1 = 132, top = 92, bot = -50;
+    S.push(box(x0, bot, x1, top));
+    S.push(ln(x0, 80, x1, 80));
+    S.push(ln(x0 + 40, 80, x0 + 40, top));
+    S.push(ln(x1 - 40, 80, x1 - 40, top));
+    S.push(bold(x0 + 6, 88.5, 26, 3, 1.8));
+    S.push(dash(x0 + 46, 86, 40, 2, 1.4));
+    S.push(dash(x1 - 34, 86, 26, 2, 1.4));
+    [62, 44, 6, -26].forEach((y) => S.push(ln(x0, y, x1, y)));
+    const sx = x0 + 9, my = [71, 53, 35, -4, -38];
+    my.forEach((y, k) => {
+      S.push(box(sx - 2.6, y - 2.6, sx + 2.6, y + 2.6));
+      if (k < 4) S.push(ln(sx + 2.6, y, sx + 8, y));
+      if (k < my.length - 1) S.push(vdash(sx, y - 2.6, my[k + 1] + 2.6));
+    });
+    [[71, 22], [53, 30], [35, 18], [-4, 20]].forEach(([y, w]) => S.push(dash(x0 + 22, y, w, 2, 1.3)));
+    S.push(ln(x0 + 70, 71, x0 + 140, 71));
+    S.push(ln(x0 + 70, 53, x0 + 162, 53));
+    for (let r = 0; r < 2; r++) for (let c = 0; c < 3; c++) {
+      const bx = x0 + 70 + c * 63, by = 40 - r * 16;
+      S.push(box(bx, by - 12, bx + 60, by));
+      S.push(ln(bx + 5, by - 6, bx + 5 + [34, 26, 28, 38, 30, 26][r * 3 + c], by - 6));
+    }
+    [-2, -10, -18].forEach((y) => S.push(ln(x0 + 70, y, x1 - 8, y)));
+    S.push(bold(x0 + 20, -34, 30, 4, 1.9));
+    S.push(dash(x1 - 70, -38, 48, 2, 1.3));
+    S.push(poly([x1 - 16, -38], [x1 - 8, -38]));
+    S.push(poly([x1 - 11, -35], [x1 - 8, -38], [x1 - 11, -41]));
+    return S;
+  },
+];
+
+// when the pen reaches each segment's ends, 0..1 across the whole drawing (constant pen speed, a beat per lift)
+function timeline(S) {
+  const t = [];
+  let acc = 0, px = null, py = null;
+  for (const stroke of S) {
+    if (px !== null) acc += 8;
+    for (const [x0, y0, x1, y1] of stroke) {
+      if (px !== null) acc += Math.hypot(x0 - px, y0 - py) * 0.25;
+      const l = Math.hypot(x1 - x0, y1 - y0);
+      t.push(acc, acc + l);
+      acc += l;
+      px = x1;
+      py = y1;
+    }
+  }
+  return t.map((v) => v / acc);
+}
+const flat3 = (segs, z) => segs.flatMap(([x0, y0, x1, y1]) => [x0, y0, z, x1, y1, z]);
+
+// blue construction marks, shown while a sheet is marked out: registration corners, extension lines, a dimension line
+function construction() {
+  const s = [], o = 7, a = 15;
+  for (const sx of [-1, 1]) for (const sy of [-1, 1]) {
+    const x = sx * (BX + o), y = sy * (BY + o);
+    s.push([x, y, x - sx * a, y], [x, y, x, y - sy * a]);
+  }
+  s.push([-BX, BY + 5, -BX, BY + 36], [BX, BY + 5, BX, BY + 36]);
+  s.push([-BX, BY + 28, BX, BY + 28]);
+  s.push([-BX - 4, BY + 24, -BX + 4, BY + 32], [BX - 4, BY + 24, BX + 4, BY + 32]);
+  return s;
+}
+
+// the arrangements: each sheet on a ring around the arc's centre, turned to face it; "you are here" in front
+const WIDE = { fov: 30, pitch: 20, hubZ: -2.6, ring: [[-37.5, 8.4], [-12.5, 8.4], [12.5, 8.4], [37.5, 8.4]] };
+const NARROW = { fov: 40, pitch: 42, hubZ: -1.6, ring: [[-8, 14.4], [8, 14.4], [-17, 6.2], [17, 6.2]] };
+
+try {
+  await boot();
+} catch (err) {
+  plain(err instanceof Error ? err.message : String(err));
+}
+
+async function boot() {
+  const canvas = document.createElement("canvas");
+  canvas.className = "wtn-canvas";
+  canvas.setAttribute("aria-hidden", "true");
+  const renderer = new THREE.WebGLRenderer({ canvas, antialias: true, powerPreference: "low-power" }); // throws without WebGL
+  renderer.outputColorSpace = THREE.LinearSRGBColorSpace;
+  renderer.setClearColor(0xe7e9ec, 1);
+
+  // the title blocks are canvas text: their faces first (capped, so a slow font never holds the drawing back)
+  await Promise.race([
+    Promise.all(['800 120px "Doto"', '500 40px "Martian Mono"', '400 30px "Martian Mono"'].map((f) => document.fonts.load(f))),
+    new Promise((r) => setTimeout(r, 2500)),
+  ]).catch(() => {});
+
+  const COL = { ink: new THREE.Color(0x0d0f12), hair: new THREE.Color(0xc3c7ce), blue: new THREE.Color(0x2448ff), graphite: new THREE.Color(0x4f5560) };
+  const scene = new THREE.Scene();
+  scene.fog = new THREE.Fog(0xe7e9ec, 10, 40);
+  const camera = new THREE.PerspectiveCamera(30, 1, 0.1, 200);
+
+  // drafting lines: screen-space widths (1–1.25 CSS px at any zoom or pixel ratio)
+  const lineMats = [];
+  const lmat = (o) => {
+    const m = new LineMaterial({ linewidth: 1, transparent: true, depthWrite: false, ...o });
+    lineMats.push(m);
+    return m;
+  };
+  const fat = (pos, mat, cols) => {
+    const g = new LineSegmentsGeometry();
+    g.setPositions(pos);
+    if (cols) g.setColors(cols);
+    const o = new LineSegments2(g, mat);
+    o.renderOrder = 1;
+    return o;
+  };
+
+  function tbTexture(d) {
+    const PX = 6, w = (TB.x1 - TB.x0) * PX, h = (TB.y1 - TB.y0) * PX;
+    const c = document.createElement("canvas");
+    c.width = w;
+    c.height = h;
+    const x = c.getContext("2d");
+    x.textBaseline = "middle";
+    x.fillStyle = "#0D0F12";
+    x.textAlign = "center";
+    x.font = `800 ${21 * PX}px Doto, "Martian Mono", monospace`;
+    x.fillText(d.num, (TB.cell * PX) / 2, h / 2 + PX * 0.6);
+    x.textAlign = "left";
+    x.font = `500 ${7 * PX}px "Martian Mono", monospace`;
+    if ("fontStretch" in x) x.fontStretch = "semi-condensed";
+    if ("letterSpacing" in x) x.letterSpacing = `${Math.round(0.6 * PX)}px`;
+    x.fillText(d.heading.toUpperCase(), (TB.cell + 6) * PX, h / 4 + PX * 0.4);
+    x.fillStyle = "#4F5560";
+    x.font = `400 ${5 * PX}px "Martian Mono", monospace`;
+    if ("fontStretch" in x) x.fontStretch = "semi-condensed";
+    x.fillText(`SHEET ${d.num} OF ${two(N)}`, (TB.cell + 6) * PX, (h * 3) / 4 + PX * 0.3);
+    const t = new THREE.CanvasTexture(c);
+    t.anisotropy = Math.min(8, renderer.capabilities.getMaxAnisotropy());
+    return t;
+  }
+
+  /* ---------- the four sheets ---------- */
+  const v1 = new THREE.Vector3();
+  const sheets = DESTS.map((d, i) => {
+    const g = new THREE.Group();
+    g.scale.setScalar(U);
+    scene.add(g);
+    const paperMat = new THREE.MeshBasicMaterial({ color: 0xf6f7f8, transparent: true, fog: false });
+    const paper = new THREE.Mesh(new THREE.PlaneGeometry(SW, SH), paperMat);
+    paper.userData.i = i;
+    g.add(paper);
+    const borderMat = lmat({ color: COL.hair.clone() });
+    g.add(fat(flat3(box(-BX, -BY, BX, BY), 0.3), borderMat));
+    const tbMat = lmat({ color: COL.ink.clone() });
+    const my = (TB.y0 + TB.y1) / 2;
+    g.add(fat(flat3([...box(TB.x0, TB.y0, TB.x1, TB.y1), ...ln(TB.x0 + TB.cell, TB.y0, TB.x0 + TB.cell, TB.y1), ...ln(TB.x0 + TB.cell, my, TB.x1, my)], 0.3), tbMat));
+    const txtMat = new THREE.MeshBasicMaterial({ map: tbTexture(d), transparent: true, depthWrite: false, fog: false });
+    const txt = new THREE.Mesh(new THREE.PlaneGeometry(TB.x1 - TB.x0, TB.y1 - TB.y0), txtMat);
+    txt.position.set((TB.x0 + TB.x1) / 2, my, 0.2);
+    txt.renderOrder = 1;
+    g.add(txt);
+    // the miniature: its segments carry the pen's time as their "line distance", so a dash as long as the
+    // progress draws it on (LineMaterial's own dash test, no custom shader); a faint underlay shows under the pen
+    const S = MINI[i]();
+    const mg = new LineSegmentsGeometry();
+    mg.setPositions(flat3(S.flat(), 0.4));
+    const tbuf = new THREE.InstancedInterleavedBuffer(new Float32Array(timeline(S)), 2, 1);
+    mg.setAttribute("instanceDistanceStart", new THREE.InterleavedBufferAttribute(tbuf, 1, 0));
+    mg.setAttribute("instanceDistanceEnd", new THREE.InterleavedBufferAttribute(tbuf, 1, 1));
+    const ghostMat = lmat({ color: COL.blue.clone(), opacity: 0.2 });
+    const ghost = new LineSegments2(mg, ghostMat);
+    ghost.renderOrder = 1;
+    ghost.visible = false;
+    g.add(ghost);
+    const inkMat = lmat({ color: COL.blue.clone(), linewidth: 1.25, dashed: true, dashSize: 2, gapSize: 1000, opacity: 0.92 });
+    const ink = new LineSegments2(mg, inkMat);
+    ink.renderOrder = 1;
+    g.add(ink);
+    const conMat = lmat({ color: COL.blue.clone(), opacity: 0 });
+    const con = fat(flat3(construction(), 0.45), conMat);
+    con.visible = false;
+    g.add(con);
+
+    // its button, its callout and its readout, pinned to it
+    const el = document.createElement("div");
+    el.className = "dest";
+    el.innerHTML =
+      `<button type="button" class="dest-btn" aria-describedby="dl${i}"><span class="lab"><span class="num">${d.num}</span> · ${d.heading}</span>` +
+      `<span class="dest-t">${d.title}</span><span class="dest-more" aria-hidden="true"><span><span class="dest-l">${d.line}</span>` +
+      `<span class="lab dest-cta">${d.cta} ${d.path.startsWith("#") ? "↓" : "→"}</span></span></span></button>` +
+      `<span class="sr-only" id="dl${i}">${d.line} Opens sheet ${d.num} of ${two(N)}.</span>`;
+    const co = document.createElement("span");
+    co.className = "co";
+    co.setAttribute("aria-hidden", "true");
+    co.textContent = d.num;
+    const dim = document.createElement("span");
+    dim.className = "dim";
+    dim.setAttribute("aria-hidden", "true");
+    layer.append(co, dim, el);
+    return {
+      d, g, paper, paperMat, borderMat, tbMat, txtMat, ghost, ghostMat, inkMat, con, conMat, el, btn: el.querySelector("button"), co, dim, dimText: "",
+      foot: new THREE.Vector3(), callout: new THREE.Vector3(), yaw0: 0, lean0: 0.07,
+      hv: 0, want: 0, drawAt: null, p: 2, mpos: new THREE.Vector3(), mquat: new THREE.Quaternion(),
+    };
+  });
+  const papers = sheets.map((s) => s.paper);
+  layer.append(root);
+
+  /* ---------- the drafting plane: registration marks, the ring, the footprints, the leaders, "you are here" ---------- */
+  const markMat = lmat({ color: COL.hair.clone(), fog: true, transparent: false, depthWrite: true });
+  {
+    const G = 0.55, A = 0.05, pos = [];
+    for (let i = -30; i <= 30; i++) for (let k = -50; k <= 14; k++) {
+      const x = i * G, z = k * G;
+      pos.push(x - A, 0, z, x + A, 0, z, x, 0, z - A, x, 0, z + A);
+    }
+    const marks = fat(pos, markMat);
+    marks.renderOrder = 0;
+    scene.add(marks);
+  }
+  const groundMat = lmat({ vertexColors: true, color: new THREE.Color(1, 1, 1) });
+  const ground = new LineSegments2(new LineSegmentsGeometry(), groundMat);
+  ground.renderOrder = 1;
+  scene.add(ground);
+  const leaders = sheets.map(() => {
+    const l = new LineSegments2(new LineSegmentsGeometry(), lmat({ color: COL.blue.clone(), dashed: true, dashSize: 0.09, gapSize: 0.07, opacity: 0.5 }));
+    l.renderOrder = 1;
+    scene.add(l);
+    return l;
+  });
+  const hubSq = new THREE.Mesh(new THREE.PlaneGeometry(1, 1), new THREE.MeshBasicMaterial({ color: 0xff4d12, fog: false, transparent: true }));
+  hubSq.rotation.x = -Math.PI / 2;
+  scene.add(hubSq);
+
+  /* ---------- state ---------- */
+  let W = 1, H = 1, narrow = false, L = WIDE;
+  const hub = new THREE.Vector3();
+  const base = { T: new THREE.Vector3(), th: 0, ph: 0, d: 20, ox: 0, oy: 0, pos: new THREE.Vector3() };
+  const mapPos = new THREE.Vector3();
+  const camPos = new THREE.Vector3();
+  const look = new THREE.Vector3();
+  let state = "map"; // map → in → arrived → leaving → out → map
+  let warpW = 0;
+  const warp = { idx: -1, end: null };
+  const tw = { on: false, t0: 0, dur: 1, from: 0, to: 0, done: null };
+  let hoverIdx = -1, focusIdx = -1, selIdx = -1;
+  let alive = 0, lastActive = performance.now(), inView = true;
+  const par = { x: 0, y: 0, tx: 0, ty: 0 };
+  const drag = { yaw: 0, pitch: 0, ty: 0, tp: 0 };
+  let down = null, dragging = false, suppressClick = false, lastPointer = "mouse";
+
+  const px = (v) => {
+    v1.copy(v).project(camera);
+    return { x: (v1.x + 1) * 0.5 * W, y: (1 - v1.y) * 0.5 * H };
+  };
+  function placeCam(T, th, ph, d, ox, oy) {
+    camera.position.set(T.x + d * Math.sin(th) * Math.cos(ph), T.y + d * Math.sin(ph), T.z + d * Math.cos(th) * Math.cos(ph));
+    camera.lookAt(T);
+    camera.updateMatrixWorld();
+    if (ox || oy) camera.setViewOffset(W, H, ox, oy, W, H);
+    else camera.clearViewOffset();
+  }
+  // a sheet's pose: on its ring, leaning back a touch; marked out, it lifts and turns part way to the camera
+  const eul = new THREE.Euler(0, 0, 0, "YXZ");
+  function pose(s, hv, dy, dyaw, ref, outPos, outQuat) {
+    const h2 = (SH * U) / 2;
+    const yawFace = Math.atan2(ref.x - s.foot.x, ref.z - s.foot.z);
+    const yaw = s.yaw0 + (yawFace - s.yaw0) * 0.4 * hv + dyaw;
+    const by = FOOT + LIFT * hv + dy;
+    const leanFace = Math.atan2(ref.y - (by + h2), Math.hypot(ref.x - s.foot.x, ref.z - s.foot.z));
+    const lean = s.lean0 + (leanFace - s.lean0) * 0.4 * hv;
+    const nx = Math.sin(yaw), nz = Math.cos(yaw);
+    outPos.set(s.foot.x - nx * h2 * Math.sin(lean), by + h2 * Math.cos(lean), s.foot.z - nz * h2 * Math.sin(lean));
+    outQuat.setFromEuler(eul.set(-lean, yaw, 0, "YXZ"));
+  }
+
+  /* ---------- layout: arrange the set for the frame, then fit the camera so it sits under the heading ---------- */
+  function layout() {
+    W = Math.max(1, sec.clientWidth);
+    H = Math.max(1, sec.clientHeight);
+    renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 2));
+    renderer.setSize(W, H, false);
+    lineMats.forEach((m) => m.resolution.set(W, H));
+    narrow = W < 720 || W / H < 0.95;
+    sec.classList.toggle("narrow", narrow);
+    L = narrow ? NARROW : WIDE;
+    camera.fov = L.fov;
+    camera.aspect = W / H;
+    camera.updateProjectionMatrix();
+
+    hub.set(0, 0, L.hubZ);
+    const gcol = [], gpos = [];
+    const addSeg = (a, b, c) => {
+      gpos.push(a.x, a.y, a.z, b.x, b.y, b.z);
+      gcol.push(c.r, c.g, c.b, c.r, c.g, c.b);
+    };
+    const rings = new Map();
+    sheets.forEach((s, i) => {
+      const [a, r] = L.ring[i];
+      s.foot.set(r * Math.sin(a * DEG), 0, -r * Math.cos(a * DEG));
+      s.yaw0 = -a * DEG;
+      const n = new THREE.Vector3(Math.sin(s.yaw0), 0, Math.cos(s.yaw0));
+      const tx = new THREE.Vector3(n.z, 0, -n.x);
+      s.callout.copy(s.foot).addScaledVector(n, 0.55);
+      // its footprint on the plane, with a tick at each end
+      const y = 0.004, h = (SW * U) / 2;
+      const p0 = s.foot.clone().addScaledVector(tx, -h).setY(y), p1 = s.foot.clone().addScaledVector(tx, h).setY(y);
+      addSeg(p0, p1, COL.graphite);
+      for (const p of [p0, p1]) addSeg(p.clone().addScaledVector(n, -0.07), p.clone().addScaledVector(n, 0.07), COL.graphite);
+      const ring = rings.get(r) || [];
+      ring.push(a);
+      rings.set(r, ring);
+      // the leader: "you are here" to this sheet's foot
+      const dir = s.foot.clone().sub(hub).setY(0).normalize();
+      const from = hub.clone().addScaledVector(dir, 0.32);
+      leaders[i].geometry.setPositions([from.x, 0.006, from.z, s.foot.x, 0.006, s.foot.z]);
+      leaders[i].computeLineDistances();
+    });
+    // each ring the sheets stand on, as a hairline construction arc
+    for (const [r, as] of rings) {
+      const a0 = (Math.min(...as) - 14) * DEG, a1 = (Math.max(...as) + 14) * DEG, n = 48;
+      for (let k = 0; k < n; k++) {
+        const u0 = a0 + ((a1 - a0) * k) / n, u1 = a0 + ((a1 - a0) * (k + 1)) / n;
+        addSeg(new THREE.Vector3(r * Math.sin(u0), 0.003, -r * Math.cos(u0)), new THREE.Vector3(r * Math.sin(u1), 0.003, -r * Math.cos(u1)), COL.hair);
+      }
+    }
+    ground.geometry.dispose();
+    ground.geometry = new LineSegmentsGeometry();
+    ground.geometry.setPositions(gpos);
+    ground.geometry.setColors(gcol);
+
+    // fit: everything that must show (sheets at rest and lifted, their dimension lines, callouts, the hub and its
+    // note) inside the frame below the heading, leaving room above the sheets for their labels
+    const headB = head.getBoundingClientRect().bottom - sec.getBoundingClientRect().top;
+    const safe = narrow ? { l: 12, r: W - 12, t: headB + 58, b: H - 150 } : { l: 56, r: W - 56, t: headB + 72, b: H - 64 };
+    const meanZ = sheets.reduce((a, s) => a + s.foot.z, 0) / N;
+    base.T.set(0, 1.0, (hub.z + meanZ) / 2);
+    base.th = 0;
+    base.ph = L.pitch * DEG;
+    const pts = [];
+    const q = new THREE.Quaternion(), c = new THREE.Vector3(), m = new THREE.Matrix4(), sc = new THREE.Vector3(U, U, U);
+    let d = 20, bb = null;
+    for (let it = 0; it < 12; it++) {
+      placeCam(base.T, base.th, base.ph, d, 0, 0);
+      pts.length = 0;
+      for (const s of sheets) for (const hv of [0, 1]) {
+        pose(s, hv, 0, 0, camera.position, c, q);
+        m.compose(c, q, sc);
+        for (const [x, y] of [[-BX, -BY], [BX, -BY], [-BX, BY + 36], [BX, BY + 36]]) pts.push(new THREE.Vector3(x, y, 0).applyMatrix4(m));
+      }
+      for (const s of sheets) pts.push(s.callout);
+      const ps = pts.map(px);
+      const hp = px(hub);
+      if (narrow) ps.push({ x: hp.x - 110, y: hp.y + 66 }, { x: hp.x + 110, y: hp.y + 66 });
+      else ps.push({ x: hp.x + 270, y: hp.y + 44 });
+      bb = { l: Math.min(...ps.map((p) => p.x)), r: Math.max(...ps.map((p) => p.x)), t: Math.min(...ps.map((p) => p.y)), b: Math.max(...ps.map((p) => p.y)) };
+      const k = Math.max((bb.r - bb.l) / (safe.r - safe.l), (bb.b - bb.t) / (safe.b - safe.t));
+      d *= k;
+      if (Math.abs(k - 1) < 0.002) break;
+    }
+    base.d = d;
+    base.ox = (bb.l + bb.r) / 2 - (safe.l + safe.r) / 2;
+    base.oy = (bb.t + bb.b) / 2 - (safe.t + safe.b) / 2;
+    placeCam(base.T, base.th, base.ph, base.d, base.ox, base.oy);
+    base.pos.copy(camera.position);
+    // the orange square: 14px by 14px from the composed view, like the site's (its depth is stretched against the
+    // plane's foreshortening, so it reads as the square and not a dash)
+    const a = px(new THREE.Vector3(hub.x - 0.5, 0, hub.z)), b = px(new THREE.Vector3(hub.x + 0.5, 0, hub.z));
+    const f = px(new THREE.Vector3(hub.x, 0, hub.z - 0.5)), n = px(new THREE.Vector3(hub.x, 0, hub.z + 0.5));
+    hubSq.scale.set(14 / Math.max(1, b.x - a.x), 14 / Math.max(1, n.y - f.y), 1);
+    hubSq.position.set(hub.x, 0.005, hub.z);
+    // the far plane fades into the ground
+    scene.fog.near = d * 0.9;
+    scene.fog.far = d * 1.9;
+    if (warp.idx >= 0) warp.end = endPose(warp.idx);
+  }
+
+  /* ---------- the warp: the sheet squares up, the camera dives in until it fills the frame ---------- */
+  function endPose(i) {
+    const s = sheets[i], h2 = (SH * U) / 2;
+    const C = new THREE.Vector3(s.foot.x, FOOT + 0.32 + h2, s.foot.z);
+    const psi = Math.atan2(base.pos.x - C.x, base.pos.z - C.z);
+    const n = new THREE.Vector3(Math.sin(psi), 0, Math.cos(psi));
+    const t = Math.tan((camera.fov * DEG) / 2);
+    const d = Math.max(h2 / t, (SW * U) / 2 / (t * camera.aspect)) * 1.045;
+    return { C, n, d, P: C.clone().addScaledVector(n, d), quat: new THREE.Quaternion().setFromEuler(new THREE.Euler(0, psi, 0, "YXZ")) };
+  }
+  function tweenW(to, dur, done) {
+    tw.on = true;
+    tw.t0 = performance.now();
+    tw.from = warpW;
+    tw.to = to;
+    tw.dur = dur;
+    tw.done = done;
+    kick();
+  }
+  function warpIn(i) {
+    if (state !== "map" || i < 0) return;
+    warp.idx = i;
+    layer.inert = pick.inert = true;
+    if (reduced) {
+      state = "arrived";
+      showArrival();
+      return;
+    }
+    state = "in";
+    warp.end = endPose(i);
+    tweenW(1, 1250, null);
+  }
+  function sheetRect(i) {
+    const s = sheets[i];
+    const ps = [[-BX, -BY], [BX, -BY], [BX, BY], [-BX, BY]].map(([x, y]) => px(s.g.localToWorld(new THREE.Vector3(x, y, 0))));
+    return {
+      l: clamp(Math.min(...ps.map((p) => p.x)), 0, W), r: clamp(Math.max(...ps.map((p) => p.x)), 0, W),
+      t: clamp(Math.min(...ps.map((p) => p.y)), 0, H), b: clamp(Math.max(...ps.map((p) => p.y)), 0, H),
+    };
+  }
+  const insetOf = (r) => `inset(${r.t.toFixed(1)}px ${(W - r.r).toFixed(1)}px ${(H - r.b).toFixed(1)}px ${r.l.toFixed(1)}px)`;
+  const setFrame = (r) => {
+    arrFrame.style.top = r ? r.t + "px" : "";
+    arrFrame.style.right = r ? W - r.r + "px" : "";
+    arrFrame.style.bottom = r ? H - r.b + "px" : "";
+    arrFrame.style.left = r ? r.l + "px" : "";
+  };
+  function showArrival() {
+    state = "arrived";
+    fillArrival(warp.idx);
+    arrival.hidden = false;
+    arrival.querySelector(".arr-scroll").scrollTop = 0;
+    if (!reduced) {
+      // the paper of the 3D sheet becomes the page: the clip opens from the sheet's outline to the frame
+      const r = sheetRect(warp.idx);
+      arrival.style.transition = arrFrame.style.transition = "none";
+      arrival.style.clipPath = insetOf(r);
+      setFrame(r);
+      void arrival.offsetWidth;
+      arrival.style.transition = arrFrame.style.transition = "";
+      arrival.style.clipPath = "inset(0px 0px 0px 0px)";
+      setFrame(null);
+    } else void arrival.offsetWidth;
+    arrival.classList.add("is-in");
+    sizeFigure();
+    arrival.querySelector(".arr-t").focus({ preventScroll: true });
+  }
+  function back() {
+    if (state === "arrived") {
+      state = "leaving";
+      const i = warp.idx;
+      arrival.classList.remove("is-in");
+      const finish = () => {
+        arrival.hidden = true;
+        arrival.style.clipPath = "";
+        setFrame(null);
+        layer.inert = pick.inert = false;
+        sheets[i].btn.focus({ preventScroll: true });
+        if (reduced || warpW === 0) {
+          state = "map";
+          warp.idx = -1;
+          kick();
+          return;
+        }
+        state = "out";
+        tweenW(0, 1050, () => {
+          state = "map";
+          warp.idx = -1;
+        });
+      };
+      if (reduced) return void setTimeout(finish, 160);
+      setTimeout(() => {
+        const r = sheetRect(i);
+        arrival.style.clipPath = insetOf(r);
+        setFrame(r);
+      }, 90);
+      setTimeout(finish, 90 + 340);
+    } else if (state === "in") {
+      state = "out";
+      layer.inert = pick.inert = false;
+      tweenW(0, Math.max(300, 1050 * warpW), () => {
+        state = "map";
+        warp.idx = -1;
+      });
+    }
+  }
+
+  /* ---------- the arrival sheet ---------- */
+  const NS = "http://www.w3.org/2000/svg";
+  let figVB = null;
+  function fillArrival(i) {
+    const d = DESTS[i], q = (s) => arrival.querySelector(s);
+    const contact = d.path.startsWith("#");
+    q(".arr-no .num").textContent = d.num;
+    q(".arr-lab").innerHTML = `<span class="num">${d.num}</span> · ${d.heading}`;
+    q(".arr-t").textContent = d.title;
+    q(".arr-sn").textContent = d.num;
+    q(".arr-tt").textContent = d.title;
+    q(".arr-tl").textContent = d.line;
+    q(".arr-go").textContent = contact ? "#contact · the brief below this map" : d.path;
+    q(".arr-note").hidden = !contact;
+    q(".tb-link").href = "https://www.rajatkumarr.com" + (contact ? "/" : "") + d.path;
+    q(".arr-cap").textContent = `Detail ${d.num} · ${d.heading}, the page in miniature`;
+    // the miniature again, at full size, drawn on stroke by stroke
+    const S = MINI[i](), t = timeline(S), segs = S.flat();
+    const xs = segs.flatMap((s) => [s[0], s[2]]), ys = segs.flatMap((s) => [s[1], s[3]]);
+    const pad = 6, x0 = Math.min(...xs) - pad, x1 = Math.max(...xs) + pad, y0 = Math.min(...ys) - pad, y1 = Math.max(...ys) + pad;
+    const svg = document.createElementNS(NS, "svg");
+    svg.setAttribute("viewBox", `${x0} ${-y1} ${x1 - x0} ${y1 - y0}`);
+    svg.setAttribute("preserveAspectRatio", "xMinYMid meet");
+    svg.setAttribute("aria-hidden", "true");
+    figVB = { w: x1 - x0, h: y1 - y0 };
+    const total = 1100, start = 300;
+    segs.forEach(([a, b, c, e], k) => {
+      const p = document.createElementNS(NS, "path");
+      p.setAttribute("d", `M${a} ${-b}L${c} ${-e}`);
+      p.setAttribute("pathLength", "1");
+      p.style.setProperty("--a", `${Math.round(start + t[2 * k] * total)}ms`);
+      p.style.setProperty("--b", `${Math.max(16, Math.round((t[2 * k + 1] - t[2 * k]) * total))}ms`);
+      svg.append(p);
+    });
+    q(".arr-svg").replaceChildren(svg);
+  }
+  function sizeFigure() {
+    const svg = arrival.querySelector(".arr-svg svg");
+    if (!svg || !figVB) return;
+    const r = svg.getBoundingClientRect();
+    const s = Math.min(r.width / figVB.w, r.height / figVB.h) || 1;
+    svg.style.setProperty("--sw", (1.25 / s).toFixed(4));
+  }
+
+  /* ---------- input: hover and focus mark a sheet out; click or Enter dives in; touch taps to choose ---------- */
+  const ray = new THREE.Raycaster();
+  const ndc = new THREE.Vector2();
+  function hitAt(cx, cy) {
+    const r = sec.getBoundingClientRect();
+    ndc.set(((cx - r.left) / W) * 2 - 1, -((cy - r.top) / H) * 2 + 1);
+    ray.setFromCamera(ndc, camera);
+    const h = ray.intersectObjects(papers, false)[0];
+    return h ? h.object.userData.i : -1;
+  }
+  const active = () => {
+    lastActive = performance.now();
+    kick();
+  };
+  function select(i) {
+    selIdx = i;
+    pick.classList.toggle("has", i >= 0);
+    if (i >= 0) {
+      const d = DESTS[i];
+      pick.querySelector(".pick-lab").innerHTML = `<span class="num">${d.num}</span> · ${d.heading}`;
+      pick.querySelector(".pick-t").textContent = d.title;
+      pick.querySelector(".pick-l").textContent = d.line;
+    }
+    kick();
+  }
+  pick.querySelector(".pick-go").addEventListener("click", () => warpIn(selIdx));
+
+  sheets.forEach((s, i) => {
+    s.btn.addEventListener("focus", () => {
+      if (s.btn.matches(":focus-visible")) focusIdx = i;
+      active();
+    });
+    s.btn.addEventListener("blur", () => {
+      if (focusIdx === i) focusIdx = -1;
+      kick();
+    });
+    s.btn.addEventListener("click", (e) => {
+      const type = e.pointerType || (e.detail ? lastPointer : "key");
+      if (type === "touch" && selIdx !== i) select(i);
+      else warpIn(i);
+    });
+  });
+
+  sec.addEventListener("pointerdown", (e) => {
+    lastPointer = e.pointerType;
+    if (state !== "map" || e.target.closest(".arrival, .pick")) return;
+    active();
+    if (e.pointerType === "mouse" && e.button !== 0) return;
+    down = { id: e.pointerId, x: e.clientX, y: e.clientY, type: e.pointerType, moved: false, onCanvas: e.target === canvas, yaw: drag.ty, pitch: drag.tp };
+    if (e.pointerType === "mouse" && e.target === canvas) canvas.setPointerCapture(e.pointerId);
+  });
+  sec.addEventListener("pointermove", (e) => {
+    if (state !== "map") return;
+    const r = sec.getBoundingClientRect();
+    if (e.pointerType === "mouse") {
+      par.tx = clamp(((e.clientX - r.left) / W) * 2 - 1, -1, 1);
+      par.ty = clamp(((e.clientY - r.top) / H) * 2 - 1, -1, 1);
+      if (!down) {
+        const b = e.target.closest && e.target.closest(".dest-btn");
+        hoverIdx = b ? sheets.findIndex((s) => s.btn === b) : e.target === canvas ? hitAt(e.clientX, e.clientY) : -1;
+        sec.classList.toggle("over", hoverIdx >= 0);
+      }
+    }
+    if (down && e.pointerId === down.id) {
+      const dx = e.clientX - down.x, dy = e.clientY - down.y;
+      if (!down.moved && Math.hypot(dx, dy) > 6) {
+        // touch: a vertical move is the page scrolling (touch-action: pan-y), not a look
+        if (down.type !== "mouse" && Math.abs(dy) > Math.abs(dx)) {
+          down = null;
+          return;
+        }
+        down.moved = true;
+        dragging = true;
+        sec.classList.add("dragging");
+      }
+      if (down.moved && !reduced) {
+        drag.ty = clamp(down.yaw - dx * 0.16 * DEG, -18 * DEG, 18 * DEG);
+        if (down.type === "mouse") drag.tp = clamp(down.pitch + dy * 0.1 * DEG, -7 * DEG, 9 * DEG);
+      }
+    }
+    active();
+  });
+  const up = (e) => {
+    if (!down || e.pointerId !== down.id) return;
+    const d = down;
+    down = null;
+    if (d.moved) {
+      // let go: the view springs back to the composed one
+      dragging = false;
+      sec.classList.remove("dragging");
+      drag.ty = 0;
+      drag.tp = 0;
+      suppressClick = true;
+      setTimeout(() => (suppressClick = false), 0);
+      kick();
+      return;
+    }
+    if (e.type !== "pointerup" || !d.onCanvas || state !== "map") return;
+    const hit = hitAt(e.clientX, e.clientY);
+    if (d.type === "mouse") warpIn(hit);
+    else if (hit >= 0 && hit === selIdx) warpIn(hit);
+    else select(hit);
+  };
+  sec.addEventListener("pointerup", up);
+  sec.addEventListener("pointercancel", up);
+  sec.addEventListener("click", (e) => {
+    if (suppressClick) {
+      e.preventDefault();
+      e.stopPropagation();
+    }
+  }, true);
+  sec.addEventListener("pointerleave", (e) => {
+    if (e.pointerType !== "mouse") return;
+    hoverIdx = -1;
+    par.tx = par.ty = 0;
+    sec.classList.remove("over");
+    kick();
+  });
+  arrival.querySelector(".arr-back").addEventListener("click", back);
+  document.addEventListener("keydown", (e) => {
+    if (e.key !== "Escape") return;
+    if (state === "arrived" || state === "in") {
+      e.preventDefault();
+      back();
+    } else if (state === "map" && selIdx >= 0) select(-1);
+  });
+
+  /* ---------- the frame: render on demand ---------- */
+  let raf = 0, last = performance.now();
+  function kick() {
+    if (!raf) raf = requestAnimationFrame(frame);
+  }
+  const vA = new THREE.Vector3(), vB = new THREE.Vector3(), vC = new THREE.Vector3();
+  const P1 = new THREE.Vector3(), P2 = new THREE.Vector3();
+  function frame() {
+    raf = 0;
+    const now = performance.now(); // one clock for the frame, the tweens and the activity timer
+    const dt = clamp((now - last) / 1000, 0.001, 0.1);
+    last = now;
+    if (!inView) return;
+    let busy = false;
+
+    if (tw.on) {
+      const u = Math.min(1, (now - tw.t0) / tw.dur);
+      warpW = tw.from + (tw.to - tw.from) * attack(u);
+      busy = true;
+      // the page takes over while the camera settles its last few percent
+      if (state === "in" && u >= 0.72) showArrival();
+      if (u >= 1) {
+        tw.on = false;
+        const f = tw.done;
+        tw.done = null;
+        if (f) f();
+      }
+    }
+    const e = warpW;
+
+    // breathing while someone is here; still a few seconds after the last move
+    const aliveT = !reduced && state === "map" && now - lastActive < 5000 ? 1 : 0;
+    alive += (aliveT - alive) * (1 - Math.exp(-dt * 2));
+    if (Math.abs(aliveT - alive) < 0.003) alive = aliveT;
+    if (alive > 0) busy = true;
+
+    if (state === "map") {
+      const kp = 1 - Math.exp(-dt * 4);
+      par.x += (par.tx * (reduced ? 0 : 1) - par.x) * kp;
+      par.y += (par.ty * (reduced ? 0 : 1) - par.y) * kp;
+      const kd = 1 - Math.exp(-dt * (dragging ? 14 : 3));
+      drag.yaw += (drag.ty - drag.yaw) * kd;
+      drag.pitch += (drag.tp - drag.pitch) * kd;
+      if (Math.abs(par.x - par.tx) + Math.abs(par.y - par.ty) > 1e-4 && !reduced) busy = true;
+      if (Math.abs(drag.yaw - drag.ty) + Math.abs(drag.pitch - drag.tp) > 1e-4) busy = true;
+    }
+
+    // which sheet is marked out: pointed at, else focused, else chosen (touch); frozen during a warp
+    const hot = state === "map" ? (dragging ? -1 : hoverIdx >= 0 ? hoverIdx : focusIdx >= 0 ? focusIdx : selIdx) : null;
+    sheets.forEach((s, i) => {
+      if (hot !== null) {
+        const want = i === hot ? 1 : 0;
+        if (want === 1 && s.want === 0 && !reduced) s.drawAt = now;
+        s.want = want;
+      }
+      if (reduced) s.hv = s.want;
+      else {
+        s.hv += (s.want - s.hv) * (1 - Math.exp(-dt * 12));
+        if (Math.abs(s.want - s.hv) < 1e-3) s.hv = s.want;
+        else busy = true;
+      }
+      if (s.drawAt !== null) {
+        const p = (now - s.drawAt) / DRAW_MS;
+        if (p >= 1) {
+          s.drawAt = null;
+          s.p = 2;
+        } else {
+          s.p = p;
+          busy = true;
+        }
+      }
+    });
+
+    // the camera on the map: the composed view, a little pointer parallax, a drag's look-around
+    const th = base.th + par.x * 2.2 * DEG + drag.yaw;
+    const ph = base.ph - par.y * 1.1 * DEG + drag.pitch;
+    mapPos.set(base.T.x + base.d * Math.sin(th) * Math.cos(ph), base.T.y + base.d * Math.sin(ph), base.T.z + base.d * Math.cos(th) * Math.cos(ph));
+    sheets.forEach((s, i) => {
+      const q = 1 - s.hv, f = i * 1.7;
+      pose(s, s.hv, 0.03 * alive * q * Math.sin(now / 1150 + f), 0.012 * alive * q * Math.sin(now / 1700 + f * 0.7), base.pos, s.mpos, s.mquat);
+      s.g.position.copy(s.mpos);
+      s.g.quaternion.copy(s.mquat);
+    });
+    camPos.copy(mapPos);
+    look.copy(base.T);
+    let ox = base.ox, oy = base.oy;
+    if (warp.idx >= 0 && e > 0 && warp.end) {
+      // a curve that ends square on to the sheet; the sheet turns to meet it
+      const E = warp.end;
+      P2.copy(E.P).addScaledVector(E.n, E.d * 0.8);
+      P1.copy(mapPos).lerp(P2, 0.35);
+      const u = e, a = (1 - u) ** 3, b = 3 * (1 - u) ** 2 * u, c = 3 * (1 - u) * u * u, d = u ** 3;
+      camPos.set(0, 0, 0).addScaledVector(mapPos, a).addScaledVector(P1, b).addScaledVector(P2, c).addScaledVector(E.P, d);
+      look.lerp(E.C, smooth(seg(e, 0, 0.6)));
+      const k = 1 - smooth(seg(e, 0, 0.7));
+      ox *= k;
+      oy *= k;
+      const s = sheets[warp.idx], turn = smooth(seg(e, 0, 0.7));
+      s.g.position.lerpVectors(s.mpos, E.C, turn);
+      s.g.quaternion.slerpQuaternions(s.mquat, E.quat, turn);
+    }
+    camera.position.copy(camPos);
+    camera.lookAt(look);
+    camera.updateMatrixWorld();
+    if (Math.abs(ox) + Math.abs(oy) > 0.01) camera.setViewOffset(W, H, ox, oy, W, H);
+    else camera.clearViewOffset();
+
+    // materials: marked out = inked border and blue construction; the rest fade as the camera dives
+    const others = 1 - seg(e, 0, 0.45);
+    sheets.forEach((s, i) => {
+      const f = warp.idx >= 0 && i !== warp.idx ? others : 1;
+      s.g.visible = f > 0.002;
+      s.paperMat.opacity = f;
+      s.paperMat.depthWrite = f > 0.999;
+      s.borderMat.color.copy(COL.hair).lerp(COL.ink, s.hv);
+      s.borderMat.opacity = f;
+      s.tbMat.opacity = f;
+      s.txtMat.opacity = f;
+      s.inkMat.opacity = 0.92 * f;
+      s.inkMat.dashSize = s.p;
+      s.ghost.visible = s.p < 1;
+      s.ghostMat.opacity = 0.2 * f;
+      s.conMat.opacity = s.hv * f * (1 - seg(e, 0, 0.3));
+      s.con.visible = s.conMat.opacity > 0.002;
+      const lo = (0.42 + 0.5 * s.hv) * (1 - seg(e, 0, 0.35));
+      leaders[i].material.opacity = lo;
+      leaders[i].visible = lo > 0.002;
+    });
+    groundMat.opacity = 1 - 0.6 * seg(e, 0, 0.5);
+    // "you are here" belongs to the map: it goes with the leaders (its 14px stretch only holds from the map's view)
+    hubSq.material.opacity = 1 - seg(e, 0, 0.35);
+    hubSq.visible = hubSq.material.opacity > 0.002;
+
+    renderer.render(scene, camera);
+    overlay(e);
+    if (busy) kick();
+  }
+
+  // the DOM layer follows the drawing: labels on the sheets' top edges, callouts at their feet, readouts on the
+  // dimension lines, the "you are here" note beside the square
+  function overlay(e) {
+    const o = 1 - seg(e, 0, 0.16);
+    const os = o.toFixed(3);
+    layer.style.opacity = head.style.opacity = hint.style.opacity = pick.style.opacity = os;
+    if (o <= 0) return;
+    const T = (el, p) => (el.style.transform = `translate3d(${Math.round(p.x)}px, ${Math.round(p.y)}px, 0)`);
+    sheets.forEach((s) => {
+      // above the top edge's highest point, so a turned sheet's rising edge never runs into its label
+      const gap = BY + 10 + 34 * s.hv;
+      const tl = px(s.g.localToWorld(vA.set(-BX, gap, 0))), tr = px(s.g.localToWorld(vB.set(BX, gap, 0)));
+      T(s.el, { x: tl.x, y: Math.min(tl.y, tr.y) });
+      s.el.classList.toggle("is-hot", s.want === 1);
+      T(s.co, px(s.callout));
+      s.co.classList.toggle("is-hot", s.want === 1);
+      if (s.hv > 0.01) {
+        const ps = [[-BX, -BY], [BX, -BY], [BX, BY], [-BX, BY]].map(([x, y]) => px(s.g.localToWorld(vB.set(x, y, 0))));
+        const w = Math.round(Math.max(...ps.map((p) => p.x)) - Math.min(...ps.map((p) => p.x)));
+        const h = Math.round(Math.max(...ps.map((p) => p.y)) - Math.min(...ps.map((p) => p.y)));
+        const txt = `${w} × ${h} px`;
+        if (txt !== s.dimText) s.dim.textContent = s.dimText = txt;
+        T(s.dim, px(s.g.localToWorld(vC.set(0, BY + 28, 0))));
+        s.dim.style.opacity = s.hv.toFixed(3);
+      } else if (s.dim.style.opacity !== "0") s.dim.style.opacity = "0";
+    });
+    T(root, px(hub));
+  }
+
+  /* ---------- go ---------- */
+  new IntersectionObserver((es) => {
+    inView = es[es.length - 1].isIntersecting;
+    if (inView) {
+      lastActive = performance.now();
+      last = performance.now();
+      kick();
+    }
+  }).observe(sec);
+  let rz = 0;
+  new ResizeObserver(() => {
+    clearTimeout(rz);
+    rz = setTimeout(() => {
+      layout();
+      sizeFigure();
+      kick();
+    }, 60);
+  }).observe(sec);
+
+  sec.prepend(canvas);
+  sec.classList.remove("no-gl");
+  sec.classList.add("gl");
+  layout();
+  renderer.compile(scene, camera);
+  kick();
+
+  // for the review harness: where the sheets are on screen, and the draw calls of the last frame
+  window.__wtn = {
+    get state() { return state; },
+    centers: () => sheets.map((s) => { const p = px(s.g.localToWorld(vA.set(0, 0, 0))); return [Math.round(p.x), Math.round(p.y)]; }),
+    calls: () => renderer.info.render.calls,
+    frames: () => renderer.info.render.frame,
+    sheets: () => sheets.map((s) => ({ hv: +s.hv.toFixed(3), draw: +Math.min(1, s.p).toFixed(3) })),
+    warp: () => +warpW.toFixed(3),
+  };
+}
+</script>
+</body>
+</html>

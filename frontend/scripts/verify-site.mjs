@@ -980,6 +980,151 @@ async function checkChapters(browser) {
   return out;
 }
 
+// "Where to next" as a sheet set (components/home/sheet-map.tsx): the 3D map comes up as #map nears the view; pointing
+// at a sheet or Tab to its link marks it out and opens its label; Enter dives in and lands on /projects; Esc in the dive
+// goes back; Contact dives to the brief; a phone taps a sheet to choose it, then Go. No WebGL and reduced motion keep
+// the plain links.
+async function mapUp(page) {
+  await page.evaluate(() => document.getElementById("map").scrollIntoView());
+  const up = await page
+    .waitForFunction(() => document.getElementById("map").classList.contains("map-3d") && !!document.querySelector("#map .map-canvas"), null, { timeout: 15000 })
+    .then(() => true, () => false);
+  // square in the window, under the sticky header
+  await page.evaluate(() => window.scrollBy(0, document.getElementById("map").getBoundingClientRect().top - document.getElementById("top").getBoundingClientRect().height));
+  await page.waitForTimeout(600);
+  return up;
+}
+async function checkSheetMap(browser) {
+  const out = [];
+  const check = (ok, msg) => out.push({ ok: !!ok, msg });
+  const hot = (page) => page.evaluate(() => [...document.querySelectorAll("#map .map-nodes > li")].map((li) => (li.classList.contains("is-hot") ? 1 : 0)).join(""));
+  const warp = (page) => page.evaluate(() => document.getElementById("map").dataset.warp);
+  // keyboard focus on link n (1-based): from the heading, Tab n times
+  const tabTo = async (page, n) => {
+    await page.evaluate(() => {
+      const h = document.getElementById("map-h");
+      h.tabIndex = -1;
+      h.focus({ preventScroll: true });
+    });
+    for (let i = 0; i < n; i++) await page.keyboard.press("Tab");
+  };
+  const fresh = async (opts) => {
+    const ctx = await browser.newContext({ viewport: { width: 1440, height: 900 }, ...opts });
+    await ctx.route("**/api/contact", (route) => route.fulfill({ status: 200, contentType: "application/json", body: "{}" }));
+    const page = await ctx.newPage();
+    const errors = [];
+    page.on("console", (m) => { if (m.type() === "error") errors.push(m.text()); });
+    page.on("pageerror", (e) => errors.push(e.message));
+    await page.goto(BASE_URL + "/", { waitUntil: "load" });
+    return { ctx, page, errors };
+  };
+
+  {
+    const { ctx, page, errors } = await fresh();
+    check(!(await page.evaluate(() => !!document.querySelector("#map .map-canvas"))), "far from #map there is no map canvas yet");
+    check(await mapUp(page), "the 3D map comes up as #map nears the view");
+    // the second sheet, on the canvas: between its link's foot and its callout
+    const at = await page.evaluate(() => {
+      const li = document.querySelectorAll("#map .map-nodes > li")[1].getBoundingClientRect();
+      const co = document.querySelectorAll("#map .map-co")[1].getBoundingClientRect();
+      return { x: co.left + co.width / 2, y: (li.bottom + co.top) / 2 };
+    });
+    // (the labels unfold by CSS transition: waited for, not slept on, since SwiftShader draws the map a few frames a second)
+    const unfolded = (i) =>
+      page
+        .waitForFunction(
+          (i) => {
+            const li = document.querySelectorAll("#map .map-nodes > li")[i];
+            return li.classList.contains("is-hot") && li.querySelector(".node-more").getBoundingClientRect().height > 10 && getComputedStyle(li.querySelector(".node-more")).opacity === "1";
+          },
+          i,
+          { timeout: 8000 }
+        )
+        .catch(() => {});
+    await page.mouse.move(at.x, at.y);
+    await unfolded(1);
+    const opened = () => page.evaluate(() => [...document.querySelectorAll("#map .node-more")].map((d) => Math.round(d.getBoundingClientRect().height)));
+    const h1 = await hot(page);
+    const d1 = await opened();
+    check(h1 === "0100" && d1[1] > 10 && d1[0] === 0, `pointing at sheet 02 marks it out and opens its label (hot ${h1}, label lines ${d1.join("/")}px)`);
+    // moving a little lower, where the label has risen from, keeps it marked out
+    await page.mouse.move(at.x + 4, at.y + 6);
+    await page.waitForTimeout(300);
+    check((await hot(page)) === "0100", "it stays marked out as the pointer moves over it");
+    await page.mouse.move(4, 4);
+    await tabTo(page, 1);
+    await unfolded(0);
+    await page.waitForFunction(() => getComputedStyle(document.querySelectorAll("#map .node-more")[1]).opacity === "0", null, { timeout: 8000 }).catch(() => {});
+    const h2 = await hot(page);
+    const d2 = await opened();
+    check(h2 === "1000" && d2[0] > 10, `Tab to the first link marks out sheet 01 and opens its label (hot ${h2}, label lines ${d2.join("/")}px)`);
+    await page.waitForTimeout(1500); // the marked-out sheet finishes lifting, its link with it
+    const head = await page.evaluate(() => {
+      const hb = document.querySelector("#map .sec-head").getBoundingClientRect().bottom;
+      return Math.round(document.querySelector("#map .map-nodes > li.is-hot").getBoundingClientRect().top - hb);
+    });
+    check(head >= 0, `the open label clears the heading (${head}px below it)`);
+    await page.keyboard.press("Enter");
+    await page.waitForTimeout(100);
+    const w = await warp(page);
+    const landed = await page.waitForURL("**/projects", { timeout: 10000 }).then(() => true, () => false);
+    check(w === "in" && landed, `Enter dives in (${w}) and lands on /projects (${page.url()})`);
+    check(errors.length === 0, `no console errors${errors.length ? ": " + errors.join(" | ") : ""}`);
+    await ctx.close();
+  }
+  {
+    const { ctx, page } = await fresh();
+    await mapUp(page);
+    await tabTo(page, 2);
+    await page.keyboard.press("Enter");
+    await page.waitForTimeout(100);
+    const mid = await warp(page);
+    await page.keyboard.press("Escape");
+    const back = await page.waitForFunction(() => document.getElementById("map").dataset.warp === "map", null, { timeout: 5000 }).then(() => true, () => false);
+    await page.waitForTimeout(1200);
+    check(mid === "in" && back && new URL(page.url()).pathname === "/", `Esc in the dive goes back to the map (${mid} -> ${await warp(page)}, still at ${new URL(page.url()).pathname})`);
+    await tabTo(page, 4);
+    await page.keyboard.press("Enter");
+    const brief = await page.waitForFunction(() => location.hash === "#contact", null, { timeout: 10000 }).then(() => true, () => false);
+    await page.waitForTimeout(500);
+    const top = await page.evaluate(() => Math.round(document.getElementById("contact").getBoundingClientRect().top));
+    check(brief && top < 900 && (await warp(page)) === "map", `Contact dives, then lands on the brief (#contact at ${top}px), the map at rest behind it`);
+    await ctx.close();
+  }
+  {
+    const { ctx, page, errors } = await fresh({ viewport: { width: 390, height: 844 }, deviceScaleFactor: 3, isMobile: true, hasTouch: true });
+    check(await mapUp(page), "phone: the 3D map comes up");
+    await page.locator("#map .map-nodes > li").nth(0).locator("a").tap();
+    await page.waitForTimeout(500);
+    const chosen = await page.evaluate(() => ({ has: document.querySelector(".map-pick")?.classList.contains("has"), t: document.querySelector(".map-pick-t")?.textContent, url: location.pathname }));
+    check(chosen.has && chosen.t === "The work, drawn" && chosen.url === "/", `phone: tapping a sheet's link chooses it (the dock reads "${chosen.t}"), it doesn't leave`);
+    await page.locator(".map-pick-go").tap();
+    const landed = await page.waitForURL("**/projects", { timeout: 10000 }).then(() => true, () => false);
+    check(landed, `phone: Go dives in and lands on /projects (${page.url()})`);
+    const overflow = await page.evaluate(() => document.documentElement.scrollWidth - document.documentElement.clientWidth);
+    check(overflow <= 0 && errors.length === 0, `phone: no horizontal overflow (${overflow}), no console errors${errors.length ? ": " + errors.join(" | ") : ""}`);
+    await ctx.close();
+  }
+  const plain = async (page) => {
+    await page.goto(BASE_URL + "/", { waitUntil: "load" });
+    await page.evaluate(() => document.getElementById("map").scrollIntoView());
+    await page.waitForTimeout(2000);
+    return page.evaluate(() => ({
+      gl: document.getElementById("map").classList.contains("map-3d") || !!document.querySelector("#map canvas"),
+      links: [...document.querySelectorAll("#map .node")].filter((a) => a.getBoundingClientRect().height > 40).length,
+    }));
+  };
+  const noGl = await withNoWebGL(browser, plain);
+  check(!noGl.gl && noGl.links === 4, `no WebGL: the plain map, four links (${noGl.links})`);
+  {
+    const ctx = await browser.newContext({ viewport: { width: 1440, height: 900 }, reducedMotion: "reduce" });
+    const r = await plain(await ctx.newPage());
+    check(!r.gl && r.links === 4, `reduced motion: the plain map, four links (${r.links})`);
+    await ctx.close();
+  }
+  return out;
+}
+
 // The page's initial JS as transferred (gzip): the scripts named in the server HTML. The stage's dynamic import of
 // three is not among them (sniffing for "WebGLRenderer" also matched the home's own route chunk).
 async function jsBytesAtLoad(page) {
@@ -1089,8 +1234,19 @@ async function checkHomePerf(browser) {
   await client.send("Emulation.setCPUThrottlingRate", { rate: 4 });
   const slow = await scrub(-8);
   console.log(`[home perf] info: 4x CPU frame p50 ${pct(slow, 0.5).toFixed(1)}, p95 ${pct(slow, 0.95).toFixed(1)}ms`);
-
   await client.send("Emulation.setCPUThrottlingRate", { rate: 1 });
+
+  // the same gate with both canvases up: the stage's (still alive above) and the sheet map's, which draws every frame
+  // for a few seconds after it comes into view (scrubbed in from just below the window)
+  const mapOk = await mapUp(page);
+  await page.evaluate(() => window.scrollBy(0, -window.innerHeight));
+  await page.waitForTimeout(300);
+  const both = await page.evaluate(() => document.querySelectorAll("canvas").length);
+  const atMap = await scrub(3);
+  check(
+    mapOk && both >= 2 && pct(atMap, 0.5) <= 17.5 && pct(atMap, 0.95) <= 25,
+    `scrubbing into the sheet map (${both} canvases) holds 60fps at 1x CPU: frame p50 <= 17.5ms, p95 <= 25ms (got p50 ${pct(atMap, 0.5).toFixed(1)}, p95 ${pct(atMap, 0.95).toFixed(1)}ms)`
+  );
   await ctx.close();
   return out;
 }
@@ -1350,6 +1506,7 @@ async function main() {
       ["home steps fit", checkStepsFit],
       ["wide", checkWide],
       ["home chapters", checkChapters],
+      ["home sheet map", checkSheetMap],
       ["contact armed+sent", checkContactArmedAndSent],
       ["contact field error", checkContactFieldError],
       ["contact empty submit", checkContactEmptySubmitBlocked],

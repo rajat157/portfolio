@@ -40,6 +40,10 @@ const nextConfig: NextConfig = {
   turbopack: {
     root: path.resolve(dirname),
   },
+  // unmatched URLs render src/app/global-not-found.tsx as a whole document (there is no root layout to wrap it)
+  experimental: {
+    globalNotFound: true,
+  },
   // /admin lives on this origin, so no framing by other sites; plus the two cheap defaults
   async headers() {
     return [
