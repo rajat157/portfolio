@@ -1128,7 +1128,8 @@ async function checkSheetMap(browser) {
 // Section paging (components/home/smooth-scroll.tsx): inside a section (the hero's story, Who I am's stops, the brief)
 // the page scrolls freely; a wheel or a drag that would leave it turns straight to the next section's first frame (the
 // previous one's last, going up), and the rest of that gesture is spent, so a trackpad's flick stops at the next
-// section. Who I am opens its first stop on arrival; the brief's text box scrolls itself; reduced motion has none of it.
+// section. Who I am opens its first stop on arrival; the brief's text box scrolls itself; a pinch zooms; reduced motion
+// has none of it.
 async function checkPaging(browser) {
   const out = [];
   const check = (ok, msg) => out.push({ ok: !!ok, msg });
@@ -1223,7 +1224,13 @@ async function checkPaging(browser) {
     y = await wheel(-100);
     check(near(y, m.whoEnd), `a notch up at the map turns back to Who I am's end (${m.map} -> ${y}, want ${m.whoEnd})`);
 
-    // a trackpad's flick: 50 wheel events ~16ms apart, decaying, sent without waiting on the page (as a real one comes)
+    // a trackpad's flick: 50 wheel events ~16ms apart, decaying, sent without waiting on the page (as a real one comes).
+    // The sends resolve before the page has them all: under the software renderer they trickle in a frame apart for
+    // seconds, so wait until none has come for a second (or the brief's check below lands in the flick's tail).
+    await page.evaluate(() => {
+      window.__wheelAt = performance.now();
+      addEventListener("wheel", () => (window.__wheelAt = performance.now()), { passive: true });
+    });
     const cdp = await ctx.newCDPSession(page);
     const sent = [];
     for (let i = 0; i < 50; i++) {
@@ -1231,6 +1238,7 @@ async function checkPaging(browser) {
       await new Promise((r) => setTimeout(r, 16));
     }
     await Promise.all(sent);
+    await page.waitForFunction(() => performance.now() - window.__wheelAt > 1000, null, { timeout: 30000, polling: 100 }).catch(() => {});
     y = await settle(page);
     m = await marks(page);
     check(near(y, m.map), `a 50-event trackpad flick from Who I am's end stops at the map (${m.whoEnd} -> ${y}, want ${m.map})`);
@@ -1280,6 +1288,31 @@ async function checkPaging(browser) {
     check(near(y, m.who), `phone: a drag at the hero's end turns to Who I am's first frame (${m.heroEnd} -> ${y}, want ${m.who})`);
     y = await drag(150);
     check(near(y, m.heroEnd), `phone: a drag down there turns back to the hero's end (${m.who} -> ${y}, want ${m.heroEnd})`);
+    // a pinch is the browser's zoom: none of its two-finger moves is cancelled (on Who I am: the stage's canvas is
+    // touch-action: pan-y, so it never zooms)
+    await go(page, m.who);
+    await page.evaluate(() => {
+      window.__pinch = { n: 0, cancelled: 0 };
+      addEventListener(
+        "touchmove",
+        (e) => {
+          if (e.touches.length < 2) return;
+          window.__pinch.n++;
+          if (e.defaultPrevented) window.__pinch.cancelled++;
+        },
+        { passive: true }
+      );
+    });
+    const fingers = [{ x: 195, y: 410, id: 1 }, { x: 195, y: 490, id: 2 }];
+    await cdp.send("Input.dispatchTouchEvent", { type: "touchStart", touchPoints: fingers });
+    for (let i = 1; i <= 12; i++) {
+      await cdp.send("Input.dispatchTouchEvent", { type: "touchMove", touchPoints: fingers.map((f, k) => ({ ...f, y: f.y + (k ? 12 : -12) * i })) });
+      await page.waitForTimeout(20);
+    }
+    await cdp.send("Input.dispatchTouchEvent", { type: "touchEnd", touchPoints: [] });
+    await page.waitForTimeout(600);
+    const pinch = await page.evaluate(() => ({ ...window.__pinch, scale: visualViewport.scale }));
+    check(pinch.n > 0 && pinch.cancelled === 0 && pinch.scale > 1, `phone: a two-finger pinch zooms the page (scale ${pinch.scale}; ${pinch.cancelled} of its ${pinch.n} moves cancelled)`);
     await ctx.close();
   }
 

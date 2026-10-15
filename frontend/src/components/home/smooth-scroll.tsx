@@ -80,15 +80,17 @@ export function SmoothScroll() {
         virtualScroll: ({ deltaY, event }) => {
           const now = performance.now();
           const touch = event.type.startsWith("touch");
+          if (touch && (event as TouchEvent).touches.length > 1) return false; // a pinch: the browser's zoom, uncancelled
           // a pause is 160ms and two frames without input: what a slow frame held up arrives at once, coalesced, after it
           if (touch ? event.type === "touchstart" : now - lastInput > 160 && quiet > 1) gesture++;
           lastInput = now;
           quiet = 0;
           if (held || paging || gesture === swallowed) return spend(event);
-          // zoom, a sideways move and the brief's text box: theirs (Lenis lets the text box scroll itself: `prevent`)
-          if (event.ctrlKey || !deltaY || (event.target as Element).closest?.("textarea")) return true;
           // where this input would take the page (a touch's release: where its fling would coast to)
           const step = event.type === "touchend" ? Math.sign(deltaY) * Math.abs(lenis.velocity) ** 1.7 : deltaY;
+          // zoom, a sideways move, a release with no fling and the brief's text box: theirs (Lenis lets the box scroll
+          // itself: `prevent`)
+          if (event.ctrlKey || !step || (event.target as Element).closest?.("textarea")) return true;
           const pos = lenis.targetScroll;
           const next = pos + step;
           const segs = segments();
