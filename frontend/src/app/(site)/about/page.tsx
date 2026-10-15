@@ -17,7 +17,7 @@ export const metadata: Metadata = {
 const defaultAboutData = {
   headline: "Software Architect & Developer",
   bio_short:
-    "Experienced Software Architect with 10+ years building high-performance systems. From managing India's fastest supercomputer (SahasraT at IISc) to architecting real-time trading platforms, I bring deep expertise in Python, cloud infrastructure, and modern web technologies. Passionate about leveraging AI tools like Claude and Gemini to accelerate development.",
+    "I design and build the software businesses run on: portals and platforms, internal tools, real-time data systems, and sites a team can update themselves. 10+ years in, across Python, cloud infrastructure and modern web stacks, with AI tools like Claude and Gemini where they speed the work up. Along the way I managed SahasraT, India's fastest supercomputer, at IISc.",
   location: "Bangalore, India",
   education: [
     {
