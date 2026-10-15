@@ -27,6 +27,7 @@ import { useRouter } from "next/navigation";
 import type { Group, Mesh, MeshBasicMaterial, Quaternion, Vector3 } from "three";
 import type { LineMaterial } from "three/addons/lines/LineMaterial.js";
 import type { LineSegments2 } from "three/addons/lines/LineSegments2.js";
+import { holdScroll } from "@/components/home/smooth-scroll";
 import { hasWebGL } from "@/components/home/stage";
 import { reducedMotion } from "@/lib/motion";
 import { tick, thunk } from "@/lib/sound";
@@ -773,6 +774,7 @@ async function boot(sec: HTMLElement, go: (href: string) => void): Promise<() =>
   }
   function rest() {
     clearTimeout(stuck);
+    holdScroll(false);
     tw.on = false;
     warpW = 0;
     warp.idx = -1;
@@ -786,6 +788,7 @@ async function boot(sec: HTMLElement, go: (href: string) => void): Promise<() =>
     thunk();
     if (reducedMotion()) return leave(i);
     setState("in");
+    holdScroll(true); // the dive moves the page itself: no smooth scroll or snap meanwhile
     warp.end = endPose(i);
     const top = sec.getBoundingClientRect().top - (document.getElementById("top")?.getBoundingClientRect().height ?? 0);
     const max = document.documentElement.scrollHeight - window.innerHeight;
@@ -809,6 +812,7 @@ async function boot(sec: HTMLElement, go: (href: string) => void): Promise<() =>
     if (state !== "in") return;
     setState("out");
     align = null;
+    holdScroll(false);
     tweenW(0, Math.max(300, 1050 * warpW), () => {
       warp.idx = -1;
       setState("map");
@@ -1177,6 +1181,23 @@ async function boot(sec: HTMLElement, go: (href: string) => void): Promise<() =>
     }
   });
   io.observe(sec);
+  // arriving (most of it in view, after being out of it), the sheets draw their miniatures in, one after another
+  let away = true;
+  const arrive = new IntersectionObserver(
+    (es) => {
+      const r = es[es.length - 1].intersectionRatio;
+      if (r < 0.1) away = true;
+      else if (r >= 0.6 && away) {
+        away = false;
+        if (state !== "map" || reducedMotion()) return;
+        const now = performance.now();
+        sheets.forEach((s, i) => (s.drawAt = now + 150 + i * 130));
+        kick();
+      }
+    },
+    { threshold: [0.1, 0.6] }
+  );
+  arrive.observe(sec);
   let rz = 0;
   const ro = new ResizeObserver(() => {
     clearTimeout(rz);
@@ -1204,7 +1225,9 @@ async function boot(sec: HTMLElement, go: (href: string) => void): Promise<() =>
     clearTimeout(rz);
     clearTimeout(stuck);
     io.disconnect();
+    arrive.disconnect();
     ro.disconnect();
+    if (state === "in" || state === "gone") holdScroll(false);
     for (const el of [head, list, root, ...items]) {
       el.style.opacity = "";
       el.style.transform = "";
