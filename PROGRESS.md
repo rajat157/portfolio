@@ -2,26 +2,35 @@
 
 ## Resume
 
-- NEXT: Rajat reviews smooth scroll + section paging on DRAFT PR #11 (`proto/smooth-snap` @ 731c085; preview, Vercel
-  login: https://portfolio-git-proto-smooth-snap-rajats-projects-6181289d.vercel.app). Merge only on his approval.
-  - His review of options a–c (2026-10-15): "c is the closest, but it moves further down and then snaps back; a and b
-    didn't snap to Where to next; it should snap both ways; maybe Lenis and virtual scroll". Built that way:
-    - Lenis (lerp .2, syncTouch) runs the page through its `virtualScroll` hook (`components/home/smooth-scroll.tsx`).
+- NEXT: finish DRAFT PR #11 (smooth scroll + section paging) and merge it once Rajat gives an explicit OK. On the
+  preview he said "This looks good" (2026-10-15); earlier he said he'd review before approving, so confirm the OK.
+  - Branch `proto/smooth-snap` @ a6a25ed (master @ 6f74db8 merged in). Preview, Vercel login:
+    https://portfolio-git-proto-smooth-snap-rajats-projects-6181289d.vercel.app
+  - How it works (`components/home/smooth-scroll.tsx`): Lenis (lerp .2, syncTouch) runs the page through its
+    `virtualScroll` hook.
     - Inside a section's own scroll the page is free: the hero's story, the chapters' run, the brief to the end.
     - An input that would leave a section is taken over: the page goes straight to the next section's first frame
       (the previous one's last, scrolling up), locked for the turn.
     - The rest of that gesture is spent: input pauses over 160ms start a new one, as does each touchstart.
-  - Also on the branch: steps.tsx opens a stop only once the section is half way up the window, so it draws in on
-    arrival; the sheet map draws its sheets in on arrival and holds the scroll during its dive (`holdScroll`).
-  - Tested on dev (scratchpad scripts, GPU Chrome): notches and bursts both ways across every boundary; CDP touch
-    drags on a phone (`Input.synthesizeScrollGesture` does not scroll headless; raw `dispatchTouchEvent` does).
-  - Perf (production build in the main tree): hero scrub p95 25.6 / 22.1 / 21.6ms against the 25ms gate (master:
-    20–24); map scrub 17.5–19.4ms. Before merging, look at Lenis's per-frame cost (its html class toggles, its rAF).
-  - When he approves:
-    - add harness checks (wheel paging both ways; a burst stops at the map; Who I am draws in on arrival);
-    - run the full matrix in a credential-free verify worktree;
-    - get the perf gate under 25ms;
-    - mark ready and merge.
+  - Also on the branch:
+    - steps.tsx opens a stop only once the section is half way up the window, so it draws in on arrival;
+    - the sheet map draws its sheets in on arrival and holds the scroll during its dive (`holdScroll`).
+  - To do, in order:
+    1. Perf: the hero scrub p95 was 25.6 / 22.1 / 21.6ms against the 25ms gate (master 20–24). Look at Lenis's
+       per-frame cost (its html class toggles, its rAF; maybe `autoRaf`) and get it reliably under 25.
+    2. Harness checks:
+       - wheel paging both ways (hero end ↔ Who I am ↔ its end ↔ map ↔ brief);
+       - a 50-event trackpad burst stops at the map;
+       - Who I am's first stop opens only on arrival;
+       - touch: raw CDP `Input.dispatchTouchEvent` drags work (`synthesizeScrollGesture` doesn't scroll headless).
+       - The scratchpad prototypes of these (pagetest.mjs, touchpage.mjs) are gone with the session; re-write them
+         into verify-site.mjs.
+    3. Full matrix in a credential-free verify worktree; mark #11 ready, retitle it, and merge on his OK.
+  - Then remove `lenis` from the main tree's node_modules if it doesn't ship (it was installed for the branch).
+- Shipped 2026-10-15 (latest): #15. Rajat saw "a weird overlay on Where to next when I hover". It was the knockout
+  #12 put behind a marked-out label: a box over the canvas, with a slightly mismatched edge and the marks hidden.
+  Removed; the label is instead capped at min(17.5rem, 20vw), so it stays clear of its neighbour at 1024. Live,
+  checked with a zoomed hover screenshot.
   - Optional, not done (he gave no preference):
     - the outputFileTracingRoot/turbopack.root build warning. Changing the tracing root changes what is bundled into
       the functions, and that has broken production here before.
