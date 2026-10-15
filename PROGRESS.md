@@ -2,25 +2,26 @@
 
 ## Resume
 
-- NEXT: Rajat reviews three ways to scroll the home on DRAFT PR #11 (`proto/smooth-snap` @ 6174c9c, master merged in).
-  Preview (Vercel login): https://portfolio-git-proto-smooth-snap-rajats-projects-6181289d.vercel.app
-  - `/?scroll=a` step by step (every scroll moves one stop);
-  - `/?scroll=b` sections, the default (free inside the hero and the chapters, each section snaps into place);
-  - `/?scroll=c` native scrolling with b's snap.
-  - All three: the first screen of each section animates as it arrives (steps.tsx opens stops only once the section
-    is half way up the window; the sheet map draws its sheets in), and the sheet map's dive holds the scroll
-    (`holdScroll`).
-  - His ask (2026-10-15): "from the hero the section below does not animate the first screen nor snaps in place,
-    scroll is not smooth … where to next should snap in place then the next … give me few options, I will review
-    and confirm". His earlier note: too slow and floaty, wrong stops; both addressed (lerp .16, hero stops 0/.28/.45/.92).
-  - When he picks one:
-    - keep only that mode (drop the ?scroll switch and the losers);
-    - add a harness check (wheel gestures land on the stops; Who I am's first stop opens on arrival);
-    - run the full matrix and the perf gate (hero p95 ≤ 25ms; it was 29.6 with the first prototype);
-    - mark #11 ready, and merge only on his approval.
-  - Tested on dev (GPU, wheel): a walks every stop both ways; b and c snap hero end → Who I am → (free) → its end →
-    map → brief, and back. Real CDP touch input snaps onward (headless synthesizeScrollGesture does not scroll at all).
-  - The builder worktree is removed. Lenis is in the main tree's node_modules (from `npm install` on the branch).
+- NEXT: Rajat reviews smooth scroll + section paging on DRAFT PR #11 (`proto/smooth-snap` @ 731c085; preview, Vercel
+  login: https://portfolio-git-proto-smooth-snap-rajats-projects-6181289d.vercel.app). Merge only on his approval.
+  - His review of options a–c (2026-10-15): "c is the closest, but it moves further down and then snaps back; a and b
+    didn't snap to Where to next; it should snap both ways; maybe Lenis and virtual scroll". Built that way:
+    - Lenis (lerp .2, syncTouch) runs the page through its `virtualScroll` hook (`components/home/smooth-scroll.tsx`).
+    - Inside a section's own scroll the page is free: the hero's story, the chapters' run, the brief to the end.
+    - An input that would leave a section is taken over: the page goes straight to the next section's first frame
+      (the previous one's last, scrolling up), locked for the turn.
+    - The rest of that gesture is spent: input pauses over 160ms start a new one, as does each touchstart.
+  - Also on the branch: steps.tsx opens a stop only once the section is half way up the window, so it draws in on
+    arrival; the sheet map draws its sheets in on arrival and holds the scroll during its dive (`holdScroll`).
+  - Tested on dev (scratchpad scripts, GPU Chrome): notches and bursts both ways across every boundary; CDP touch
+    drags on a phone (`Input.synthesizeScrollGesture` does not scroll headless; raw `dispatchTouchEvent` does).
+  - Perf (production build in the main tree): hero scrub p95 25.6 / 22.1 / 21.6ms against the 25ms gate (master:
+    20–24); map scrub 17.5–19.4ms. Before merging, look at Lenis's per-frame cost (its html class toggles, its rAF).
+  - When he approves:
+    - add harness checks (wheel paging both ways; a burst stops at the map; Who I am draws in on arrival);
+    - run the full matrix in a credential-free verify worktree;
+    - get the perf gate under 25ms;
+    - mark ready and merge.
   - Optional, not done (he gave no preference):
     - the outputFileTracingRoot/turbopack.root build warning. Changing the tracing root changes what is bundled into
       the functions, and that has broken production here before.
