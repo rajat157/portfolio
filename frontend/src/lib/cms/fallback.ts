@@ -120,8 +120,8 @@ export type FallbackPost = {
 export const FALLBACK_POSTS: FallbackPost[] = [
   {
     slug: "building-real-time-trading-platforms",
-    title: "Building Real-Time Trading Platforms",
-    excerpt: "Lessons learned from architecting high-frequency trading systems with modern tech stack. Covers Kafka, WebSocket, and low-latency design patterns.",
+    title: "Building a Real-Time Market Monitoring Platform",
+    excerpt: "Lessons from building Tredye, real-time market monitoring on an event-driven stack.",
     category: "Architecture",
     readingTime: 8,
     publishedAt: "2026-01-15",

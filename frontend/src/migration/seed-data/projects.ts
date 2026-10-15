@@ -20,40 +20,16 @@ export interface ProjectSeed {
 
 export const projects: ProjectSeed[] = [
   {
-    title: "Tredye Trading Platform",
+    title: "Tredye — Real-Time NSE Market Monitoring on an Event-Driven Stack",
     slug: "tredye-trading-platform",
     description:
-      "Real-time trading platform built with Next.js 16, Docker, Redis, Kafka, and PostgreSQL. Features high-frequency data streaming, real-time order book updates, and advanced charting capabilities.",
+      "Roughly 800 live RSI streams, divergence alerts and MACD setups — computed as the market moves and streamed to the browser.",
     content: `
-# Tredye Trading Platform
+# Tredye — Real-Time NSE Market Monitoring on an Event-Driven Stack
 
-A comprehensive real-time trading platform designed for high-frequency trading operations.
+Real-time market monitoring for Voltvave Innovations: roughly 800 live RSI streams, divergence alerts and MACD setups, computed as the market moves and streamed to the browser. An informational tool: it watches the market and gives no investment advice.
 
-## Key Features
-
-- **Real-time Data Streaming**: WebSocket-based live price feeds with sub-millisecond latency
-- **Order Book Management**: Live order book updates with depth visualization
-- **Advanced Charting**: TradingView-style interactive charts with multiple timeframes
-- **Portfolio Management**: Real-time P&L tracking and position management
-- **Risk Management**: Configurable stop-loss, take-profit, and position limits
-
-## Technical Architecture
-
-The platform is built on a microservices architecture:
-
-- **Frontend**: Next.js 16 with App Router for server-side rendering and optimal performance
-- **Message Queue**: Apache Kafka for reliable, ordered event streaming
-- **Cache Layer**: Redis for session management and real-time data caching
-- **Database**: PostgreSQL with TimescaleDB extension for time-series data
-- **Containerization**: Docker and Docker Compose for development and deployment
-
-## Challenges & Solutions
-
-### High-Frequency Updates
-The main challenge was handling thousands of price updates per second without overwhelming the UI. We implemented a tick batching system that aggregates updates within a 16ms window (matching 60fps refresh rate) and uses React's concurrent features for smooth rendering.
-
-### Data Consistency
-Ensuring data consistency across distributed services was critical. We used Kafka's exactly-once semantics combined with PostgreSQL's ACID transactions to maintain order integrity.
+The full case study lives in src/migration/case-studies/case-study-tredye.md, synced by scripts/import-case-studies.ts.
     `.trim(),
     technologies: ["Next.js", "Docker", "Redis", "Kafka", "PostgreSQL", "WebSocket", "TypeScript"],
     categorySlug: "web-dev",

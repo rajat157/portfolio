@@ -17,29 +17,29 @@ export interface BlogPostSeed {
 
 export const blogPosts: BlogPostSeed[] = [
   {
-    title: "Building Real-Time Trading Platforms",
+    title: "Building a Real-Time Market Monitoring Platform",
     slug: "building-real-time-trading-platforms",
     excerpt:
-      "Lessons learned from architecting high-frequency trading systems with modern tech stack.",
+      "Lessons from building Tredye, real-time market monitoring on an event-driven stack.",
     content: `
-# Building Real-Time Trading Platforms
+# Building a Real-Time Market Monitoring Platform
 
-After spending months building Tredye, a real-time trading platform, I've accumulated valuable insights into the unique challenges of financial technology systems. Here's what I learned.
+After spending months building Tredye, a real-time market monitoring platform, I've accumulated valuable insights into the unique challenges of systems that stream live market data. Here's what I learned.
 
 ## The Challenge of Real-Time
 
-Trading platforms have unique requirements that push traditional web architectures to their limits:
+Live market monitoring has requirements that push traditional web architectures to their limits:
 
-- **Sub-millisecond latency**: Price updates must reach users instantly
+- **Low latency**: Price updates must reach users as they happen
 - **High throughput**: Thousands of events per second per user
-- **Data consistency**: Order execution must be atomic and reliable
-- **Always-on reliability**: Downtime means lost money
+- **Data consistency**: Every tick must land once, in order
+- **Always-on reliability**: Downtime in market hours leaves users blind
 
 ## Architecture Decisions
 
 ### Message-Driven Architecture
 
-We chose Apache Kafka as our event backbone. Every price tick, order, and trade is an event flowing through Kafka topics. This provides:
+We chose Apache Kafka as our event backbone. Every price tick and market event flows through Kafka topics. This provides:
 
 1. **Durability**: Events are persisted and can be replayed
 2. **Ordering**: Critical for maintaining price history
@@ -77,13 +77,13 @@ setInterval(() => {
 
 Without metrics, you're flying blind. We instrumented:
 - WebSocket message latency
-- Order execution time
+- End-to-end tick delay, from the feed to the screen
 - UI render performance
 - Database query duration
 
 ### 2. Plan for Failure
 
-In trading systems, failure modes must be well-defined:
+In a live market feed, failure modes must be well-defined:
 - What happens when Kafka is down?
 - How do we handle database failover?
 - What's the degraded experience for users?
@@ -94,10 +94,10 @@ We discovered critical bugs only under production-like load. Invest in load test
 
 ## Conclusion
 
-Building real-time trading platforms is challenging but rewarding. The key is embracing event-driven architecture, investing in observability, and planning for failure from day one.
+Building real-time market monitoring is challenging but rewarding. The key is embracing event-driven architecture, investing in observability, and planning for failure from day one.
     `.trim(),
     categorySlug: "architecture",
-    tags: ["trading", "real-time", "kafka", "websocket", "architecture"],
+    tags: ["market data", "real-time", "kafka", "websocket", "architecture"],
     published_date: "2026-01-15",
     reading_time: 8,
     featured: true,
