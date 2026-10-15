@@ -2,25 +2,25 @@
 
 ## Resume
 
-- NEXT: waiting on Rajat. Nothing is in progress (master = 91d3f10; PRs #1–#10 and #12–#14 are live).
-  - Smooth scroll + snapping, DRAFT PR #11 (`proto/smooth-snap`; preview
-    https://portfolio-git-proto-smooth-snap-rajats-projects-6181289d.vercel.app). PARKED by Rajat (2026-10-15): "I'll
-    review and then let you know". His feedback so far: "too slow / floaty" and "wrong stops" (which ones, unsaid).
-    - Found, not yet changed:
-      - Lenis's default `lerp: 0.1` overrides the `duration: 0.75` that was passed; together with Snap's 500ms debounce
-        and its own lerp glide, that is the float.
-      - The hero snap points 0.17 and 0.79 of the runway land mid-animation. Step 1 animates 0.04–0.26 and step 3
-        0.62–0.88, so the settled points are about 0.28, 0.45 and 0.92.
-      - Proximity at 20% of the viewport, on chapter stops 50vh apart, pulls any small scroll back to the stop it left.
-    - Ready when he says go:
-      - lerp ~0.2;
-      - snap debounce ~150ms, then a 0.45s attack-eased snap;
-      - hero stops [0, 0.28, 0.45, 0.92];
-      - direction-aware detents in the chapters (a deliberate scroll moves on, a nudge returns).
-    - Merge master into the branch first (it predates #12–#14). It must pass the perf gate: hero p95 ≤ 25ms (it was
-      29.6). Keep it a draft until he says it feels right.
-    - Its builder worktree is `.claude/worktrees/agent-a8e74a64a20092fa7` (remove it when done; check for a media
-      junction first).
+- NEXT: Rajat reviews three ways to scroll the home on DRAFT PR #11 (`proto/smooth-snap` @ 6174c9c, master merged in).
+  Preview (Vercel login): https://portfolio-git-proto-smooth-snap-rajats-projects-6181289d.vercel.app
+  - `/?scroll=a` step by step (every scroll moves one stop);
+  - `/?scroll=b` sections, the default (free inside the hero and the chapters, each section snaps into place);
+  - `/?scroll=c` native scrolling with b's snap.
+  - All three: the first screen of each section animates as it arrives (steps.tsx opens stops only once the section
+    is half way up the window; the sheet map draws its sheets in), and the sheet map's dive holds the scroll
+    (`holdScroll`).
+  - His ask (2026-10-15): "from the hero the section below does not animate the first screen nor snaps in place,
+    scroll is not smooth … where to next should snap in place then the next … give me few options, I will review
+    and confirm". His earlier note: too slow and floaty, wrong stops; both addressed (lerp .16, hero stops 0/.28/.45/.92).
+  - When he picks one:
+    - keep only that mode (drop the ?scroll switch and the losers);
+    - add a harness check (wheel gestures land on the stops; Who I am's first stop opens on arrival);
+    - run the full matrix and the perf gate (hero p95 ≤ 25ms; it was 29.6 with the first prototype);
+    - mark #11 ready, and merge only on his approval.
+  - Tested on dev (GPU, wheel): a walks every stop both ways; b and c snap hero end → Who I am → (free) → its end →
+    map → brief, and back. Real CDP touch input snaps onward (headless synthesizeScrollGesture does not scroll at all).
+  - The builder worktree is removed. Lenis is in the main tree's node_modules (from `npm install` on the branch).
   - Optional, not done (he gave no preference):
     - the outputFileTracingRoot/turbopack.root build warning. Changing the tracing root changes what is bundled into
       the functions, and that has broken production here before.
