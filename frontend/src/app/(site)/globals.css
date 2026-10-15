@@ -552,10 +552,9 @@ a.btn { display: inline-flex; align-items: center; text-decoration: none; }
 /* a sheet's link sits on its top edge and grows upward when the sheet is marked out */
 .map-3d .map-nodes > li { z-index: 3; display: block; padding: 0; translate: -2px -100%; pointer-events: none; }
 .map-3d .map-nodes > li::before, .map-3d .map-nodes > li::after, .map-3d .node::before { content: none; }
-.map-3d .node, .map-3d .node:hover, .map-3d .node:focus-visible { pointer-events: auto; display: grid; justify-items: start; gap: 6px; max-width: 17.5rem; padding: 4px 8px 8px 2px; border: 0; background: none; }
-/* marked out, a link comes in front of its neighbours on a knockout, like a note over the drawing */
+/* no wider than the gap to the next sheet (20vw at 1024), so an opened label never runs into its neighbour */
+.map-3d .node, .map-3d .node:hover, .map-3d .node:focus-visible { pointer-events: auto; display: grid; justify-items: start; gap: 6px; max-width: min(17.5rem, 20vw); padding: 4px 8px 8px 2px; border: 0; background: none; }
 .map-3d .map-nodes > li.is-hot { z-index: 4; }
-.map-3d .is-hot .node { background: var(--lab); }
 .map-3d .node-ico { display: none; }
 .map-3d .node-top .lab { transition: color var(--t16) var(--ease-attack); }
 .map-3d .is-hot .node-top .lab { color: var(--ink-c); }
