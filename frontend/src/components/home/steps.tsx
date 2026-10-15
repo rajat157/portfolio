@@ -40,6 +40,7 @@ export function Steps({ id }: { id: string }) {
     const topH = () => document.getElementById("top")?.getBoundingClientRect().height ?? 0;
     const run = () => sec.offsetHeight - pin.offsetHeight;
 
+    // i = -1: every stop closed (the section is out of sight)
     function set(i: number) {
       if (i === cur) return;
       const first = cur === -1;
@@ -53,6 +54,7 @@ export function Steps({ id }: { id: string }) {
         else c.removeAttribute("aria-current");
         c.toggleAttribute("data-done", k < i);
       });
+      if (i < 0) return;
       if (no) no.textContent = String(i + 1).padStart(2, "0");
       stops[i].querySelectorAll<HTMLElement>("[data-count]").forEach(countUp);
       if (!first) tick();
@@ -62,8 +64,12 @@ export function Steps({ id }: { id: string }) {
     function update() {
       raf = 0;
       if (!pinned) return;
+      // a stop opens once the section is half way up the window and they all close once it has gone, so each arrival
+      // draws its first screen in (at load it would draw out of sight)
+      const box = sec!.getBoundingClientRect();
+      if (box.top > innerHeight / 2 || box.bottom < innerHeight / 2) return set(-1);
       const r = run();
-      const p = r > 0 ? (topH() - sec!.getBoundingClientRect().top) / r : 0;
+      const p = r > 0 ? (topH() - box.top) / r : 0;
       set(Math.min(n - 1, Math.max(0, Math.floor(p * n))));
     }
     const onScroll = () => {
