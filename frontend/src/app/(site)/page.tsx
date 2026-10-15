@@ -1,14 +1,15 @@
 // The home experience (BUILD-PLAN.md §0, "P3b — Home experience"): the
 // shard-cut name stage, the scroll story, "Who I am" / "What I build" (Chapters),
 // "Where to next" and the close contact brief. Server-rendered
-// (this file) plus client islands: Stage (three.js, lazy), Steps and
-// ContactForm (progressive enhancement; posts natively without JS).
+// (this file) plus client islands: Stage and SheetMap (three.js, lazy), Steps
+// and ContactForm (progressive enhancement; posts natively without JS).
 // Everything here is readable with no JS, no WebGL and reduced motion.
 import type { Metadata } from "next";
 import Link from "next/link";
 import { ContactForm } from "@/components/contact-form";
 import { Chapters } from "@/components/home/chapters";
 import { NameMark } from "@/components/home/name-mark";
+import { SheetMap } from "@/components/home/sheet-map";
 import { Splash } from "@/components/home/splash";
 import { Stage } from "@/components/home/stage";
 import { HOME, mapProjectsDesc } from "@/content/home";
@@ -197,10 +198,15 @@ export default async function HomePage() {
                       </svg>
                     </span>
                     <span className="node-t">{node.title}</span>
-                    <span className="node-d">{desc}</span>
-                    <span className="node-go lab">
-                      {node.cta}
-                      <span aria-hidden="true">{node.cta === "Write" ? " ↓" : " →"}</span>
+                    {/* the sheet map (SheetMap) folds these away until its sheet is marked out */}
+                    <span className="node-more">
+                      <span>
+                        <span className="node-d">{desc}</span>
+                        <span className="node-go lab">
+                          {node.cta}
+                          <span aria-hidden="true">{node.cta === "Write" ? " ↓" : " →"}</span>
+                        </span>
+                      </span>
                     </span>
                   </Link>
                 </li>
@@ -208,6 +214,7 @@ export default async function HomePage() {
             })}
           </ul>
         </div>
+        <SheetMap />
       </section>
 
       <section className="foot end" id="contact">
