@@ -2,13 +2,13 @@
 
 // Smooth scrolling and section paging on the home (Rajat, reviewing options a–c on 2026-10-15: c's "free inside a
 // section, snap between them" is closest, but it overshot and came back, and a section must snap both ways; "maybe
-// Lenis and virtual scroll"). PROTOTYPE for his review (proto/smooth-snap).
+// Lenis and virtual scroll").
 // Lenis smooths the wheel and drives touch. Inside a section's own scroll (the hero's story, the chapters' stops, the
 // brief and below) the page moves freely. A gesture that leaves a section is taken over before the page moves: it
 // goes straight to the next section's first frame (the previous section's last, scrolling up), and the rest of that
 // gesture (a trackpad's coasting, a touch's fling) is swallowed, so it can't run on past the next section. The next
-// gesture moves on. Keyboard and scrollbar scroll as always. Off under reduced motion (lib/motion, which honours the
-// site's Motion toggle).
+// gesture moves on. Keyboard and scrollbar scroll as always, and so does the brief's text box. Off under reduced
+// motion (lib/motion, which honours the site's Motion toggle).
 import { useEffect } from "react";
 import type Lenis from "lenis";
 import { reducedMotion } from "@/lib/motion";
@@ -65,6 +65,7 @@ export function SmoothScroll() {
       let pageT = 0;
       let gesture = 0; // input bursts: a new one after a pause in the wheel, or at each touch
       let lastInput = 0;
+      let quiet = 0; // frames drawn since the last input
       let swallowed = -1; // the gesture that turned a page: the rest of it is spent
       const spend = (event: Event) => {
         if (event.cancelable) event.preventDefault();
@@ -75,13 +76,17 @@ export function SmoothScroll() {
         lerp: 0.2,
         syncTouch: true,
         respectReducedMotion: false,
+        prevent: (node) => node.nodeName === "TEXTAREA",
         virtualScroll: ({ deltaY, event }) => {
           const now = performance.now();
           const touch = event.type.startsWith("touch");
-          if (touch ? event.type === "touchstart" : now - lastInput > 160) gesture++;
+          // a pause is 160ms and two frames without input: what a slow frame held up arrives at once, coalesced, after it
+          if (touch ? event.type === "touchstart" : now - lastInput > 160 && quiet > 1) gesture++;
           lastInput = now;
+          quiet = 0;
           if (held || paging || gesture === swallowed) return spend(event);
-          if (event.ctrlKey || !deltaY) return true;
+          // zoom, a sideways move and the brief's text box: theirs (Lenis lets the text box scroll itself: `prevent`)
+          if (event.ctrlKey || !deltaY || (event.target as Element).closest?.("textarea")) return true;
           // where this input would take the page (a touch's release: where its fling would coast to)
           const step = event.type === "touchend" ? Math.sign(deltaY) * Math.abs(lenis.velocity) ** 1.7 : deltaY;
           const pos = lenis.targetScroll;
@@ -105,10 +110,11 @@ export function SmoothScroll() {
         },
       });
       lenisRef = lenis;
-      held = false;
+      if (held) lenis.stop();
 
       let raf = 0;
       const loop = (time: number) => {
+        quiet++;
         lenis.raf(time);
         raf = requestAnimationFrame(loop);
       };

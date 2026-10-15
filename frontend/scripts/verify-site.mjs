@@ -1125,6 +1125,175 @@ async function checkSheetMap(browser) {
   return out;
 }
 
+// Section paging (components/home/smooth-scroll.tsx): inside a section (the hero's story, Who I am's stops, the brief)
+// the page scrolls freely; a wheel or a drag that would leave it turns straight to the next section's first frame (the
+// previous one's last, going up), and the rest of that gesture is spent, so a trackpad's flick stops at the next
+// section. Who I am opens its first stop on arrival; the brief's text box scrolls itself; reduced motion has none of it.
+async function checkPaging(browser) {
+  const out = [];
+  const check = (ok, msg) => out.push({ ok: !!ok, msg });
+  const near = (y, want) => Math.abs(y - want) <= 2;
+  // each section's first and last frame, as the page has them now (its length changes as the stage and the map come up;
+  // the brief is shorter than a window, so its first frame is the page's end)
+  const marks = (page) =>
+    page.evaluate(() => {
+      const th = document.getElementById("top").getBoundingClientRect().height;
+      const max = document.documentElement.scrollHeight - innerHeight;
+      const at = (id, pin) => {
+        const el = document.getElementById(id);
+        const y = el.getBoundingClientRect().top + scrollY - th + (pin ? el.offsetHeight - el.querySelector(pin).offsetHeight : 0);
+        return Math.round(Math.min(y, max));
+      };
+      return { heroEnd: at("exp", ".exp-pin"), who: at("who"), whoEnd: at("who", ".steps-pin"), map: at("map"), contact: at("contact") };
+    });
+  // the page at rest: no smooth scroll under way and still for 600ms (the slow software renderer gives a few frames a second)
+  const settle = (page) =>
+    page.evaluate(
+      () =>
+        new Promise((resolve) => {
+          const t0 = performance.now();
+          let y = scrollY;
+          let still = t0;
+          const poll = () => {
+            const now = performance.now();
+            if (scrollY !== y || document.documentElement.classList.contains("lenis-smooth")) {
+              y = scrollY;
+              still = now;
+            }
+            if (now - still >= 600 || now - t0 > 8000) resolve(Math.round(scrollY));
+            else setTimeout(poll, 50);
+          };
+          setTimeout(poll, 50);
+        })
+    );
+  const go = async (page, y) => {
+    await page.evaluate((y) => scrollTo(0, y), y);
+    return settle(page);
+  };
+  const ready = (page) =>
+    page.waitForFunction(() => document.getElementById("exp")?.classList.contains("gl-ready") && !document.documentElement.hasAttribute("data-boot"), null, { timeout: 15000 }).catch(() => {});
+
+  {
+    const ctx = await browser.newContext({ viewport: { width: 1440, height: 900 } });
+    await ctx.route("**/api/contact**", (r) => r.abort());
+    const page = await ctx.newPage();
+    await page.goto(BASE_URL + "/", { waitUntil: "load" });
+    await ready(page);
+    await page.mouse.move(720, 450);
+    const wheel = async (dy) => {
+      await page.mouse.wheel(0, dy);
+      return settle(page);
+    };
+    const openStops = () => page.evaluate(() => document.querySelectorAll("#who .steps-stop[data-on]").length);
+    check((await openStops()) === 0, "at the top, Who I am has no stop open yet");
+    let y = await wheel(100);
+    check(near(y, 100), `a wheel notch inside the hero scrolls it freely (0 -> ${y})`);
+
+    let m = await marks(page);
+    await go(page, m.heroEnd);
+    // where Who I am's section stood when its first stop opened: on arrival, at least half way up the window
+    await page.evaluate(() => {
+      const who = document.getElementById("who");
+      window.__opened = null;
+      new MutationObserver(() => {
+        if (window.__opened === null && who.querySelector(".steps-stop[data-on]")) window.__opened = who.getBoundingClientRect().top / innerHeight;
+      }).observe(who, { subtree: true, attributes: true, attributeFilter: ["data-on"] });
+    });
+    const closed = await openStops();
+    y = await wheel(100);
+    m = await marks(page);
+    check(near(y, m.who), `a notch at the hero's end turns to Who I am's first frame (${m.heroEnd} -> ${y}, want ${m.who})`);
+    const opened = await page.evaluate(() => window.__opened);
+    check(closed === 0 && opened !== null && opened <= 0.5, `Who I am opens its first stop on arrival, not before (closed at the hero's end: ${closed === 0}; opened with the section at ${opened === null ? "never" : Math.round(opened * 100) + "%"} of the window)`);
+    y = await wheel(100);
+    check(near(y, m.who + 100), `a notch inside Who I am scrolls through its stops freely (${m.who} -> ${y})`);
+    await go(page, m.who);
+    y = await wheel(-100);
+    check(near(y, m.heroEnd), `a notch up at Who I am's first frame turns back to the hero's end (${m.who} -> ${y}, want ${m.heroEnd})`);
+
+    await go(page, m.whoEnd);
+    y = await wheel(100);
+    m = await marks(page);
+    check(near(y, m.map), `a notch at Who I am's end turns to the map (${m.whoEnd} -> ${y}, want ${m.map})`);
+    y = await wheel(100);
+    m = await marks(page);
+    check(near(y, m.contact), `a notch at the map turns to the brief (${m.map} -> ${y}, want ${m.contact})`);
+    y = await wheel(-100);
+    check(near(y, m.map), `a notch up at the brief turns back to the map (${m.contact} -> ${y}, want ${m.map})`);
+    y = await wheel(-100);
+    check(near(y, m.whoEnd), `a notch up at the map turns back to Who I am's end (${m.map} -> ${y}, want ${m.whoEnd})`);
+
+    // a trackpad's flick: 50 wheel events ~16ms apart, decaying, sent without waiting on the page (as a real one comes)
+    const cdp = await ctx.newCDPSession(page);
+    const sent = [];
+    for (let i = 0; i < 50; i++) {
+      sent.push(cdp.send("Input.dispatchMouseEvent", { type: "mouseWheel", x: 720, y: 450, deltaX: 0, deltaY: Math.max(2, Math.round(60 * 0.93 ** i)) }));
+      await new Promise((r) => setTimeout(r, 16));
+    }
+    await Promise.all(sent);
+    y = await settle(page);
+    m = await marks(page);
+    check(near(y, m.map), `a 50-event trackpad flick from Who I am's end stops at the map (${m.whoEnd} -> ${y}, want ${m.map})`);
+
+    // the brief's text box scrolls itself, not the page
+    await go(page, m.contact);
+    const box = page.locator("#cform textarea");
+    await box.fill(Array.from({ length: 40 }, (_, i) => `Line ${i + 1} of a long brief`).join("\n"));
+    await box.evaluate((t) => (t.scrollTop = 0));
+    const before = await settle(page);
+    const r = await box.boundingBox();
+    await page.mouse.move(r.x + r.width / 2, r.y + r.height / 2);
+    await page.mouse.wheel(0, 100);
+    await page.waitForTimeout(500);
+    const after = await settle(page);
+    const top = await box.evaluate((t) => t.scrollTop);
+    check(top > 0 && near(after, before), `a wheel over the brief's text box scrolls the box (scrollTop ${top}), not the page (${before} -> ${after})`);
+    await ctx.close();
+  }
+
+  {
+    // touch: Lenis drives the page from raw touches (synthesizeScrollGesture doesn't scroll headless)
+    const ctx = await browser.newContext({ viewport: { width: 390, height: 844 }, deviceScaleFactor: 3, isMobile: true, hasTouch: true });
+    const page = await ctx.newPage();
+    await page.goto(BASE_URL + "/", { waitUntil: "load" });
+    await ready(page);
+    const cdp = await ctx.newCDPSession(page);
+    // a finger dragged by dy (up is negative: the page scrolls down), held still before it lifts so nothing flings
+    const drag = async (dy) => {
+      const x = 195;
+      const y0 = dy < 0 ? 620 : 300;
+      await cdp.send("Input.dispatchTouchEvent", { type: "touchStart", touchPoints: [{ x, y: y0 }] });
+      for (let i = 1; i <= 8; i++) {
+        await cdp.send("Input.dispatchTouchEvent", { type: "touchMove", touchPoints: [{ x, y: y0 + (dy * i) / 8 }] });
+        await page.waitForTimeout(30);
+      }
+      await page.waitForTimeout(300);
+      await cdp.send("Input.dispatchTouchEvent", { type: "touchEnd", touchPoints: [] });
+      return settle(page);
+    };
+    let y = await drag(-300);
+    check(y >= 270 && y <= 330, `phone: a drag inside the hero scrolls it freely (0 -> ${y})`);
+    let m = await marks(page);
+    await go(page, m.heroEnd);
+    y = await drag(-150);
+    m = await marks(page);
+    check(near(y, m.who), `phone: a drag at the hero's end turns to Who I am's first frame (${m.heroEnd} -> ${y}, want ${m.who})`);
+    y = await drag(150);
+    check(near(y, m.heroEnd), `phone: a drag down there turns back to the hero's end (${m.who} -> ${y}, want ${m.heroEnd})`);
+    await ctx.close();
+  }
+
+  {
+    const ctx = await browser.newContext({ viewport: { width: 1440, height: 900 }, reducedMotion: "reduce" });
+    const page = await ctx.newPage();
+    await page.goto(BASE_URL + "/", { waitUntil: "load" });
+    await page.waitForTimeout(1500);
+    check(!(await page.evaluate(() => document.documentElement.classList.contains("lenis"))), "under reduced motion the page scrolls natively (no smooth scroll, no paging)");
+    await ctx.close();
+  }
+  return out;
+}
+
 // The page's initial JS as transferred (gzip): the scripts named in the server HTML. The stage's dynamic import of
 // three is not among them (sniffing for "WebGLRenderer" also matched the home's own route chunk).
 async function jsBytesAtLoad(page) {
@@ -1507,6 +1676,7 @@ async function main() {
       ["wide", checkWide],
       ["home chapters", checkChapters],
       ["home sheet map", checkSheetMap],
+      ["home paging", checkPaging],
       ["contact armed+sent", checkContactArmedAndSent],
       ["contact field error", checkContactFieldError],
       ["contact empty submit", checkContactEmptySubmitBlocked],
